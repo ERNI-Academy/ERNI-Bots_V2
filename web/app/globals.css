@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: #00ffff;
+  --color-background-light: #f5f8f8;
+  --color-background-dark: #0a0a0a;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-space-grotesk);
+  --radius-DEFAULT: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom animations and effects for glitch feudalism theme */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes jitter {
+  0% { transform: translate(0,0) skew(0); }
+  25% { transform: translate(-2px, 1px) skew(1deg); }
+  50% { transform: translate(2px, -1px) skew(-1deg); }
+  75% { transform: translate(-1px, -1px) skew(0); }
+  100% { transform: translate(1px, 1px) skew(0); }
+}
+
+.cursor-blink {
+  animation: blink 1s infinite;
+}
+
+.crt-overlay {
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
+}
+
+.chromatic-aberration {
+  text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+}
+
+.glitch-button:hover {
+  animation: jitter 0.2s infinite;
+}
+
+.medieval-rain {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.15;
+  overflow: hidden;
+  color: #00ffff;
+  font-family: serif;
+  display: flex;
+  justify-content: space-around;
+}
+
+.rain-column {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  user-select: none;
+}
