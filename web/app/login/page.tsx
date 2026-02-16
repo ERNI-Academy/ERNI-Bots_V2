@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -31,7 +32,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     // Aquí implementarás tu lógica de autenticación
     // Por ahora, simplemente guardamos un token en una cookie
     if (username && password) {
@@ -115,12 +116,17 @@ export default function LoginPage() {
 
             {/* Main Warning Display */}
             <div className="text-center py-4 sm:py-6 space-y-2 border-y border-primary/10">
-              <h2 className="text-base sm:text-xl md:text-2xl font-bold tracking-tighter uppercase">
-                ERNI BOTS V2
-              </h2>
-              <h2 className="text-base sm:text-xl md:text-2xl font-bold tracking-tighter uppercase text-white bg-primary/20 px-2 sm:px-4 inline-block">
-                FRAGMENTED PROTOCOL
-              </h2>
+              <div className="flex items-center justify-center gap-3 sm:gap-4">
+                <img src="/logo.png" alt="ERNI Logo" className="h-16 sm:h-20 md:h-24 w-auto" />
+                <div>
+                  <h2 className="text-base sm:text-xl md:text-2xl font-bold tracking-tighter uppercase">
+                    ERNI BOTS V2
+                  </h2>
+                  <h2 className="text-base sm:text-xl md:text-2xl font-bold tracking-tighter uppercase text-white bg-primary/20 px-2 sm:px-4 inline-block">
+                    PROTOCOLO_FRAGMENTADO
+                  </h2>
+                </div>
+              </div>
               <p className="text-[8px] sm:text-[10px] text-red-500 mt-2 sm:mt-4 tracking-[0.2em] sm:tracking-[0.3em] font-medium animate-pulse">
                 SYSTEM_ERROR: MEMORY_LEAK_DETECTED
               </p>
@@ -130,7 +136,7 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8 max-w-md mx-auto">
               <div className="space-y-2 group">
                 <p className="text-[8px] sm:text-[10px] font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
-                  &gt; ENTER_USER_PROTOCOL:
+                  &gt; USUARIO:
                 </p>
                 <input
                   className="w-full bg-transparent border-0 border-b border-primary/30 p-0 py-2 focus:ring-0 focus:border-primary text-base sm:text-lg md:text-xl placeholder:text-primary/10 transition-all"
@@ -144,7 +150,7 @@ export default function LoginPage() {
 
               <div className="space-y-2 group">
                 <p className="text-[8px] sm:text-[10px] font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
-                  &gt; ESTABLISH_KEY:
+                  &gt; CLAVE:
                 </p>
                 <input
                   className="w-full bg-transparent border-0 border-b border-primary/30 p-0 py-2 focus:ring-0 focus:border-primary text-base sm:text-lg md:text-xl placeholder:text-primary/10 transition-all"
@@ -163,12 +169,22 @@ export default function LoginPage() {
                   type="submit"
                   className="glitch-button w-full bg-primary text-background-dark font-bold py-3 sm:py-4 text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase relative overflow-hidden group cursor-pointer"
                 >
-                  <span className="relative z-10">[ ACCESS ]</span>
+                  <span className="relative z-10">[ ACCEDER ]</span>
                   {/* Button Hover Effect Layers */}
                   <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
                   <div className="absolute top-0 left-0 w-full h-[1px] bg-white opacity-50"></div>
                   <div className="absolute bottom-0 left-0 w-full h-[1px] bg-black opacity-20"></div>
                 </button>
+              </div>
+
+              {/* Register Link */}
+              <div className="text-center pt-4">
+                <Link
+                  href="/register"
+                  className="text-[10px] sm:text-xs text-primary/60 hover:text-primary transition-colors tracking-widest uppercase font-mono"
+                >
+                  &gt; ¿NO_TIENES_CUENTA? REGISTRARSE_AQUÍ
+                </Link>
               </div>
             </form>
 
