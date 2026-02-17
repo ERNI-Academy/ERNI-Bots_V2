@@ -1,4 +1,4 @@
-name: Deploy Next.js Standalone to Azure
+name: Deploy Next.js Standard to Azure
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -15,24 +16,27 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./web/package-lock.json
 
       - name: Install and Build
         working-directory: ./web
         run: |
           npm ci
           npm run build
-
-      - name: Prepare Standalone Artifact
-        working-directory: ./web
-        run: |
-          cp -r .next/static .next/standalone/.next/static
-          cp -r public .next/standalone/public
+          # TRUCO: Eliminamos dependencias de desarrollo para que pese menos
+          npm prune --production
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: web-app
-          path: ./web/.next/standalone
+          name: node-app
+          path: |
+            ./web/.next
+            ./web/public
+            ./web/node_modules
+            ./web/package.json
+            ./web/next.config.mjs
 
   deploy:
     runs-on: ubuntu-latest
@@ -45,13 +49,19 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: web-app
+          name: node-app
       
+      - name: Move files to root
+        run: |
+          cp -r web/* .
+          rm -rf web
+
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'ernibots-v2' 
+          app-name: 'ernibots-v2'
           slot-name: 'Production'
-          package: . 
+          package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D714FF7A49F94EC5ADB11F943A71ABCB }}
+          startup-command: 'next start -p 8080'
