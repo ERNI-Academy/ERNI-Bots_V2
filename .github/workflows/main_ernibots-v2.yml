@@ -24,19 +24,15 @@ jobs:
         run: |
           npm ci
           npm run build
-          # TRUCO: Eliminamos dependencias de desarrollo para que pese menos
+          # Eliminamos dependencias de desarrollo para aligerar la subida
           npm prune --production
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: |
-            ./web/.next
-            ./web/public
-            ./web/node_modules
-            ./web/package.json
-            ./web/next.config.mjs
+          path: . 
+          working-directory: ./web
 
   deploy:
     runs-on: ubuntu-latest
@@ -51,10 +47,8 @@ jobs:
         with:
           name: node-app
       
-      - name: Move files to root
-        run: |
-          cp -r web/* .
-          rm -rf web
+      - name: Verify files
+        run: ls -la
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
