@@ -19,27 +19,16 @@ jobs:
           cache: 'npm'
           cache-dependency-path: ./web/package-lock.json
 
-      - name: Install dependencies
+      - name: Zip artifact for deployment
         working-directory: ./web
-        run: npm ci
-
-      - name: Build application
-        working-directory: ./web
-        run: npm run build --if-present
-
-      - name: Clean up dev dependencies (keep only production)
-        working-directory: ./web
-        run: npm prune --production
-
-      - name: Make startup script executable
-        working-directory: ./web
-        run: chmod +x startup.sh
+        run: |
+          zip -r ../release.zip . -x "*.git*" ".next/*" "node_modules/*"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: ./web
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -53,9 +42,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-app
-      
-      - name: Verify files
-        run: ls -la
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -63,5 +49,5 @@ jobs:
         with:
           app-name: 'ernibots-v2'
           slot-name: 'Production'
-          package: .
+          package: release.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D714FF7A49F94EC5ADB11F943A71ABCB }}
