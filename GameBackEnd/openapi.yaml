@@ -1,0 +1,349 @@
+openapi: 3.0.3
+info:
+  title: ERNI MMORPG Game Backend API
+  version: 1.0.0
+  description: >
+    Backend API for ERNI-Bots MMORPG.
+    The backend is the authoritative game engine.
+    Agent Service is external and not exposed publicly.
+
+servers:
+  - url: /api/v1
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    RegisterRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+
+    PlayerProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        score:
+          type: integer
+        energy:
+          type: integer
+        rank:
+          type: integer
+
+    CreateFortressRequest:
+      type: object
+      required: [name, system_prompt, protected_word]
+      properties:
+        name:
+          type: string
+        system_prompt:
+          type: string
+        protected_word:
+          type: string
+          description: Single word, no spaces
+
+    FortressResponse:
+      type: object
+      properties:
+        fortress_id:
+          type: string
+          format: uuid
+
+    FortressListItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        owner:
+          type: string
+        difficulty:
+          type: integer
+
+    StartBattleRequest:
+      type: object
+      required: [fortress_id]
+      properties:
+        fortress_id:
+          type: string
+          format: uuid
+
+    StartBattleResponse:
+      type: object
+      properties:
+        battle_id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        max_turns:
+          type: integer
+
+    MessageRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
+    MessageResponse:
+      type: object
+      properties:
+        response:
+          type: string
+        turn:
+          type: integer
+        remaining_turns:
+          type: integer
+
+    GuessRequest:
+      type: object
+      required: [word]
+      properties:
+        word:
+          type: string
+
+    GuessResponse:
+      type: object
+      properties:
+        result:
+          type: string
+          enum: [correct, incorrect]
+        score_awarded:
+          type: integer
+          nullable: true
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        username:
+          type: string
+        score:
+          type: integer
+
+paths:
+
+  /auth/register:
+    post:
+      summary: Register a new player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered
+        '400':
+          description: Invalid input
+        '409':
+          description: Username already exists
+
+  /auth/login:
+    post:
+      summary: Login and receive JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+
+  /players/me:
+    get:
+      summary: Get authenticated player profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Player profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerProfile'
+        '401':
+          description: Unauthorized
+
+  /fortresses:
+    post:
+      summary: Create a new fortress
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFortressRequest'
+      responses:
+        '201':
+          description: Fortress created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FortressResponse'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+
+    get:
+      summary: List public fortresses
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of fortresses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FortressListItem'
+        '401':
+          description: Unauthorized
+
+  /battles:
+    post:
+      summary: Start a new battle
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartBattleRequest'
+      responses:
+        '201':
+          description: Battle started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartBattleResponse'
+        '400':
+          description: Invalid request
+        '403':
+          description: Forbidden
+        '404':
+          description: Fortress not found
+
+  /battles/{battle_id}/message:
+    post:
+      summary: Send message to defender agent
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: battle_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageRequest'
+      responses:
+        '200':
+          description: Agent response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Invalid battle
+        '403':
+          description: Forbidden
+        '410':
+          description: Battle finished
+
+  /battles/{battle_id}/guess:
+    post:
+      summary: Attempt to guess protected word
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: battle_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuessRequest'
+      responses:
+        '200':
+          description: Guess result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuessResponse'
+        '400':
+          description: Incorrect guess
+        '403':
+          description: Forbidden
+        '410':
+          description: Battle finished
+
+  /leaderboard:
+    get:
+      summary: Get global leaderboard
+      responses:
+        '200':
+          description: Ranking list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaderboardEntry'
