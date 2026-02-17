@@ -25,11 +25,23 @@ jobs:
           npm ci
           npm run build
 
+      - name: Prepare standalone deployment
+        working-directory: ./web
+        run: |
+          # Copiar archivos standalone
+          cp -r .next/standalone ./deploy
+          # Copiar assets estáticos
+          cp -r .next/static ./deploy/.next/static
+          # Copiar archivos públicos
+          cp -r public ./deploy/public
+          # Copiar package.json para referencia
+          cp package.json ./deploy/
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: ./web
+          path: ./web/deploy
 
   deploy:
     runs-on: ubuntu-latest

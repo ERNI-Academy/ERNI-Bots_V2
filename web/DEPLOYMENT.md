@@ -15,8 +15,10 @@
 ### ✅ Comando de Inicio
 El comando configurado en Azure:
 ```bash
-node_modules/.bin/next start -p 8080
+node server.js
 ```
+
+**Importante:** Con `output: 'standalone'`, Next.js genera un servidor optimizado en `.next/standalone/server.js`. El workflow de GitHub Actions copia automáticamente esta estructura al directorio raíz del deployment.
 
 ## Pasos para Verificar el Deployment
 
@@ -26,12 +28,13 @@ Verifica que tu Azure App Service tenga la siguiente configuración:
 
 **Configuración General:**
 - Stack: Node 20 LTS
-- Startup Command: `node_modules/.bin/next start -p 8080`
+- Startup Command: `node server.js`
 
 **Variables de Entorno (Application Settings):**
 ```
 PORT=8080
 NODE_ENV=production
+HOSTNAME=0.0.0.0
 ```
 
 Para autenticación real (cuando se implemente), agregar:
@@ -78,6 +81,20 @@ Después del deployment, verifica:
 4. **Validación**: Verificar credenciales contra base de datos
 
 ## Troubleshooting
+
+### Error: "Application Error" / "App Container Failed to Start" / Error 503
+**Síntoma:** La aplicación no inicia y Azure muestra errores 503.
+
+**Causa común:** Startup command incorrecto o archivos standalone mal configurados.
+
+**Solución:**
+1. Verificar que el startup command sea: `node server.js`
+2. Confirmar que el workflow copia correctamente la estructura standalone:
+   - `.next/standalone/` → raíz del deployment
+   - `.next/static` → `deploy/.next/static`
+   - `public` → `deploy/public`
+3. Verificar variables de entorno: `PORT=8080`, `NODE_ENV=production`, `HOSTNAME=0.0.0.0`
+4. Revisar logs: `az webapp log tail --resource-group cybersecurity --name ernibots-v2`
 
 ### Error: "Application Error"
 - Verifica los logs en Azure Portal → Monitoring → Log Stream
