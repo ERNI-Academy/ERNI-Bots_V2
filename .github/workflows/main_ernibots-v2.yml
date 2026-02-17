@@ -31,6 +31,10 @@ jobs:
         working-directory: ./web
         run: npm prune --production
 
+      - name: Make startup script executable
+        working-directory: ./web
+        run: chmod +x startup.sh
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
