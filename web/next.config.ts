@@ -1,13 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Configuración para Azure App Service
-  output: 'standalone',
-  
-  // Asegurar que los assets estáticos se sirvan correctamente
-  assetPrefix: process.env.NEXT_PUBLIC_ASSET_PREFIX || '',
-  
-  // Configuración de imágenes
+  // Configuración de imágenes para Azure App Service
   images: {
     unoptimized: true, // Azure App Service no soporta optimización de imágenes
   },

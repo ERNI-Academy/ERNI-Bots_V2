@@ -16,6 +16,8 @@
 # next.js
 /web/.next/
 /web/out/
+/web/deploy/
+/web/test-deploy/
 
 # production
 /web/build
