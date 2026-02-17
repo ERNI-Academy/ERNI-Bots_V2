@@ -24,15 +24,12 @@ jobs:
         run: |
           npm ci
           npm run build
-          # Eliminamos dependencias de desarrollo para aligerar la subida
-          npm prune --production
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: . 
-          working-directory: ./web
+          path: ./web
 
   deploy:
     runs-on: ubuntu-latest
