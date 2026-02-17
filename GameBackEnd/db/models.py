@@ -15,6 +15,7 @@ class Player(Base):
 
     id = Column(String, primary_key=True, default=generate_uuid)
     username = Column(String(50), unique=True, nullable=False)
+    email = Column(String(120), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     score = Column(Integer, default=0)
     energy = Column(Integer, default=100)

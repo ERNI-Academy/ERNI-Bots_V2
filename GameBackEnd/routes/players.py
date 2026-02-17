@@ -36,6 +36,7 @@ def get_profile():
     response = {
         "id": player.id,
         "username": player.username,
+        "email": player.email,
         "score": player.score,
         "energy": player.energy,
         "rank": rank
