@@ -147,7 +147,7 @@ export default function DashboardPage() {
                             className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors"
                             title="Quiénes Somos"
                         >
-                            <span className="material-symbols-outlined text-xs md:text-sm">groups</span>
+                            <span className="material-symbols-outlined text-xs md:text-sm">info</span>
                         </Link>
                         <button
                             onClick={() => router.push("/login")}
