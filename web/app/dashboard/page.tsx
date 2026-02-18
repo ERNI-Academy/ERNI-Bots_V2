@@ -30,7 +30,7 @@ export default function DashboardPage() {
                     <img
                         alt="Topographic digital map wireframe"
                         className="w-full h-full object-cover"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuASt74bXltakj3HDn2Hk-P0xvNcxuk-UDwDUzc6zoKU-MESHXKGF50r_NeEVIs5rH2-j36jhHX3BPYeDGpGVl5WzrycWm5BLbMWQajo80kEo5HVDcZex70OzU3I5HDzRPuI5X2tFoJKiDGrn_3qMB-9d5YMQzyz1W0NHTXr3PpAbm5o_POnZMZZRZTo6itxByz7BwO19QSLiW42rQCmNx494jl7G00U7TxDgzHK6mt98yMvh0t2CD5J-hQBZW9TmnLLmnxiDXQ8-2k"
+                        src="/map.png"
                     />
                 </div>
 
