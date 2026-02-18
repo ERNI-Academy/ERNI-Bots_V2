@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { FORTRESSES, STATUS_STYLES, type Fortress } from "@/lib/fortresses";
 
 type Tab = "map" | "log" | "console";
@@ -141,6 +142,13 @@ export default function DashboardPage() {
                                 settings_input_component
                             </span>
                         </button>
+                        <Link
+                            href="/about"
+                            className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors"
+                            title="Quiénes Somos"
+                        >
+                            <span className="material-symbols-outlined text-xs md:text-sm">groups</span>
+                        </Link>
                         <button
                             onClick={() => router.push("/login")}
                             className="p-1 md:p-2 border border-[#ff0033]/30 hover:bg-[#ff0033]/20 text-[#ff0033] transition-colors"
@@ -303,6 +311,13 @@ export default function DashboardPage() {
                     <div className="text-[7px] md:text-[8px] text-white/40">
                         MEM: <span className="text-primary">8.1GB</span>
                     </div>
+                    <div className="hidden md:block h-3 w-px bg-white/10" />
+                    <Link
+                        href="/about"
+                        className="hidden md:inline text-[7px] text-primary/40 hover:text-primary uppercase tracking-widest transition-colors font-mono"
+                    >
+                        QUIÉNES_SOMOS
+                    </Link>
                 </div>
             </div>
 

@@ -170,14 +170,17 @@ export default function LoginPage() {
             </form>
 
             {/* Terminal Footer Status */}
-            <div className="flex justify-between items-end opacity-40 text-[8px] sm:text-[9px] font-mono pt-2 sm:pt-4">
-              <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex justify-between items-end text-[8px] sm:text-[9px] font-mono pt-2 sm:pt-4">
+              <div className="flex items-center gap-1 sm:gap-2 opacity-40">
                 <span className="w-1 sm:w-1.5 h-1 sm:h-1.5 bg-primary rounded-full animate-ping"></span>
                 <span className="hidden sm:inline">UPLINK_STATUS: SEEKING_PEERS...</span>
                 <span className="sm:hidden">SEEKING...</span>
               </div>
-              <div>
-                <span>REV_104.B9</span>
+              <div className="flex items-center gap-3">
+                <Link href="/about" className="text-primary/40 hover:text-primary transition-colors uppercase tracking-widest">
+                  &gt; QUIÉNES_SOMOS
+                </Link>
+                <span className="opacity-40">REV_104.B9</span>
               </div>
             </div>
           </div>
