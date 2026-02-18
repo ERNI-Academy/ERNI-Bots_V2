@@ -9,7 +9,7 @@ const TEAM = [
         block: "01",
         codename: "David (a.k.a JDarkness) Soto Dalmau",
         job: "Cybersecurity Practice Area Lead",
-        bio: "'No matter the language' developer, CTF addict, and cybersecurity enthusiast since 1983. I'm an eternal hacker in progress with a mission to solve complex problems. Known as 'Master Yoda' by my peers, I strive to foster lateral thinking, embrace challenges, and promote a culture of continuous learning.",
+        bio: "Operativo en la red desde 1983 y adicto confeso a los CTFs, David es un \"políglota de código\" capaz de hablar cualquier lenguaje que procese un bit. Como Arquitecto Primigenio y entusiasta de la ciberseguridad, su misión en este protocolo fragmentado es resolver problemas de complejidad extrema y fomentar el pensamiento lateral. Conocido entre sus pares como 'Master Yoda', no solo construye infraestructuras, sino que promueve una cultura de aprendizaje continuo, recordándonos que en el vacío digital, la curiosidad es la única defensa que no necesita parches.",
         skills: ["Cybersecurity", "CTF", "Reverse_Engineering", "Cryptography", "Penetration_Testing", "Python", ".NET"],
         src: "/soto.jpg",
         link: "https://www.linkedin.com/in/davidsotodalmau/",
@@ -18,7 +18,7 @@ const TEAM = [
         block: "02",
         codename: "Samuel Hernández Martos",
         job: "Expert Fullstack Developer",
-        bio: "Fullstack Engineer with almost 10 years of experience, mainly working with .NET technologies. He started as a backend developer, but one day he managed to center a div on a web page — and he liked it! Always curious and eager to try new things, he’s passionate about building cloud applications, both web and mobile.",
+        bio: "Ingeniero Fullstack con una década de incursiones en el ecosistema .NET, Samuel comenzó su trayectoria en las sombras del backend hasta que un día logró el milagro de centrar un div en el vacío digital... y le cogió el gusto. Operativo incansable y siempre ávido de nuevos desafíos, es un experto en erigir fortalezas en la nube, ya sea en entornos web o infraestructuras móviles. En este Protocolo Fragmentado, su curiosidad es su mejor herramienta para construir aplicaciones escalables que resistan cualquier inyección de código.",
         skills: [".NET", "Python", "React", "Next.js", "Security_Architecture", "Typescript", "Node.js", "React_Native", "Cloud_Security", "Mobile_Development"],
         src: "/samuel.jpg",
         link: "https://www.linkedin.com/in/samuel-hernandez-martos/",
@@ -81,10 +81,7 @@ export default function AboutPage() {
                             LOS ARQUITECTOS DEL VACÍO DIGITAL
                         </p>
                         <p className="text-[#00ff41] text-sm leading-relaxed max-w-2xl font-mono">
-                            PROJECT: ERNI-BOTS V2 // MISSION: EL PROTOCOLO FRAGMENTADO <br /><br />
-                            Somos los arquitectos del vacío digital. En la era del neo-feudalismo tecnológico,
-                            el código es nuestra única palanca. Aquí encontrarás los datos recuperados de
-                            nuestros agentes de campo.
+                            No somos una corporación, ni una entidad centralizada. Somos los que observábamos desde las sombras cuando la Bóveda Aurora fue abierta. Vimos cómo el Gran Firewall se desintegraba y cómo la lógica de los Caballeros Guardianes se filtraba en la red pública. Mientras el mundo veía el caos, nosotros vimos la oportunidad.
                         </p>
                     </div>
                 </div>
