@@ -92,3 +92,21 @@ body {
 .glitch-hover:hover {
   text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
 }
+
+/* Story page styles */
+.story-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.story-scroll::-webkit-scrollbar-thumb {
+  background: #00ffff;
+}
+
+.story-glitch-text {
+  text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+}
+
+.story-redacted {
+  background-color: #000;
+  color: #000;
+  cursor: help;
+}

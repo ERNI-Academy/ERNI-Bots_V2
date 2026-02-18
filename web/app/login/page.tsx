@@ -35,11 +35,9 @@ export default function LoginPage() {
 
     // Aquí implementarás tu lógica de autenticación
     // Por ahora, simplemente guardamos un token en una cookie
-    if (username && password) {
-      // Establecer cookie de autenticación
-      document.cookie = "auth-token=authenticated; path=/; max-age=86400"; // 24 horas
-      router.push("/");
-    }
+    // TODO: implementar autenticación real
+    document.cookie = "auth-token=authenticated; path=/; max-age=86400"; // 24 horas
+    router.push("/story");
   };
 
   if (!mounted) {
