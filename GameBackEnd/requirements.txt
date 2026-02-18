@@ -1,3 +1,4 @@
 Flask
 flask-jwt-extended
 werkzeug
+SQLAlchemy
