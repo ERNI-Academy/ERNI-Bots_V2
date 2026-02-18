@@ -6,29 +6,13 @@ import Link from "next/link";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [maskedPassword, setMaskedPassword] = useState("");
+  const [invitationCode, setInvitationCode] = useState("");
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
-
-  const medievalChars = ["⚔", "🛡", "ᚱ", "ᚦ"];
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const handlePasswordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace") {
-      e.preventDefault();
-      setPassword(password.slice(0, -1));
-      setMaskedPassword(maskedPassword.slice(0, -1));
-    } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-      e.preventDefault();
-      setPassword(password + e.key);
-      const randomSymbol = medievalChars[Math.floor(Math.random() * medievalChars.length)];
-      setMaskedPassword(maskedPassword + randomSymbol);
-    }
-  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -148,16 +132,15 @@ export default function LoginPage() {
 
               <div className="space-y-2 group">
                 <p className="text-[8px] sm:text-[10px] font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
-                  &gt; CLAVE:
+                  &gt; CÓDIGO DE INVITACIÓN:
                 </p>
                 <input
                   className="w-full bg-transparent border-0 border-b border-primary/30 p-0 py-2 focus:ring-0 focus:border-primary text-base sm:text-lg md:text-xl placeholder:text-primary/10 transition-all"
-                  placeholder="⚔ 🛡 ᚱ ᚦ ⚔ 🛡 ᚱ ᚦ"
+                  placeholder="XXXX-XXXX-XXXX..."
                   type="text"
-                  value={maskedPassword}
-                  onKeyDown={handlePasswordKeyDown}
-                  readOnly
-                  onPaste={(e) => e.preventDefault()}
+                  spellCheck={false}
+                  value={invitationCode}
+                  onChange={(e) => setInvitationCode(e.target.value)}
                 />
               </div>
 

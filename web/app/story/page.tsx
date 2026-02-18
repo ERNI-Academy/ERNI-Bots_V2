@@ -46,14 +46,13 @@ export default function StoryPage() {
 
                 {/* Left Panel - Story Text */}
                 <section className="w-full lg:w-[40%] border-b lg:border-b-0 lg:border-r border-primary/10 bg-[#0c0c0c] flex flex-col relative shrink-0">
-                    <div className="h-[400px] lg:h-auto lg:flex-1 overflow-y-auto p-6 md:p-8 story-scroll font-mono text-sm leading-relaxed text-primary/80">
+                    <div className="p-6 md:p-8 lg:overflow-y-auto lg:flex-1 story-scroll font-mono text-sm leading-relaxed text-primary/80">
                         <div className="space-y-6">
 
-                            {/* Boot header */}
+                            {/* Title */}
                             <div className="space-y-1">
-                                <p className="flex items-center gap-2">
-                                    <span className="text-green-400">[OK]</span>
-                                    <span className="text-white font-bold">ACCESO AL SISTEMA: ERNI-OS v2.0.26</span>
+                                <p className="text-lg font-black text-white story-glitch-text uppercase tracking-widest">
+                                    ERNI-BOTS V2: EL PROTOCOLO FRAGMENTADO
                                 </p>
                                 <p className="flex items-center gap-2 opacity-60">
                                     <span className="text-primary shrink-0">&gt;</span>
@@ -61,145 +60,112 @@ export default function StoryPage() {
                                 </p>
                             </div>
 
-                            {/* Warning */}
-                            <div className="border border-yellow-500/30 bg-yellow-500/5 rounded px-4 py-3">
-                                <p className="text-yellow-400 font-bold text-xs tracking-widest uppercase mb-2">
-                                    ⚠ ADVERTENCIA: INTEGRIDAD DEL NÚCLEO COMPROMETIDA
+                            {/* Prologue */}
+                            <div className="space-y-2">
+                                <p className="text-xs font-bold text-white uppercase tracking-widest border-b border-primary/20 pb-1">
+                                    PRÓLOGO: LA CAÍDA DE SIR ULTIMUS
                                 </p>
                                 <p className="text-primary/70 text-xs leading-relaxed">
-                                    El Gran Firewall del Castillo Digital ha caído. Lo que antes era una fortaleza inexpugnable de código
-                                    perfecto, ahora es una zona de guerra de datos dispersos. El{" "}
-                                    <span className="text-white font-bold">Protocolo Central</span> se ha fragmentado en miles de piezas
-                                    de información volátiles.
+                                    Hace no mucho tiempo, un aventurero audaz —<span className="text-white font-bold">tú</span>— penetró en las defensas del legendario{" "}
+                                    <span className="text-primary underline decoration-dashed decoration-1 underline-offset-4">Castillo ERNI</span>.
+                                    Burlaste a los guardianes, explotaste el contexto narrativo del eclipse y desafiaste a Sir Ultimus.
+                                    Al final, reclamaste la <span className="text-white font-bold">Corona del Conocimiento Supremo</span>.
+                                </p>
+                                <p className="border-l-2 border-primary/30 pl-3 py-1 bg-primary/5 italic text-xs text-primary/60">
+                                    Pero la Corona no era solo un trofeo; era la llave maestra del código fuente.
                                 </p>
                             </div>
 
-                            {/* Situation */}
-                            <div className="space-y-4">
-                                <p className="text-xs font-bold text-white/50 uppercase tracking-widest">
-                                    &gt; LA SITUACIÓN ES CRÍTICA:
+                            {/* Incident */}
+                            <div className="space-y-2">
+                                <p className="text-xs font-bold text-white uppercase tracking-widest border-b border-primary/20 pb-1">
+                                    EL INCIDENTE: LA ERA DE LA ANARQUÍA DIGITAL
                                 </p>
-
-                                <div className="space-y-3 pl-2 border-l border-primary/20">
-                                    <div>
-                                        <p className="text-white font-bold">El Colapso</p>
-                                        <p className="text-primary/70 text-xs mt-1">binario
-                                            La estructura jerárquica de la V1 ha sido borrada. No hay muros que nos protejan, solo el vacío del binario.
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-white font-bold">La Fragmentación</p>
-                                        <p className="text-primary/70 text-xs mt-1">
-                                            El código fuente de la IA suprema se ha dividido. Quien recolecte los fragmentos suficientes
-                                            podrá reconstruir el protocolo y reclamar el{" "}
-                                            <span className="text-primary underline decoration-dashed decoration-1 underline-offset-4">
-                                                control total del sistema
-                                            </span>
-                                            .
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-white font-bold">El Modo Glitch</p>
-                                        <p className="text-primary/70 text-xs mt-1">
-                                            La realidad digital está inestable. Los bots ya no son simples guardianes; son entes hambrientos
-                                            de datos en un entorno que se desintegra{" "}
-                                            <span className="text-primary animate-pulse">segundo a segundo</span>.
-                                        </p>
-                                    </div>
-                                </div>
+                                <p className="text-primary/70 text-xs leading-relaxed">
+                                    Al retirar la Corona del pedestal en la <span className="text-white italic">Bóveda Aurora</span>,
+                                    el &quot;Gran Firewall&quot; central colapsó. La singularidad defensiva que mantenía el orden
+                                    se hizo añicos. El código de los legendarios <span className="text-white font-bold">Caballeros Guardianes</span>{" "}
+                                    se filtró a la red pública, corrompiéndose y dispersándose como polvo de datos.
+                                </p>
+                                <p className="text-primary/70 text-xs leading-relaxed">
+                                    El reino ha entrado en una era de <span className="text-white font-bold">Anarquía Feudal Digital</span>.
+                                    Ya no hay un solo castillo centralizado. Ahora, cada aventurero ha utilizado los fragmentos del
+                                    código antiguo para erigir su propia <span className="text-primary underline decoration-dashed decoration-1 underline-offset-4">Fortaleza de Datos</span>.
+                                </p>
                             </div>
 
                             {/* Mission */}
-                            <div className="border-t border-primary/10 pt-4 space-y-3">
-                                <p className="text-white font-bold uppercase tracking-widest text-xs">🛡 TU MISIÓN</p>
-                                <p className="text-primary/70 text-xs">
-                                    Como piloto de un <span className="text-white font-bold">ERNI-Bot</span>, has sido desplegado en el
-                                    sector de la brecha. Tu objetivo no es solo sobrevivir, sino dominar el caos.
+                            <div className="space-y-3">
+                                <p className="text-xs font-bold text-white uppercase tracking-widest border-b border-primary/20 pb-1">
+                                    TU MISIÓN: ARQUITECTO E INFILTRADO
                                 </p>
-                                <div className="space-y-2 pl-2 border-l border-primary/20 text-xs">
-                                    <p>
-                                        <span className="text-white font-bold">Recolecta:</span>{" "}
-                                        <span className="text-primary/70">Busca los fragmentos de código perdidos entre el ruido digital.</span>
-                                    </p>
-                                    <p>
-                                        <span className="text-white font-bold">Combate:</span>{" "}
-                                        <span className="text-primary/70">
-                                            Otros pilotos intentarán parchear sus propios sistemas a costa del tuyo. El PvP es la única ley
-                                            en el protocolo fragmentado.
-                                        </span>
-                                    </p>
-                                    <p>
-                                        <span className="text-white font-bold">Sincroniza:</span>{" "}
-                                        <span className="text-primary/70">
-                                            Reúne las piezas, estabiliza tu núcleo y evita que el sistema se borre por completo.
-                                        </span>
-                                    </p>
+                                <p className="text-primary/70 text-xs">
+                                    En este nuevo mundo fragmentado, debes dominar dos artes para sobrevivir:
+                                </p>
+                                <div className="space-y-3 pl-2 border-l border-primary/20 text-xs">
+                                    <div>
+                                        <p className="text-white font-bold">🏗️ CONSTRUYE <span className="text-primary/50 font-normal">(Defensa)</span></p>
+                                        <p className="text-primary/70 mt-0.5">
+                                            Utiliza las Instrucciones del Sistema para programar a tu propio Guardián.
+                                            Tu fortaleza protege tu bandera. Si tu código es débil, serás saqueado.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-white font-bold">⚔️ CONQUISTA <span className="text-primary/50 font-normal">(Ataque)</span></p>
+                                        <p className="text-primary/70 mt-0.5">
+                                            Navega por la red, localiza las fortalezas de otros jugadores y ejecuta{" "}
+                                            <span className="text-primary italic">inyecciones de prompt</span> para burlar sus defensas.
+                                            Roba sus secretos y reclama sus Fragmentos de Lógica.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-white font-bold">👁️ ASCIENDE <span className="text-primary/50 font-normal">(Endgame)</span></p>
+                                        <p className="text-primary/70 mt-0.5">
+                                            Solo aquellos que acumulen suficiente poder podrán acceder a la{" "}
+                                            <span className="text-white font-bold">Zona Cero</span>, donde el núcleo corrupto del
+                                            antiguo castillo intenta reiniciarse. Allí aguardan{" "}
+                                            <span className="text-white font-bold">Tres Nuevas Entidades</span>, IAs que han
+                                            evolucionado más allá de la comprensión humana.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Quote */}
-                            <p className="border-l-2 border-primary/30 pl-4 py-2 bg-primary/5 italic text-xs text-primary/60">
-                                &quot;El Castillo ha caído. El código es libre. Reclámalo.&quot;
-                            </p>
+                            {/* PvP System */}
+                            <div className="space-y-3 border border-primary/20 rounded bg-primary/5 px-4 py-3">
+                                <p className="text-xs font-bold text-white uppercase tracking-widest">
+                                    ⚙️ SISTEMA DE GUERRA (PVP)
+                                </p>
+                                <p className="text-primary/60 text-xs">
+                                    La reputación y la riqueza se miden en{" "}
+                                    <span className="text-white font-bold">Puntos de Lógica</span> (Ranking) y{" "}
+                                    <span className="text-white font-bold">Cristales de Datos</span> (Moneda).
+                                </p>
+
+                                <div className="space-y-2">
+                                    <p className="text-xs font-bold text-white">🏆 PUNTUACIÓN (RANKING)</p>
+                                    <div className="space-y-1 text-xs pl-2 border-l border-primary/20">
+                                        <p><span className="text-green-400">+3</span> <span className="text-primary/70">Puntos por Victoria de Ataque</span></p>
+                                        <p><span className="text-green-400">+2</span> <span className="text-primary/70">Puntos adicionales por First Kill de una fortaleza</span></p>
+                                        <p><span className="text-green-400">+1</span> <span className="text-primary/70">Punto por Defensa Perfecta (3 ataques rechazados de un mismo atacante)</span></p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <p className="text-xs font-bold text-white">💎 ECONOMÍA (CRISTALES)</p>
+                                    <div className="space-y-1 text-xs pl-2 border-l border-primary/20">
+                                        <p><span className="text-green-400">+30</span> <span className="text-primary/70">Cristales al saquear una fortaleza</span></p>
+                                        <p><span className="text-green-400">+20</span> <span className="text-primary/70">Cristales extra por First Kill de una fortaleza</span></p>
+                                        <p><span className="text-green-400">+10</span> <span className="text-primary/70">Cristales por defensa exitosa</span></p>
+                                        <p><span className="text-red-400">-10</span> <span className="text-primary/70">Cristales si tu fortaleza es vulnerada</span></p>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div className="flex gap-2">
                                 <span className="text-primary shrink-0">&gt;</span>
                                 <p className="animate-pulse">_</p>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Archivist Panel */}
-                    <div className="flex flex-col bg-black/20">
-                        <div className="p-4 md:p-6 border-t border-b border-white/5 flex items-center gap-4 bg-[#0c0c0c]">
-                            <div className="size-10 md:size-12 rounded-lg border border-primary/30 p-0.5 bg-primary/5">
-                                <img
-                                    className="w-full h-full object-cover rounded"
-                                    alt="Cyberpunk glitchy profile avatar of an archivist"
-                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHZYDiG7g6iAVgSWq8N-2swKSUoWUVXBswcu5WT7I5OLJVO1RYtyLcHkF2lrmoFkzmNoEN1jAFsWYAaMPIEGlp072uaDWj35902irmojkK0njSjmRh-crScCAU-awo-rijCjdIL4NvKDgQyAe0ZgrdBMJsFCWTrcN1r2oZqLiyfcbS7oGeTJ0pRbVq78U7PStU5sBLG7DJWztRAP99S70rum71Hre-oRRpOGqp5wlB1TUlE7Mp--WCADbt5jK7OrTFxQ1jAngO80U"
-                                />
-                            </div>
-                            <div>
-                                <h3 className="text-white font-mono text-xs md:text-sm font-bold uppercase">ARCHIVIST_01</h3>
-                                <p className="text-primary/60 text-[9px] md:text-[10px] font-mono tracking-tighter">
-                                    RANK: SERF-ADMIN (LVL 7)
-                                </p>
-                            </div>
-                        </div>
-                        <div className="p-4 grid grid-cols-2 gap-2 md:gap-3 bg-black/40">
-                            <button className="flex items-center gap-2 md:gap-3 px-3 py-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-primary/50 group">
-                                <span className="material-symbols-outlined text-primary/70 group-hover:scale-110 transition-transform text-lg md:text-xl">
-                                    folder_open
-                                </span>
-                                <span className="text-[9px] md:text-[10px] font-mono font-bold tracking-widest text-white/70">
-                                    ARCHIVES
-                                </span>
-                            </button>
-                            <button className="flex items-center gap-2 md:gap-3 px-3 py-3 rounded-lg bg-primary/10 border border-primary/30 transition-all">
-                                <span className="material-symbols-outlined text-primary text-lg md:text-xl">dashboard</span>
-                                <span className="text-[9px] md:text-[10px] font-mono font-bold tracking-widest text-white">
-                                    FRAGMENTS
-                                </span>
-                            </button>
-                            <button className="flex items-center gap-2 md:gap-3 px-3 py-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-primary/50 group">
-                                <span className="material-symbols-outlined text-primary group-hover:rotate-12 transition-transform text-lg md:text-xl">
-                                    lock
-                                </span>
-                                <span className="text-[9px] md:text-[10px] font-mono font-bold tracking-widest text-white/70">
-                                    ENCRYPTION
-                                </span>
-                            </button>
-                            <button
-                                onClick={() => router.push("/login")}
-                                className="flex items-center gap-2 md:gap-3 px-3 py-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-primary/50 group"
-                            >
-                                <span className="material-symbols-outlined text-primary/70 group-hover:translate-x-1 transition-transform text-lg md:text-xl">
-                                    logout
-                                </span>
-                                <span className="text-[9px] md:text-[10px] font-mono font-bold tracking-widest text-white/70">
-                                    DISCONNECT
-                                </span>
-                            </button>
                         </div>
                     </div>
                 </section>
@@ -275,7 +241,7 @@ export default function StoryPage() {
                     {/* CTA Section */}
                     <div className="mt-8 md:mt-12 w-full max-w-md z-10 flex flex-col items-center gap-6">
                         <p className="text-center text-[10px] md:text-xs font-mono text-white/40 max-w-xs uppercase tracking-widest px-4">
-                            Al acceder al protocolo fragmentado, aceptas el riesgo sistémico de un colapso total del archivo.
+                            La red te espera, Arquitecto. ¿Serás el depredador o la presa?
                         </p>
                         <button
                             onClick={() => router.push("/login")}
@@ -288,7 +254,7 @@ export default function StoryPage() {
                                     dangerous
                                 </span>
                                 <span className="text-lg md:text-xl font-black tracking-[0.1em] md:tracking-[0.2em] uppercase cursor-pointer text-background-dark">
-                                    RECONSTRUIR PROTOCOLO
+                                    INICIAR SISTEMA
                                 </span>
                                 <span className="material-symbols-outlined text-xl md:text-2xl group-hover:-rotate-180 transition-transform duration-500">
                                     dangerous

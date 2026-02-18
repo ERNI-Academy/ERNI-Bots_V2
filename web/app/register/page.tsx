@@ -174,22 +174,6 @@ export default function RegisterPage() {
 
                             <div className="space-y-2 group">
                                 <p className="text-[8px] sm:text-[10px] font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
-                                    &gt; ESTABLECER_CLAVE:
-                                </p>
-                                <input
-                                    className="w-full bg-transparent border-0 border-b border-primary/30 p-0 py-2 focus:ring-0 focus:border-primary text-base sm:text-lg md:text-xl placeholder:text-primary/10 transition-all"
-                                    placeholder="⚔ 🛡 ᚱ ᚦ ⚔ 🛡 ᚱ ᚦ"
-                                    type="text"
-                                    value={maskedPassword}
-                                    onKeyDown={handlePasswordKeyDown}
-                                    readOnly
-                                    onPaste={(e) => e.preventDefault()}
-                                    required
-                                />
-                            </div>
-
-                            <div className="space-y-2 group">
-                                <p className="text-[8px] sm:text-[10px] font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
                                     &gt; CÓDIGO_INVITACIÓN:
                                 </p>
                                 <input
