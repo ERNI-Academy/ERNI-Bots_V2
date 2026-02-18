@@ -47,11 +47,11 @@ export default function DashboardPage() {
                     className="absolute top-1/2 right-1/3 w-6 h-6 bg-[#ff0033] rounded-full shadow-[0_0_20px_#ff0033] cursor-pointer hover:scale-150 transition-transform focus:outline-none"
                     title="Nodo Sangriento"
                 />
-                {/* Contested - Zona Zero */}
+                {/* Contested - Zona Cero */}
                 <button
                     onClick={() => setSelectedFortress(FORTRESSES[2])}
                     className="absolute bottom-1/4 left-1/2 w-4 h-4 bg-[#ffd700] rounded-full shadow-[0_0_15px_#ffd700] cursor-pointer hover:scale-150 transition-transform focus:outline-none"
-                    title="Zona Zero"
+                    title="Zona Cero"
                 />
                 {/* Neutral - Torre Vigilante */}
                 <button
@@ -79,7 +79,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Locked objective card */}
-                <div className="fixed bottom-24 md:bottom-32 right-4 w-48 panel-float p-3 z-30 group">
+                <div className="hidden md:fixed bottom-24 md:bottom-32 right-4 w-48 panel-float p-3 z-30 group">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-10 h-10 flex items-center justify-center bg-[#8b5cf6]/20 border border-[#8b5cf6] group-hover:bg-[#8b5cf6]/40 transition-colors">
                             <span className="material-symbols-outlined text-[#8b5cf6] text-xl">lock</span>
@@ -88,7 +88,7 @@ export default function DashboardPage() {
                             <div className="text-[9px] text-[#8b5cf6] font-bold uppercase tracking-widest">
                                 Zona bloqueada
                             </div>
-                            <div className="text-[11px] font-bold text-white">Acceder a la Zona Zero</div>
+                            <div className="text-[11px] font-bold text-white">Acceder a la Zona Cero</div>
                         </div>
                     </div>
                     <div className="space-y-1">
@@ -119,15 +119,15 @@ export default function DashboardPage() {
                 <div className="overflow-hidden">
                     <h1 className="text-sm md:text-xl font-bold tracking-[0.1em] md:tracking-[0.2em] war-room-glitch flex items-center gap-2 md:gap-3 whitespace-nowrap">
                         <span className="material-symbols-outlined text-primary text-base md:text-xl">terminal</span>
-                        <span className="hidden md:inline">DATA OVERLORD: COMMAND_CENTER_v4.0.1</span>
-                        <span className="md:hidden">OVERLORD_v4</span>
+                        <span className="hidden md:inline">FORTALEZAS: CENTRO_DE_OPERACIONES_v2.0.0</span>
+                        <span className="md:hidden">FORTALEZAS_V2</span>
                     </h1>
                     <div className="flex gap-2 md:gap-4">
                         <span className="text-[7px] md:text-[9px] text-primary/60 uppercase tracking-widest">
                             ESTADO: OK
                         </span>
                         <span className="hidden md:inline text-[9px] text-[#00ff41]/60 uppercase tracking-widest">
-                            NODO: CENTRAL_CORE
+                            BETTERASK.ERNI
                         </span>
                     </div>
                 </div>
@@ -151,7 +151,7 @@ export default function DashboardPage() {
                         </Link>
                         <button
                             onClick={() => router.push("/login")}
-                            className="p-1 md:p-2 border border-[#ff0033]/30 hover:bg-[#ff0033]/20 text-[#ff0033] transition-colors"
+                            className="p-1 md:p-2 border border-[#ff0033]/30 hover:bg-[#ff0033]/20 text-[#ff0033] transition-colors cursor-pointer"
                             title="Salir"
                         >
                             <span className="material-symbols-outlined text-xs md:text-sm">power_settings_new</span>
@@ -251,6 +251,41 @@ export default function DashboardPage() {
                     </div>
                 </aside>
 
+                {/* Acceder a la Zona Zero — solo móvil */}
+                <aside className="md:hidden group panel-float p-3 relative overflow-hidden z-20">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 flex items-center justify-center bg-[#8b5cf6]/20 border border-[#8b5cf6] group-hover:bg-[#8b5cf6]/40 transition-colors">
+                            <span className="material-symbols-outlined text-[#8b5cf6] text-xl">lock</span>
+                        </div>
+                        <div>
+                            <div className="text-[9px] text-[#8b5cf6] font-bold uppercase tracking-widest">
+                                Zona bloqueada
+                            </div>
+                            <div className="text-[11px] font-bold text-white">Acceder a la Zona Zero</div>
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <div className="flex justify-between text-[8px] text-white/40 font-mono">
+                            <span>PROGRESO</span>
+                            <span>62.4%</span>
+                        </div>
+                        <div className="h-0.5 w-full bg-white/10">
+                            <div className="h-full bg-[#8b5cf6]" style={{ width: "62.4%" }}></div>
+                        </div>
+                        <div className="text-[7px] text-white/30 text-right mt-1 font-mono uppercase">
+                            Requiere Fragmentos de Lógica
+                        </div>
+                    </div>
+                    <div className="absolute -top-10 -left-10 w-24 h-24 pointer-events-none opacity-20 overflow-hidden rounded-full">
+                        <img
+                            alt="Abstract pixelated violet vortex"
+                            className="w-full h-full object-cover animate-spin"
+                            style={{ animationDuration: "30s" }}
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_60z-TJkoycAF6Kq8AyJ7Cle0OKqF-c8aJPna1MbzmkOvNXXEsxunOdSLNVj7uLP0tYamB1Tkrb1j5QtkRtCZ6w03bxs3RC0x5b-FbIgGlHOiGPZFrAFOrTrGv2haHmomzgW2lqeae3MRs0cHz4RfsckiL7PQOpr6IsjAYjcDQYSCA99tVKTzQzkkaZfHFCH2WELPm_PjGob0Xogs09LMOz0a4X3-Dh_FZu4X-eN3uEieOb3mxpHhfWP7YhR7cGeLlYDCrfB14og"
+                        />
+                    </div>
+                </aside>
+
                 {/* Resource Management Console */}
                 <aside className="md:fixed md:bottom-4 md:left-4 md:right-4 md:h-24 panel-float flex flex-col md:flex-row md:items-center px-4 md:px-6 py-4 md:py-0 gap-6 md:gap-12 z-20 relative">
                     <div className="panel-header absolute top-0 left-0 right-0 h-1 hidden md:block"></div>
@@ -294,31 +329,6 @@ export default function DashboardPage() {
                         </button>
                     </div>
                 </aside>
-            </div>
-
-            {/* ─── BOTTOM STATUS BAR ─── */}
-            <div className="fixed bottom-14 md:bottom-4 left-1/2 -translate-x-1/2 bg-black/80 border border-primary/20 px-4 py-1.5 flex items-center gap-4 md:gap-6 z-50 backdrop-blur-md whitespace-nowrap">
-                <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00ff41]"></span>
-                    <span className="text-[8px] md:text-[9px] font-bold text-white/80 tracking-widest uppercase">
-                        Sistema Protegido
-                    </span>
-                </div>
-                <div className="flex items-center gap-3 md:gap-4">
-                    <div className="text-[7px] md:text-[8px] text-white/40">
-                        CPU: <span className="text-primary">42%</span>
-                    </div>
-                    <div className="text-[7px] md:text-[8px] text-white/40">
-                        MEM: <span className="text-primary">8.1GB</span>
-                    </div>
-                    <div className="hidden md:block h-3 w-px bg-white/10" />
-                    <Link
-                        href="/about"
-                        className="hidden md:inline text-[7px] text-primary/40 hover:text-primary uppercase tracking-widest transition-colors font-mono"
-                    >
-                        QUIÉNES_SOMOS
-                    </Link>
-                </div>
             </div>
 
             {/* ─── FORTRESS MODAL ─── */}
@@ -451,7 +461,7 @@ export default function DashboardPage() {
                     const labels: Record<Tab, string> = {
                         map: "Vista del Mapa",
                         log: "Registro de Actividad",
-                        console: "Mi Fortaleza",
+                        console: "Operaciones",
                     };
                     return (
                         <button
