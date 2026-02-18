@@ -12,6 +12,10 @@
   --color-background-light: #f5f8f8;
   --color-background-dark: #0a0a0a;
   --color-terminal-bg: #101818;
+  --color-matrix-green: #00ff41;
+  --color-blood-red: #ff0033;
+  --color-loot-gold: #ffd700;
+  --color-void-violet: #8b5cf6;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-space-grotesk);
@@ -109,4 +113,62 @@ body {
   background-color: #000;
   color: #000;
   cursor: help;
+}
+
+/* Dashboard / War Room styles */
+.scanlines {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%),
+              linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 2px, 2px 100%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.panel-float {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.panel-header {
+  background: rgba(0, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+}
+
+.tactical-bg {
+  background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%);
+}
+
+.grid-overlay {
+  background-image:
+    linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.war-room-glitch {
+  text-shadow: 2px 0 #ff0033, -2px 0 #00ffff;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 2px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.33);
+}
+
+.hot-zone {
+  animation: pulse-ring 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(0.95); opacity: 0.2; }
+  50%  { transform: scale(1.05); opacity: 0.5; }
+  100% { transform: scale(0.95); opacity: 0.2; }
 }

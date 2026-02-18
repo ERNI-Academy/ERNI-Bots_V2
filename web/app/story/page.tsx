@@ -244,7 +244,7 @@ export default function StoryPage() {
                             La red te espera, Arquitecto. ¿Serás el depredador o la presa?
                         </p>
                         <button
-                            onClick={() => router.push("/login")}
+                            onClick={() => router.push("/dashboard")}
                             className="glitch-button relative group w-full py-5 md:py-6 bg-primary text-background-dark rounded-lg overflow-hidden transition-all active:scale-95 border-b-4 border-primary/50 shadow-[0_0_30px_rgba(0,255,255,0.15)]"
                         >
                             <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
