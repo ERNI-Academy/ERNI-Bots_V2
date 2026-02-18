@@ -1,4 +1,4 @@
-# BOOTLOADER_V1.0.4 | GLITCH_FEUDALISM
+# ERNI BOTS V2 | EL PROTOCOLO FRAGMENTADO
 
 Sistema de autenticación con diseño cyberpunk/feudal adaptado a Next.js.
 

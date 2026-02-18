@@ -69,7 +69,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-between border-b border-primary/20 bg-primary/5 px-3 sm:px-4 py-2">
             <div className="flex items-center gap-1 sm:gap-2">
               <span className="material-symbols-outlined text-xs sm:text-sm">terminal</span>
-              <span className="text-[8px] sm:text-[10px] font-bold tracking-tighter">BOOTLOADER_V1.0.4 - SESSION: #0xFF02</span>
+              <span className="text-[8px] sm:text-[10px] font-bold tracking-tighter">ERNI BOTS V2 | EL PROTOCOLO FRAGMENTADO - SESSION: #0xFF02</span>
             </div>
             <div className="flex gap-2">
               <div className="w-2 h-2 rounded-full border border-primary/30"></div>

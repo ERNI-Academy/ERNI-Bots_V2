@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BOOTLOADER_V1.0.4 | GLITCH_FEUDALISM",
-  description: "Neural network authentication system",
+  title: "ERNI BOTS V2 | EL PROTOCOLO FRAGMENTADO",
+  description: "CTF de Infiltración y Dominio de Fortalezas en la Red",
 };
 
 export default function RootLayout({
