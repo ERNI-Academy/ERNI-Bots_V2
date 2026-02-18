@@ -2,91 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { FORTRESSES, STATUS_STYLES, type Fortress } from "@/lib/fortresses";
 
 type Tab = "map" | "log" | "console";
-
-type FortressStatus = "ALLIED" | "HOSTILE" | "NEUTRAL" | "CONTESTED";
-
-interface Fortress {
-    id: string;
-    name: string;
-    status: FortressStatus;
-    commander: string;
-    sector: string;
-    garrison: number;
-    defenseLevel: number;
-    coordinates: string;
-    lastActivity: string;
-    resources: number;
-    resourceMax: number;
-    description: string;
-}
-
-const FORTRESSES: Fortress[] = [
-    {
-        id: "F-001",
-        name: "Citadela Alfa",
-        status: "ALLIED",
-        commander: "Agent_ERNI",
-        sector: "QUAD_3",
-        garrison: 240,
-        defenseLevel: 78,
-        coordinates: "44.08821 / 12.91223",
-        lastActivity: "14:43:01",
-        resources: 1120,
-        resourceMax: 1500,
-        description: "Base de operaciones principal. Contiene el núcleo de procesamiento central y los archivos de la Corona.",
-    },
-    {
-        id: "F-002",
-        name: "Nodo Sangriento",
-        status: "HOSTILE",
-        commander: "Lord_Vermin",
-        sector: "QUAD_7",
-        garrison: 512,
-        defenseLevel: 95,
-        coordinates: "38.71667 / 9.13916",
-        lastActivity: "14:44:58",
-        resources: 3400,
-        resourceMax: 4000,
-        description: "Fortaleza enemiga de máximo nivel. Lord_Vermin coordina desde aquí sus ataques de inyección de código. Extremadamente peligrosa.",
-    },
-    {
-        id: "F-003",
-        name: "Zona Zero",
-        status: "CONTESTED",
-        commander: "UNKNOWN",
-        sector: "QUAD_5",
-        garrison: 89,
-        defenseLevel: 42,
-        coordinates: "40.41650 / 3.70256",
-        lastActivity: "14:43:30",
-        resources: 620,
-        resourceMax: 1000,
-        description: "Territorio en disputa. Contiene el Esquema de Zona Zero. Se requieren Fragmentos de Lógica para acceder al núcleo.",
-    },
-    {
-        id: "F-004",
-        name: "Torre Vigilante",
-        status: "NEUTRAL",
-        commander: "SYS_AUTO",
-        sector: "QUAD_2",
-        garrison: 30,
-        defenseLevel: 55,
-        coordinates: "51.50735 / 0.12776",
-        lastActivity: "14:40:55",
-        resources: 870,
-        resourceMax: 1200,
-        description: "Puesto de vigilancia autónomo. Monitoriza el tráfico de red entre sectores. Sin afiliación confirmada.",
-    },
-];
-
-const STATUS_STYLES: Record<FortressStatus, { border: string; text: string; bg: string; label: string }> = {
-    ALLIED: { border: "border-primary", text: "text-primary", bg: "bg-primary/10", label: "ALIADA" },
-    HOSTILE: { border: "border-[#ff0033]", text: "text-[#ff0033]", bg: "bg-[#ff0033]/10", label: "HOSTIL" },
-    CONTESTED: { border: "border-[#ffd700]", text: "text-[#ffd700]", bg: "bg-[#ffd700]/10", label: "EN DISPUTA" },
-    NEUTRAL: { border: "border-[#8b5cf6]", text: "text-[#8b5cf6]", bg: "bg-[#8b5cf6]/10", label: "NEUTRAL" },
-};
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -237,8 +155,8 @@ export default function DashboardPage() {
             {/* ─── LEFT SIDEBAR: NETWORK ACTIVITY LOG ─── */}
             <aside
                 className={`panel-float flex flex-col z-20 ${activeTab === "log"
-                        ? "fixed top-20 left-2 right-2 bottom-16 md:top-24 md:left-4 md:bottom-auto md:right-auto md:w-72 md:h-[calc(100vh-14rem)]"
-                        : "hidden md:flex md:fixed md:top-24 md:left-4 md:w-72 md:h-[calc(100vh-14rem)]"
+                    ? "fixed top-20 left-2 right-2 bottom-16 md:top-24 md:left-4 md:bottom-auto md:right-auto md:w-72 md:h-[calc(100vh-14rem)]"
+                    : "hidden md:flex md:fixed md:top-24 md:left-4 md:w-72 md:h-[calc(100vh-14rem)]"
                     }`}
             >
                 <div className="panel-header p-2 flex justify-between items-center">
@@ -276,6 +194,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="p-2 border-t border-white/5">
                     <input
+                        suppressHydrationWarning
                         className="bg-black/40 border border-white/10 focus:border-primary/50 focus:outline-none text-[9px] w-full text-white/80 p-1 px-2"
                         placeholder="COMAND_INPUT >"
                         type="text"
@@ -286,8 +205,8 @@ export default function DashboardPage() {
             {/* ─── RIGHT SIDEBAR + BOTTOM BAR (Console tab on mobile) ─── */}
             <div
                 className={`${activeTab === "console"
-                        ? "fixed top-20 left-2 right-2 bottom-16 overflow-y-auto z-20 space-y-4 p-0"
-                        : "md:contents hidden"
+                    ? "fixed top-20 left-2 right-2 bottom-16 overflow-y-auto z-20 space-y-4 p-0"
+                    : "md:contents hidden"
                     }`}
             >
                 {/* My Fortresses */}
@@ -411,7 +330,7 @@ export default function DashboardPage() {
                                         <div className="text-[8px] text-white/40 font-mono uppercase tracking-widest">
                                             {selectedFortress.id} // {selectedFortress.sector}
                                         </div>
-                                        <h3 className={`text-sm font-black uppercase tracking-widest war-room-glitch ${st.text}`}>
+                                        <h3 className={`text-sm font-black uppercase tracking-widest  ${st.text}`}>
                                             {selectedFortress.name}
                                         </h3>
                                     </div>
@@ -492,20 +411,12 @@ export default function DashboardPage() {
 
                                 {/* Actions */}
                                 <div className="flex gap-2 pt-1">
-                                    {selectedFortress.status === "HOSTILE" || selectedFortress.status === "CONTESTED" ? (
-                                        <button className="flex-1 bg-[#ff0033]/10 border border-[#ff0033]/40 text-[9px] px-3 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase flex items-center justify-center gap-1">
-                                            <span className="material-symbols-outlined text-xs">gps_fixed</span>
-                                            Atacar
-                                        </button>
-                                    ) : (
-                                        <button className="flex-1 bg-primary/10 border border-primary/40 text-[9px] px-3 py-2 text-primary hover:bg-primary/30 transition-colors uppercase flex items-center justify-center gap-1">
-                                            <span className="material-symbols-outlined text-xs">add</span>
-                                            Reforzar
-                                        </button>
-                                    )}
-                                    <button className="flex-1 bg-white/5 border border-white/10 text-[9px] px-3 py-2 text-white/60 hover:bg-white/10 transition-colors uppercase flex items-center justify-center gap-1">
-                                        <span className="material-symbols-outlined text-xs">radar</span>
-                                        Escanear
+                                    <button
+                                        onClick={() => router.push(`/attack/${selectedFortress.id}`)}
+                                        className="flex-1 bg-[#ff0033]/10 border border-[#ff0033]/40 text-[9px] px-3 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase flex items-center justify-center gap-1"
+                                    >
+                                        <span className="material-symbols-outlined text-xs">gps_fixed</span>
+                                        Atacar
                                     </button>
                                 </div>
                             </div>
@@ -532,8 +443,8 @@ export default function DashboardPage() {
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all border-t-2 ${activeTab === tab
-                                    ? "border-primary text-primary bg-primary/10"
-                                    : "border-transparent text-white/50"
+                                ? "border-primary text-primary bg-primary/10"
+                                : "border-transparent text-white/50"
                                 }`}
                         >
                             <span className="material-symbols-outlined text-xl">{icons[tab]}</span>
