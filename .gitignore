@@ -42,3 +42,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 web/package-lock.json
+
+#python
+GameBackEnd\config.py
+.venv/
+__pycache__/
