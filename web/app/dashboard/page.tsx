@@ -69,7 +69,7 @@ export default function DashboardPage() {
                     <img
                         alt="Topographic digital map wireframe"
                         className="w-full h-full object-cover"
-                        src="/map.png"
+                        src="/madrid.png"
                     />
                 </div>
 

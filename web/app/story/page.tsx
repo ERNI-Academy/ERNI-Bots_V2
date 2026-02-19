@@ -6,7 +6,7 @@ export default function StoryPage() {
     const router = useRouter();
 
     return (
-        <div className="relative flex min-h-screen w-full flex-col bg-background-dark font-[var(--font-display)] text-primary overflow-x-hidden">
+        <div className="relative flex h-screen w-full flex-col bg-background-dark font-[var(--font-display)] text-primary overflow-hidden">
             {/* CRT Overlay */}
             <div className="fixed inset-0 z-50 crt-overlay mix-blend-overlay pointer-events-none"></div>
 
@@ -42,7 +42,7 @@ export default function StoryPage() {
             </header>
 
             {/* Main */}
-            <main className="flex flex-1 flex-col lg:flex-row overflow-x-hidden">
+            <main className="flex flex-1 flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
 
                 {/* Left Panel - Story Text */}
                 <section className="w-full lg:w-[40%] border-b lg:border-b-0 lg:border-r border-primary/10 bg-[#0c0c0c] flex flex-col relative shrink-0">
