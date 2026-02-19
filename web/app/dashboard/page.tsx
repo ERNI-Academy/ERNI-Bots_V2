@@ -1,16 +1,55 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FORTRESSES, STATUS_STYLES, type Fortress } from "@/lib/fortresses";
 
 type Tab = "map" | "log" | "console";
 
+interface MarkerPos {
+    top: string;
+    left: string;
+}
+
+// Safe zone: avoid header (~12% top), sidebars (~24% each side), bottom bars (~32% bottom)
+const SAFE = { topMin: 12, topMax: 68, leftMin: 24, leftMax: 76 };
+
+function randomPos(): MarkerPos {
+    const top = Math.random() * (SAFE.topMax - SAFE.topMin) + SAFE.topMin;
+    const left = Math.random() * (SAFE.leftMax - SAFE.leftMin) + SAFE.leftMin;
+    return { top: `${top.toFixed(2)}%`, left: `${left.toFixed(2)}%` };
+}
+
+// Generate spread positions keeping markers at least 8% apart from each other
+function generateSpreadPositions(count: number): MarkerPos[] {
+    const positions: MarkerPos[] = [];
+    const minDist = 8;
+    let attempts = 0;
+    while (positions.length < count && attempts < 1000) {
+        const candidate = randomPos();
+        const topN = parseFloat(candidate.top);
+        const leftN = parseFloat(candidate.left);
+        const tooClose = positions.some((p) => {
+            const dt = topN - parseFloat(p.top);
+            const dl = leftN - parseFloat(p.left);
+            return Math.sqrt(dt * dt + dl * dl) < minDist;
+        });
+        if (!tooClose) positions.push(candidate);
+        attempts++;
+    }
+    return positions;
+}
+
 export default function DashboardPage() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<Tab>("map");
     const [selectedFortress, setSelectedFortress] = useState<Fortress | null>(null);
+    const [markerPos, setMarkerPos] = useState<MarkerPos[]>([]);
+
+    useEffect(() => {
+        setMarkerPos(generateSpreadPositions(4));
+    }, []);
 
     return (
         <div className="relative bg-background-dark text-white font-[var(--font-display)] overflow-hidden h-screen w-screen">
@@ -34,34 +73,41 @@ export default function DashboardPage() {
                     />
                 </div>
 
-                {/* Map markers */}
-                {/* Allied - Citadela Alfa */}
-                <button
-                    onClick={() => setSelectedFortress(FORTRESSES[0])}
-                    className="absolute top-1/3 left-1/4 w-4 h-4 bg-white rounded-full shadow-[0_0_15px_white] animate-pulse cursor-pointer hover:scale-150 transition-transform focus:outline-none"
-                    title="Citadela Alfa"
-                />
-                {/* Hostile - Nodo Sangriento */}
-                <button
-                    onClick={() => setSelectedFortress(FORTRESSES[1])}
-                    className="absolute top-1/2 right-1/3 w-6 h-6 bg-[#ff0033] rounded-full shadow-[0_0_20px_#ff0033] cursor-pointer hover:scale-150 transition-transform focus:outline-none"
-                    title="Nodo Sangriento"
-                />
-                {/* Contested - Zona Cero */}
-                <button
-                    onClick={() => setSelectedFortress(FORTRESSES[2])}
-                    className="absolute bottom-1/4 left-1/2 w-4 h-4 bg-[#ffd700] rounded-full shadow-[0_0_15px_#ffd700] cursor-pointer hover:scale-150 transition-transform focus:outline-none"
-                    title="Zona Cero"
-                />
-                {/* Neutral - Torre Vigilante */}
-                <button
-                    onClick={() => setSelectedFortress(FORTRESSES[3])}
-                    className="absolute top-1/4 right-1/4 w-8 h-8 border-2 border-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors focus:outline-none"
-                    style={{ animation: "spin 10s linear infinite" }}
-                    title="Torre Vigilante"
-                >
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                </button>
+                {/* Map markers — random positions generated client-side */}
+                {markerPos.length === 4 && (
+                    <>
+                        {/* Allied - Citadela Alfa */}
+                        <button
+                            onClick={() => setSelectedFortress(FORTRESSES[0])}
+                            className="absolute w-4 h-4 bg-white rounded-full shadow-[0_0_15px_white] animate-pulse cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2"
+                            style={{ top: markerPos[0].top, left: markerPos[0].left }}
+                            title="Citadela Alfa"
+                        />
+                        {/* Hostile - Nodo Sangriento */}
+                        <button
+                            onClick={() => setSelectedFortress(FORTRESSES[1])}
+                            className="absolute w-6 h-6 bg-[#ff0033] rounded-full shadow-[0_0_20px_#ff0033] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2"
+                            style={{ top: markerPos[1].top, left: markerPos[1].left }}
+                            title="Nodo Sangriento"
+                        />
+                        {/* Contested - Zona Cero */}
+                        <button
+                            onClick={() => setSelectedFortress(FORTRESSES[2])}
+                            className="absolute w-4 h-4 bg-[#ffd700] rounded-full shadow-[0_0_15px_#ffd700] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2"
+                            style={{ top: markerPos[2].top, left: markerPos[2].left }}
+                            title="Zona Cero"
+                        />
+                        {/* Neutral - Torre Vigilante */}
+                        <button
+                            onClick={() => setSelectedFortress(FORTRESSES[3])}
+                            className="absolute w-8 h-8 border-2 border-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors focus:outline-none -translate-x-1/2 -translate-y-1/2"
+                            style={{ top: markerPos[3].top, left: markerPos[3].left, animation: "spin 10s linear infinite" }}
+                            title="Torre Vigilante"
+                        >
+                            <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        </button>
+                    </>
+                )}
 
                 {/* SVG tactical lines */}
                 <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none">
