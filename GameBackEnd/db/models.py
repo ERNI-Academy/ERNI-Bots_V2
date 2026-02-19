@@ -249,3 +249,64 @@ class Boss(Base):
 
     protocol = relationship("Protocol")
     archetype = relationship("Archetype")
+
+
+# ==========================
+# INVITATION CODE
+# ==========================
+
+class InvitationCode(Base):
+    """
+    One invitation code per player.
+    - code_hash: pbkdf2+sha256+salt via werkzeug (never stored in clear)
+    - player_id: set when a player claims this code at registration
+    - is_active: admin can revoke; also auto-set to False when max_uses reached
+    - max_uses: default 1 (one player per code)
+    - current_uses: incremented on each registration (not on login)
+    - expires_at: optional expiry (None = never expires)
+    Audit: last_used_at, last_used_ip, created_by
+    """
+    __tablename__ = "invitation_codes"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    code_hash = Column(String(255), nullable=False)
+
+    is_active = Column(Boolean, default=True, nullable=False)
+    max_uses = Column(Integer, default=1, nullable=False)
+    current_uses = Column(Integer, default=0, nullable=False)
+    expires_at = Column(DateTime, nullable=True)
+
+    # Linked player (set on first successful registration)
+    player_id = Column(String, ForeignKey("players.id"), nullable=True)
+
+    # Audit
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(String(100), nullable=True)
+    last_used_at = Column(DateTime, nullable=True)
+    last_used_ip = Column(String(45), nullable=True)  # supports IPv6
+
+    player = relationship("Player")
+
+
+Index("idx_invitation_player", InvitationCode.player_id)
+Index("idx_invitation_active", InvitationCode.is_active)
+
+
+# ==========================
+# TOKEN BLOCKLIST (logout / revocation)
+# ==========================
+
+class TokenBlocklist(Base):
+    """
+    Stores revoked JWT IDs (jti claims) to enforce logout.
+    Checked on every authenticated request via flask-jwt-extended's
+    token_in_blocklist_loader callback.
+    """
+    __tablename__ = "token_blocklist"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    jti = Column(String(36), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+Index("idx_blocklist_jti", TokenBlocklist.jti)

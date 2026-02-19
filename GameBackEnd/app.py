@@ -1,26 +1,77 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS
+
 from config import Config
+from extensions import limiter
 from routes.auth import auth_bp
 from routes.players import players_bp
 from routes.fortresses import fortresses_bp
 from routes.battles import battles_bp
 from routes.leaderboard import leaderboard_bp
 
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    # ── CORS ───────────────────────────────────────────────────────────────
+    origins = [o.strip() for o in app.config["CORS_ORIGINS"].split(",")]
+    CORS(app, origins=origins, supports_credentials=True)
+
+    # ── JWT ────────────────────────────────────────────────────────────────
     jwt = JWTManager(app)
 
-    app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
-    app.register_blueprint(players_bp, url_prefix="/api/v1/players")
-    app.register_blueprint(fortresses_bp, url_prefix="/api/v1/fortresses")
-    app.register_blueprint(battles_bp, url_prefix="/api/v1/battles")
+    @jwt.token_in_blocklist_loader
+    def _check_token_revoked(jwt_header, jwt_payload):
+        """Return True if the token's jti is in the revocation table."""
+        from db import SessionLocal
+        from db.models import TokenBlocklist
+        jti = jwt_payload["jti"]
+        db = SessionLocal()
+        try:
+            return db.query(TokenBlocklist).filter_by(jti=jti).first() is not None
+        finally:
+            db.close()
+
+    @jwt.revoked_token_loader
+    def _revoked_token(jwt_header, jwt_payload):
+        return jsonify({"error": "Token has been revoked"}), 401
+
+    @jwt.unauthorized_loader
+    def _missing_token(reason):
+        return jsonify({"error": "Authorization token required"}), 401
+
+    @jwt.invalid_token_loader
+    def _invalid_token(reason):
+        return jsonify({"error": "Invalid token"}), 401
+
+    @jwt.expired_token_loader
+    def _expired_token(jwt_header, jwt_payload):
+        return jsonify({"error": "Token has expired"}), 401
+
+    # ── Rate limiter ───────────────────────────────────────────────────────
+    limiter.init_app(app)
+
+    # ── Security headers ───────────────────────────────────────────────────
+    @app.after_request
+    def _security_headers(response):
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=()"
+        return response
+
+    # ── Blueprints ─────────────────────────────────────────────────────────
+    app.register_blueprint(auth_bp,        url_prefix="/api/v1/auth")
+    app.register_blueprint(players_bp,     url_prefix="/api/v1/players")
+    app.register_blueprint(fortresses_bp,  url_prefix="/api/v1/fortresses")
+    app.register_blueprint(battles_bp,     url_prefix="/api/v1/battles")
     app.register_blueprint(leaderboard_bp, url_prefix="/api/v1/leaderboard")
 
     return app
 
+
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True)
+    app.run(debug=False)

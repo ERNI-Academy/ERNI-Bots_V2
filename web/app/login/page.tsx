@@ -3,10 +3,13 @@
 import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { loginApi } from "@/lib/auth";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [invitationCode, setInvitationCode] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
@@ -16,12 +19,16 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
-    // Aquí implementarás tu lógica de autenticación
-    // Por ahora, simplemente guardamos un token en una cookie
-    // TODO: implementar autenticación real
-    document.cookie = "auth-token=authenticated; path=/; max-age=86400"; // 24 horas
-    router.push("/story");
+    setError("");
+    setLoading(true);
+    try {
+      await loginApi(username, invitationCode);
+      router.push("/story");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error de autenticación");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!mounted) {
@@ -144,13 +151,22 @@ export default function LoginPage() {
                 />
               </div>
 
+              {/* Error Message */}
+              {error && (
+                <p className="font-mono text-[10px] sm:text-xs text-red-500 tracking-widest uppercase flex items-center gap-2">
+                  <span className="text-red-500/50">[ERR]</span>
+                  <span>{error}</span>
+                </p>
+              )}
+
               {/* Action Button */}
               <div className="pt-4 sm:pt-6">
                 <button
                   type="submit"
-                  className="glitch-button w-full bg-primary text-background-dark font-bold py-3 sm:py-4 text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase relative overflow-hidden group cursor-pointer"
+                  disabled={loading}
+                  className="glitch-button w-full bg-primary text-background-dark font-bold py-3 sm:py-4 text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase relative overflow-hidden group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span className="relative z-10">[ ACCEDER ]</span>
+                  <span className="relative z-10">{loading ? "[ AUTENTICANDO... ]" : "[ ACCEDER ]"}</span>
                   {/* Button Hover Effect Layers */}
                   <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
                   <div className="absolute top-0 left-0 w-full h-[1px] bg-white opacity-50"></div>

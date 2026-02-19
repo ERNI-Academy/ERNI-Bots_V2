@@ -1,13 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { logoutApi } from "@/lib/auth";
 
 export default function Home() {
   const router = useRouter();
 
-  const handleLogout = () => {
-    // Eliminar la cookie de autenticación
-    document.cookie = "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  const handleLogout = async () => {
+    await logoutApi(); // el servidor lee el JWT de la cookie httpOnly y lo revoca
     router.push("/login");
   };
 

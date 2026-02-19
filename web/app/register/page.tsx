@@ -3,35 +3,21 @@
 import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { registerApi } from "@/lib/auth";
 
 export default function RegisterPage() {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [maskedPassword, setMaskedPassword] = useState("");
     const [invitationCode, setInvitationCode] = useState("");
     const [acceptTerms, setAcceptTerms] = useState(false);
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
     const [mounted, setMounted] = useState(false);
     const router = useRouter();
-
-    const medievalChars = ["⚔", "🛡", "ᚱ", "ᚦ"];
 
     useEffect(() => {
         setMounted(true);
     }, []);
-
-    const handlePasswordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Backspace") {
-            e.preventDefault();
-            setPassword(password.slice(0, -1));
-            setMaskedPassword(maskedPassword.slice(0, -1));
-        } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            e.preventDefault();
-            setPassword(password + e.key);
-            const randomSymbol = medievalChars[Math.floor(Math.random() * medievalChars.length)];
-            setMaskedPassword(maskedPassword + randomSymbol);
-        }
-    };
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -41,11 +27,15 @@ export default function RegisterPage() {
             return;
         }
 
-        // Aquí implementarás tu lógica de registro
-        if (username && email && password && invitationCode) {
-            // Establecer cookie de autenticación
-            document.cookie = "auth-token=authenticated; path=/; max-age=86400"; // 24 horas
-            router.push("/");
+        setError("");
+        setLoading(true);
+        try {
+            await registerApi(username, email, invitationCode);
+            router.push("/story");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Error de registro");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -209,13 +199,22 @@ export default function RegisterPage() {
                                 </label>
                             </div>
 
+                            {/* Error Message */}
+                            {error && (
+                                <p className="font-mono text-[10px] sm:text-xs text-red-500 tracking-widest uppercase flex items-center gap-2">
+                                    <span className="text-red-500/50">[ERR]</span>
+                                    <span>{error}</span>
+                                </p>
+                            )}
+
                             {/* Action Button */}
                             <div className="pt-4 sm:pt-6">
                                 <button
                                     type="submit"
-                                    className="glitch-button w-full bg-primary text-background-dark font-bold py-3 sm:py-4 text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase relative overflow-hidden group cursor-pointer"
+                                    disabled={loading}
+                                    className="glitch-button w-full bg-primary text-background-dark font-bold py-3 sm:py-4 text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase relative overflow-hidden group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <span className="relative z-10">[ INYECTAR CONCIENCIA ]</span>
+                                    <span className="relative z-10">{loading ? "[ INICIALIZANDO... ]" : "[ INYECTAR CONCIENCIA ]"}</span>
                                     {/* Button Hover Effect Layers */}
                                     <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
                                     <div className="absolute top-0 left-0 w-full h-[1px] bg-white opacity-50"></div>
