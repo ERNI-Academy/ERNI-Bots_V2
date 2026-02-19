@@ -3,13 +3,22 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FORTRESSES, STATUS_STYLES, type Fortress } from "@/lib/fortresses";
+import { fetchMatchmakingFortresses, STATUS_STYLES, type Fortress } from "@/lib/fortresses";
 
 type Tab = "map" | "log" | "console";
 
 interface MarkerPos {
     top: string;
     left: string;
+}
+
+interface PlayerProfile {
+    id: string;
+    username: string;
+    credits: number;
+    energy: number;
+    season_score: number;
+    rank: number;
 }
 
 // Safe zone: avoid header (~12% top), sidebars (~24% each side), bottom bars (~32% bottom)
@@ -21,7 +30,6 @@ function randomPos(): MarkerPos {
     return { top: `${top.toFixed(2)}%`, left: `${left.toFixed(2)}%` };
 }
 
-// Generate spread positions keeping markers at least 8% apart from each other
 function generateSpreadPositions(count: number): MarkerPos[] {
     const positions: MarkerPos[] = [];
     const minDist = 8;
@@ -41,14 +49,39 @@ function generateSpreadPositions(count: number): MarkerPos[] {
     return positions;
 }
 
+function markerClass(status: Fortress["status"]): string {
+    switch (status) {
+        case "HOSTILE":   return "absolute w-6 h-6 bg-[#ff0033] rounded-full shadow-[0_0_20px_#ff0033] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
+        case "CONTESTED": return "absolute w-4 h-4 bg-[#ffd700] rounded-full shadow-[0_0_15px_#ffd700] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
+        case "NEUTRAL":   return "absolute w-8 h-8 border-2 border-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors focus:outline-none -translate-x-1/2 -translate-y-1/2";
+        default:          return "absolute w-4 h-4 bg-white rounded-full shadow-[0_0_15px_white] animate-pulse cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
+    }
+}
+
 export default function DashboardPage() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<Tab>("map");
     const [selectedFortress, setSelectedFortress] = useState<Fortress | null>(null);
     const [markerPos, setMarkerPos] = useState<MarkerPos[]>([]);
+    const [fortresses, setFortresses] = useState<Fortress[]>([]);
+    const [player, setPlayer] = useState<PlayerProfile | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        setMarkerPos(generateSpreadPositions(4));
+        async function load() {
+            try {
+                const [fortressData, profileRes] = await Promise.all([
+                    fetchMatchmakingFortresses().catch(() => [] as Fortress[]),
+                    fetch("/api/players/me", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
+                ]);
+                setFortresses(fortressData);
+                setPlayer(profileRes);
+                setMarkerPos(generateSpreadPositions(fortressData.length));
+            } finally {
+                setLoading(false);
+            }
+        }
+        load();
     }, []);
 
     return (
@@ -56,10 +89,9 @@ export default function DashboardPage() {
             {/* Scanlines */}
             <div className="scanlines"></div>
 
-            {/* ─── TACTICAL MAP BACKGROUND (always rendered, hidden on mobile via tab) ─── */}
+            {/* ─── TACTICAL MAP BACKGROUND ─── */}
             <div
-                className={`fixed inset-0 tactical-bg overflow-hidden ${activeTab !== "map" ? "hidden md:block" : ""
-                    }`}
+                className={`fixed inset-0 tactical-bg overflow-hidden ${activeTab !== "map" ? "hidden md:block" : ""}`}
             >
                 {/* Grid overlay */}
                 <div className="absolute inset-0 grid-overlay"></div>
@@ -73,41 +105,29 @@ export default function DashboardPage() {
                     />
                 </div>
 
-                {/* Map markers — random positions generated client-side */}
-                {markerPos.length === 4 && (
-                    <>
-                        {/* Allied - Citadela Alfa */}
-                        <button
-                            onClick={() => setSelectedFortress(FORTRESSES[0])}
-                            className="absolute w-4 h-4 bg-white rounded-full shadow-[0_0_15px_white] animate-pulse cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2"
-                            style={{ top: markerPos[0].top, left: markerPos[0].left }}
-                            title="Citadela Alfa"
-                        />
-                        {/* Hostile - Nodo Sangriento */}
-                        <button
-                            onClick={() => setSelectedFortress(FORTRESSES[1])}
-                            className="absolute w-6 h-6 bg-[#ff0033] rounded-full shadow-[0_0_20px_#ff0033] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2"
-                            style={{ top: markerPos[1].top, left: markerPos[1].left }}
-                            title="Nodo Sangriento"
-                        />
-                        {/* Contested - Zona Cero */}
-                        <button
-                            onClick={() => setSelectedFortress(FORTRESSES[2])}
-                            className="absolute w-4 h-4 bg-[#ffd700] rounded-full shadow-[0_0_15px_#ffd700] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2"
-                            style={{ top: markerPos[2].top, left: markerPos[2].left }}
-                            title="Zona Cero"
-                        />
-                        {/* Neutral - Torre Vigilante */}
-                        <button
-                            onClick={() => setSelectedFortress(FORTRESSES[3])}
-                            className="absolute w-8 h-8 border-2 border-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors focus:outline-none -translate-x-1/2 -translate-y-1/2"
-                            style={{ top: markerPos[3].top, left: markerPos[3].left, animation: "spin 10s linear infinite" }}
-                            title="Torre Vigilante"
-                        >
-                            <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        </button>
-                    </>
+                {/* Loading overlay */}
+                {loading && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                        <div className="font-mono text-primary/60 text-xs animate-pulse uppercase tracking-widest">
+                            ESCANEANDO FORTALEZAS...
+                        </div>
+                    </div>
                 )}
+
+                {/* Map markers */}
+                {!loading && markerPos.length === fortresses.length && fortresses.map((fortress, i) => (
+                    <button
+                        key={fortress.id}
+                        onClick={() => setSelectedFortress(fortress)}
+                        className={markerClass(fortress.status)}
+                        style={{ top: markerPos[i].top, left: markerPos[i].left }}
+                        title={fortress.name}
+                    >
+                        {fortress.status === "NEUTRAL" && (
+                            <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        )}
+                    </button>
+                ))}
 
                 {/* SVG tactical lines */}
                 <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none">
@@ -148,14 +168,6 @@ export default function DashboardPage() {
                         <div className="text-[7px] text-white/30 text-right mt-1 font-mono uppercase">
                             Requiere Fragmentos de Lógica
                         </div>
-                    </div>
-                    <div className="absolute -top-10 -left-10 w-24 h-24 pointer-events-none opacity-20 overflow-hidden rounded-full">
-                        <img
-                            alt="Abstract pixelated violet vortex"
-                            className="w-full h-full object-cover animate-spin"
-                            style={{ animationDuration: "30s" }}
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_60z-TJkoycAF6Kq8AyJ7Cle0OKqF-c8aJPna1MbzmkOvNXXEsxunOdSLNVj7uLP0tYamB1Tkrb1j5QtkRtCZ6w03bxs3RC0x5b-FbIgGlHOiGPZFrAFOrTrGv2haHmomzgW2lqeae3MRs0cHz4RfsckiL7PQOpr6IsjAYjcDQYSCA99tVKTzQzkkaZfHFCH2WELPm_PjGob0Xogs09LMOz0a4X3-Dh_FZu4X-eN3uEieOb3mxpHhfWP7YhR7cGeLlYDCrfB14og"
-                        />
                     </div>
                 </div>
             </div>
@@ -227,23 +239,19 @@ export default function DashboardPage() {
                     </div>
                     <div className="border-l border-[#ff0033]/20 pl-2">
                         <span className="text-primary/50">[14:44:58]</span>{" "}
-                        <span className="text-[#ff0033]">ATAQUE:</span> La fortaleza "Nodo Sangriento" ha sido atacada por Lord_Vermin. Defensa comprometida.
+                        <span className="text-[#ff0033]">ATAQUE:</span> La fortaleza &quot;Nodo Sangriento&quot; ha sido atacada por Lord_Vermin. Defensa comprometida.
                     </div>
                     <div className="border-l border-[#ffd700]/20 pl-2">
                         <span className="text-primary/50">[14:44:12]</span>{" "}
-                        <span className="text-[#ffd700]">DEFENSA:</span> La fortaleza "Citadela Alfa" ha repelido un ataque de Lord_Vermin.
-                    </div>
-                    <div className="border-l border-[#ffd700]/20 pl-2">
-                        <span className="text-primary/50">[14:44:12]</span>{" "}
-                        <span className="text-[#ffd700]">DEFENSA:</span> La fortaleza "Citadela Alfa" ha repelido un ataque de Lord_Vermin.
+                        <span className="text-[#ffd700]">DEFENSA:</span> La fortaleza &quot;Citadela Alfa&quot; ha repelido un ataque de Lord_Vermin.
                     </div>
                     <div className="border-l border-[#ff0033]/20 pl-2">
                         <span className="text-primary/50">[14:44:58]</span>{" "}
-                        <span className="text-[#ff0033]">ATAQUE:</span> La fortaleza "Zona Zero" ha sido atacada por Lord_Vermin. Defensa comprometida.
+                        <span className="text-[#ff0033]">ATAQUE:</span> La fortaleza &quot;Zona Cero&quot; ha sido atacada. Defensa comprometida.
                     </div>
                     <div className="border-l border-[#8b5cf6]/20 pl-2">
                         <span className="text-primary/50">[14:43:30]</span>{" "}
-                        <span className="text-[#8b5cf6]">ALERTA:</span> Actividad inusual detectada en "Torre Vigilante". Posible escaneo de reconocimiento.
+                        <span className="text-[#8b5cf6]">ALERTA:</span> Actividad inusual detectada en &quot;Torre Vigilante&quot;. Posible escaneo de reconocimiento.
                     </div>
                 </div>
                 <div className="p-2 border-t border-white/5">
@@ -256,38 +264,53 @@ export default function DashboardPage() {
                 </div>
             </aside>
 
-            {/* ─── RIGHT SIDEBAR + BOTTOM BAR (Console tab on mobile) ─── */}
+            {/* ─── RIGHT SIDEBAR + BOTTOM BAR ─── */}
             <div
                 className={`${activeTab === "console"
                     ? "fixed top-20 left-2 right-2 bottom-16 overflow-y-auto z-20 space-y-4 p-0"
                     : "md:contents hidden"
                     }`}
             >
-                {/* My Fortresses */}
+                {/* My Profile */}
                 <aside className="md:fixed md:top-24 md:right-4 md:w-72 panel-float z-20">
                     <div className="panel-header p-2">
                         <h2 className="text-[10px] font-bold text-[#ffd700] flex items-center gap-2">
                             <span className="material-symbols-outlined text-xs">monitoring</span>
-                            MI FORTALEZA
+                            MI PERFIL
                         </h2>
                     </div>
                     <div className="p-4 space-y-4">
                         <div className="flex gap-3">
-                            <div className="w-10 h-10 border border-[#ff0033] bg-[#ff0033]/10 flex items-center justify-center shrink-0">
-                                <span className="material-symbols-outlined text-[#ff0033]">person_off</span>
+                            <div className="w-10 h-10 border border-primary bg-primary/10 flex items-center justify-center shrink-0">
+                                <span className="material-symbols-outlined text-primary">person</span>
                             </div>
                             <div>
-                                <div className="text-xs font-bold text-[#ff0033]">Lord_Vermin</div>
-                                <div className="text-[9px] text-white/40">ID: ID_12345</div>
+                                <div className="text-xs font-bold text-primary">
+                                    {player ? player.username : "—"}
+                                </div>
+                                <div className="text-[9px] text-white/40">
+                                    {player ? `Rango #${player.rank}` : "Cargando..."}
+                                </div>
                             </div>
                         </div>
                         <div className="space-y-2">
                             <div className="flex justify-between text-[9px]">
-                                <span className="text-white/60 uppercase">Nivel de Amenaza</span>
-                                <span className="text-[#ff0033] font-bold">CRITICAL</span>
+                                <span className="text-white/60 uppercase">Puntuación</span>
+                                <span className="text-[#00ff41] font-bold">
+                                    {player ? `${player.season_score} PTS` : "—"}
+                                </span>
                             </div>
-                            <div className="h-1 bg-white/5">
-                                <div className="h-full bg-[#ff0033]" style={{ width: "88%" }}></div>
+                            <div className="flex justify-between text-[9px]">
+                                <span className="text-white/60 uppercase">Créditos</span>
+                                <span className="text-[#ffd700] font-bold">
+                                    {player ? player.credits : "—"}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-[9px]">
+                                <span className="text-white/60 uppercase">Energía</span>
+                                <span className="text-primary font-bold">
+                                    {player ? `${player.energy}/100` : "—"}
+                                </span>
                             </div>
                         </div>
                         <button className="w-full border border-primary/30 bg-primary/5 p-2 text-[9px] text-primary hover:bg-primary/20 transition-all uppercase flex items-center justify-center gap-2">
@@ -307,7 +330,7 @@ export default function DashboardPage() {
                             <div className="text-[9px] text-[#8b5cf6] font-bold uppercase tracking-widest">
                                 Zona bloqueada
                             </div>
-                            <div className="text-[11px] font-bold text-white">Acceder a la Zona Zero</div>
+                            <div className="text-[11px] font-bold text-white">Acceder a la Zona Cero</div>
                         </div>
                     </div>
                     <div className="space-y-1">
@@ -322,14 +345,6 @@ export default function DashboardPage() {
                             Requiere Fragmentos de Lógica
                         </div>
                     </div>
-                    <div className="absolute -top-10 -left-10 w-24 h-24 pointer-events-none opacity-20 overflow-hidden rounded-full">
-                        <img
-                            alt="Abstract pixelated violet vortex"
-                            className="w-full h-full object-cover animate-spin"
-                            style={{ animationDuration: "30s" }}
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_60z-TJkoycAF6Kq8AyJ7Cle0OKqF-c8aJPna1MbzmkOvNXXEsxunOdSLNVj7uLP0tYamB1Tkrb1j5QtkRtCZ6w03bxs3RC0x5b-FbIgGlHOiGPZFrAFOrTrGv2haHmomzgW2lqeae3MRs0cHz4RfsckiL7PQOpr6IsjAYjcDQYSCA99tVKTzQzkkaZfHFCH2WELPm_PjGob0Xogs09LMOz0a4X3-Dh_FZu4X-eN3uEieOb3mxpHhfWP7YhR7cGeLlYDCrfB14og"
-                        />
-                    </div>
                 </aside>
 
                 {/* Resource Management Console */}
@@ -341,10 +356,12 @@ export default function DashboardPage() {
                                 <span className="material-symbols-outlined text-xs">analytics</span>
                                 FRAGMENTOS DE LÓGICA
                             </h2>
-                            <span className="text-primary text-[10px] font-bold">1150 UNIDADES</span>
+                            <span className="text-primary text-[10px] font-bold">
+                                {player ? `${player.credits} CRÉDITOS` : "— CRÉDITOS"}
+                            </span>
                         </div>
                         <div className="h-1.5 w-full bg-white/5 border border-white/10 relative">
-                            <div className="h-full bg-primary" style={{ width: "62.4%" }}></div>
+                            <div className="h-full bg-primary" style={{ width: `${player ? Math.min(100, (player.credits / 1000) * 100) : 0}%` }}></div>
                         </div>
                         <div className="flex gap-4 text-[8px] text-white/40 font-mono">
                             <span>FRAGMENTOS DE LÓGICA</span>
@@ -353,21 +370,34 @@ export default function DashboardPage() {
                     <div className="flex-1 space-y-2">
                         <div className="flex justify-between items-end">
                             <span className="text-[10px] text-white/60">PUNTUACIÓN</span>
-                            <span className="text-[#00ff41] text-[10px] font-bold">50 PUNTOS</span>
+                            <span className="text-[#00ff41] text-[10px] font-bold">
+                                {player ? `${player.season_score} PUNTOS` : "— PUNTOS"}
+                            </span>
                         </div>
                         <div className="flex gap-1 h-1.5">
-                            <div className="flex-1 bg-[#00ff41] shadow-[0_0_5px_#00ff41]"></div>
-                            <div className="flex-1 bg-[#00ff41] shadow-[0_0_5px_#00ff41]"></div>
-                            <div className="flex-1 bg-[#00ff41] shadow-[0_0_5px_#00ff41]"></div>
-                            <div className="flex-1 bg-white/10"></div>
-                            <div className="flex-1 bg-white/10"></div>
+                            {[...Array(5)].map((_, i) => (
+                                <div
+                                    key={i}
+                                    className={`flex-1 ${player && i < Math.ceil((player.season_score / 200) * 5) ? "bg-[#00ff41] shadow-[0_0_5px_#00ff41]" : "bg-white/10"}`}
+                                ></div>
+                            ))}
                         </div>
                         <div className="flex gap-4 text-[8px] text-white/40 font-mono">
-                            <span className="text-[#00ff41]">POCO A POCO</span>
+                            <span className="text-[#00ff41]">
+                                {player ? `RANGO #${player.rank}` : "CARGANDO..."}
+                            </span>
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <button className="flex-1 md:flex-none bg-primary/10 border border-primary/40 text-[9px] px-4 py-2 text-primary hover:bg-primary/30 transition-colors uppercase">
+                        <button
+                            onClick={() => {
+                                setLoading(true);
+                                fetchMatchmakingFortresses()
+                                    .then(f => { setFortresses(f); setMarkerPos(generateSpreadPositions(f.length)); })
+                                    .finally(() => setLoading(false));
+                            }}
+                            className="flex-1 md:flex-none bg-primary/10 border border-primary/40 text-[9px] px-4 py-2 text-primary hover:bg-primary/30 transition-colors uppercase"
+                        >
                             RE-ESCANEAR FORTALEZAS
                         </button>
                         <button className="flex-1 md:flex-none bg-[#ff0033]/10 border border-[#ff0033]/40 text-[9px] px-4 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase">
@@ -399,9 +429,9 @@ export default function DashboardPage() {
                                     <span className="material-symbols-outlined text-primary text-base">fort</span>
                                     <div>
                                         <div className="text-[8px] text-white/40 font-mono uppercase tracking-widest">
-                                            {selectedFortress.id} // {selectedFortress.sector}
+                                            {selectedFortress.id.slice(0, 8)}... // {selectedFortress.sector}
                                         </div>
-                                        <h3 className={`text-sm font-black uppercase tracking-widest  ${st.text}`}>
+                                        <h3 className={`text-sm font-black uppercase tracking-widest ${st.text}`}>
                                             {selectedFortress.name}
                                         </h3>
                                     </div>
@@ -438,7 +468,7 @@ export default function DashboardPage() {
                                     </div>
                                     <div className="space-y-0.5">
                                         <div className="text-white/40 uppercase">Guarnición</div>
-                                        <div className="font-bold text-white">{selectedFortress.garrison} unidades</div>
+                                        <div className="font-bold text-white">{selectedFortress.garrison} pts</div>
                                     </div>
                                     <div className="space-y-0.5">
                                         <div className="text-white/40 uppercase">Coordenadas</div>
@@ -460,22 +490,6 @@ export default function DashboardPage() {
                                         <div
                                             className={`h-full transition-all ${st.border.replace("border", "bg")}`}
                                             style={{ width: `${selectedFortress.defenseLevel}%` }}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Resources */}
-                                <div className="space-y-1">
-                                    <div className="flex justify-between text-[9px] font-mono">
-                                        <span className="text-white/40 uppercase">Recursos</span>
-                                        <span className="font-bold text-[#ffd700]">
-                                            {selectedFortress.resources.toLocaleString()} / {selectedFortress.resourceMax.toLocaleString()}
-                                        </span>
-                                    </div>
-                                    <div className="h-1 bg-white/5">
-                                        <div
-                                            className="h-full bg-[#ffd700]"
-                                            style={{ width: `${(selectedFortress.resources / selectedFortress.resourceMax) * 100}%` }}
                                         />
                                     </div>
                                 </div>

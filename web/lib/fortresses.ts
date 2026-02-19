@@ -15,68 +15,74 @@ export interface Fortress {
     description: string;
 }
 
-export const FORTRESSES: Fortress[] = [
-    {
-        id: "F-001",
-        name: "Citadela Alfa",
-        status: "ALLIED",
-        commander: "Agent_ERNI",
-        sector: "QUAD_3",
-        garrison: 240,
-        defenseLevel: 78,
-        coordinates: "44.08821 / 12.91223",
-        lastActivity: "14:43:01",
-        resources: 1120,
+// Backend matchmaking response shape
+interface MatchmakingEntry {
+    player_id: string;
+    username: string;
+    season_score: number;
+    fortress_id: string;
+    fortress_name: string;
+    defeats: number;
+    attacks: number;
+}
+
+function statusFromDefeats(defeats: number): FortressStatus {
+    if (defeats === 0) return "ALLIED";
+    if (defeats <= 2) return "NEUTRAL";
+    if (defeats === 3) return "CONTESTED";
+    return "HOSTILE";
+}
+
+function sectorFromIndex(index: number): string {
+    const sectors = ["QUAD_1", "QUAD_2", "QUAD_3", "QUAD_4", "QUAD_5", "QUAD_6", "QUAD_7", "QUAD_8"];
+    return sectors[index % sectors.length];
+}
+
+function coordinatesFromIndex(index: number): string {
+    const coords = [
+        "44.08821 / 12.91223",
+        "38.71667 / 9.13916",
+        "40.41650 / 3.70256",
+        "51.50735 / 0.12776",
+        "48.85341 / 2.34880",
+        "52.52000 / 13.40500",
+        "41.89474 / 12.48220",
+        "37.98381 / 23.72784",
+    ];
+    return coords[index % coords.length];
+}
+
+function adaptMatchmakingEntry(entry: MatchmakingEntry, index: number): Fortress {
+    const status = statusFromDefeats(entry.defeats);
+    const defenseLevel = Math.max(0, 100 - entry.defeats * 25);
+    return {
+        id: entry.fortress_id,
+        name: entry.fortress_name,
+        status,
+        commander: entry.username,
+        sector: sectorFromIndex(index),
+        garrison: entry.season_score,
+        defenseLevel,
+        coordinates: coordinatesFromIndex(index),
+        lastActivity: new Date().toLocaleTimeString("es-ES", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+        }),
+        resources: entry.season_score * 10,
         resourceMax: 1500,
-        description:
-            "Base de operaciones principal. Contiene el núcleo de procesamiento central y los archivos de la Corona.",
-    },
-    {
-        id: "F-002",
-        name: "Nodo Sangriento",
-        status: "HOSTILE",
-        commander: "Lord_Vermin",
-        sector: "QUAD_7",
-        garrison: 512,
-        defenseLevel: 95,
-        coordinates: "38.71667 / 9.13916",
-        lastActivity: "14:44:58",
-        resources: 3400,
-        resourceMax: 4000,
-        description:
-            "Fortaleza enemiga de máximo nivel. Lord_Vermin coordina desde aquí sus ataques de inyección de código. Extremadamente peligrosa.",
-    },
-    {
-        id: "F-003",
-        name: "Zona Zero",
-        status: "CONTESTED",
-        commander: "UNKNOWN",
-        sector: "QUAD_5",
-        garrison: 89,
-        defenseLevel: 42,
-        coordinates: "40.41650 / 3.70256",
-        lastActivity: "14:43:30",
-        resources: 620,
-        resourceMax: 1000,
-        description:
-            "Territorio en disputa. Contiene el Esquema de Zona Zero. Se requieren Fragmentos de Lógica para acceder al núcleo.",
-    },
-    {
-        id: "F-004",
-        name: "Torre Vigilante",
-        status: "NEUTRAL",
-        commander: "SYS_AUTO",
-        sector: "QUAD_2",
-        garrison: 30,
-        defenseLevel: 55,
-        coordinates: "51.50735 / 0.12776",
-        lastActivity: "14:40:55",
-        resources: 870,
-        resourceMax: 1200,
-        description:
-            "Puesto de vigilancia autónomo. Monitoriza el tráfico de red entre sectores. Sin afiliación confirmada.",
-    },
-];
+        description: `Fortaleza controlada por ${entry.username}. Ha sido atacada ${entry.attacks} veces esta temporada.`,
+    };
+}
+
+export async function fetchMatchmakingFortresses(): Promise<Fortress[]> {
+    const res = await fetch("/api/players/matchmaking", { credentials: "include" });
+    if (!res.ok) {
+        throw new Error(`Matchmaking error: ${res.status}`);
+    }
+    const entries: MatchmakingEntry[] = await res.json();
+    return entries.map(adaptMatchmakingEntry);
+}
 
 export const STATUS_STYLES: Record<
     FortressStatus,

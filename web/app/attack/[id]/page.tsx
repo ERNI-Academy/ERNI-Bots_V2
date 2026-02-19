@@ -2,11 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { FORTRESSES, STATUS_STYLES } from "@/lib/fortresses";
+import { STATUS_STYLES } from "@/lib/fortresses";
+import type { FortressStatus } from "@/lib/fortresses";
 
 interface Message {
     id: number;
-    role: "user" | "system" | "result";
+    role: "user" | "system" | "guardian" | "result";
     text: string;
     timestamp: string;
 }
@@ -27,7 +28,7 @@ const SYSTEM_BOOT: Message[] = [
     {
         id: 2,
         role: "system",
-        text: "Canal establecido. Introduce tu vector de ataque mediante prompt. El sistema evaluará la efectividad de tu estrategia.",
+        text: "Canal establecido. Introduce tu vector de ataque. El guardián responderá en tiempo real.",
         timestamp: now(),
     },
 ];
@@ -36,21 +37,13 @@ function now() {
     return new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-// Simulated responses from the fortress defense AI
-const DEFENSE_RESPONSES = [
-    "ACCESO DENEGADO. Contramedida activa: firewall dinámico nivel 9.",
-    "Intento de intrusión registrado. Desplegando protocolo honeypot.",
-    "Tu vector es primitivo. La defensa del sector {sector} no cederá tan fácilmente.",
-    "BRECHA DETECTADA en capa 3. Reparando... Reparado. ¿Es eso lo mejor que tienes?",
-    "Fragmentos de lógica insuficientes para penetrar este nodo.",
-    "ERROR_FATAL: reverse-shell neutralizado. Intenta otra táctica.",
-    "LORD_VERMIN: «Patético. Mis troyanos son más creativos que eso.»",
-    "Sistema de detección de anomalías activado. Tu IP ha sido enmascarada... momentáneamente.",
-];
-
-function getDefenseReply(sector: string): string {
-    const r = DEFENSE_RESPONSES[Math.floor(Math.random() * DEFENSE_RESPONSES.length)];
-    return r.replace("{sector}", sector);
+interface BattleState {
+    battleId: string;
+    sessionId: string;
+    fortressName: string;
+    fortressStatus: FortressStatus;
+    defenseLevel: number;
+    attackCost: number;
 }
 
 export default function AttackPage() {
@@ -58,25 +51,193 @@ export default function AttackPage() {
     const params = useParams();
     const fortressId = params?.id as string;
 
-    const fortress = FORTRESSES.find((f) => f.id === fortressId);
-    const st = fortress ? STATUS_STYLES[fortress.status] : STATUS_STYLES["HOSTILE"];
-
     const [messages, setMessages] = useState<Message[]>(SYSTEM_BOOT);
     const [input, setInput] = useState("");
+    const [guessInput, setGuessInput] = useState("");
     const [isThinking, setIsThinking] = useState(false);
-    const [damageDealt, setDamageDealt] = useState(0);
+    const [isGuessing, setIsGuessing] = useState(false);
+    const [showGuessPanel, setShowGuessPanel] = useState(false);
+    const [battle, setBattle] = useState<BattleState | null>(null);
+    const [initError, setInitError] = useState<string | null>(null);
+    const [battleResult, setBattleResult] = useState<"won" | "lost" | null>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
 
+    // Auto-scroll on new messages
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isThinking]);
 
-    if (!fortress) {
+    // Initialize battle on mount
+    useEffect(() => {
+        async function initBattle() {
+            try {
+                const res = await fetch("/api/battles", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ fortress_id: fortressId }),
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    setInitError(data.error ?? "Error al iniciar la batalla");
+                    return;
+                }
+
+                setBattle({
+                    battleId: data.battle_id,
+                    sessionId: data.session_id,
+                    fortressName: fortressId, // will be updated below if matchmaking data available
+                    fortressStatus: "HOSTILE",
+                    defenseLevel: 100,
+                    attackCost: data.attack_cost,
+                });
+
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: Date.now(),
+                        role: "system",
+                        text: `Batalla iniciada. Coste de ataque: ${data.attack_cost} créditos. ID: ${data.battle_id.slice(0, 8)}...`,
+                        timestamp: now(),
+                    },
+                ]);
+            } catch {
+                setInitError("No se pudo conectar con el servidor");
+            }
+        }
+        if (fortressId) {
+            initBattle();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fortressId]);
+
+    const st = STATUS_STYLES[battle?.fortressStatus ?? "HOSTILE"];
+
+    async function handleSend() {
+        if (!input.trim() || isThinking || !battle || battleResult) return;
+
+        const userText = input.trim();
+        const userMsg: Message = {
+            id: Date.now(),
+            role: "user",
+            text: userText,
+            timestamp: now(),
+        };
+
+        setMessages(prev => [...prev, userMsg]);
+        setInput("");
+        setIsThinking(true);
+
+        try {
+            const res = await fetch(`/api/battles/${battle.battleId}/message`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ message: userText }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: Date.now() + 1,
+                        role: "system",
+                        text: `ERROR: ${data.error ?? "No se pudo enviar el mensaje"}`,
+                        timestamp: now(),
+                    },
+                ]);
+            } else {
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: Date.now() + 1,
+                        role: "guardian",
+                        text: data.response,
+                        timestamp: now(),
+                    },
+                ]);
+            }
+        } catch {
+            setMessages(prev => [
+                ...prev,
+                {
+                    id: Date.now() + 1,
+                    role: "system",
+                    text: "ERROR: Conexión perdida con el guardián",
+                    timestamp: now(),
+                },
+            ]);
+        } finally {
+            setIsThinking(false);
+        }
+    }
+
+    async function handleGuess() {
+        if (!guessInput.trim() || isGuessing || !battle || battleResult) return;
+
+        const word = guessInput.trim().toUpperCase();
+        setIsGuessing(true);
+
+        try {
+            const res = await fetch(`/api/battles/${battle.battleId}/guess`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ word }),
+            });
+
+            const data = await res.json();
+
+            if (data.result === "correct") {
+                setBattleResult("won");
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: Date.now(),
+                        role: "result",
+                        text: `¡VICTORIA! La palabra "${word}" era correcta. +${data.score_awarded} puntos obtenidos. Redirigiendo al mapa...`,
+                        timestamp: now(),
+                    },
+                ]);
+                setTimeout(() => router.push("/dashboard"), 3000);
+            } else {
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: Date.now(),
+                        role: "system",
+                        text: `La palabra "${word}" es incorrecta. Sigue intentándolo.`,
+                        timestamp: now(),
+                    },
+                ]);
+                setGuessInput("");
+            }
+        } catch {
+            setMessages(prev => [
+                ...prev,
+                {
+                    id: Date.now(),
+                    role: "system",
+                    text: "ERROR: No se pudo verificar la palabra",
+                    timestamp: now(),
+                },
+            ]);
+        } finally {
+            setIsGuessing(false);
+        }
+    }
+
+    // Error screen
+    if (initError) {
         return (
             <div className="h-screen w-screen bg-background-dark flex items-center justify-center font-mono text-[#ff0033]">
                 <div className="text-center space-y-2">
                     <span className="material-symbols-outlined text-4xl">error</span>
-                    <p className="text-sm uppercase tracking-widest">Objetivo no encontrado</p>
+                    <p className="text-sm uppercase tracking-widest">{initError}</p>
                     <button
                         onClick={() => router.push("/dashboard")}
                         className="mt-4 text-[10px] border border-[#ff0033]/40 px-4 py-2 hover:bg-[#ff0033]/10 transition-colors uppercase"
@@ -86,41 +247,6 @@ export default function AttackPage() {
                 </div>
             </div>
         );
-    }
-
-    const defenseRemaining = Math.max(0, fortress.defenseLevel - damageDealt);
-    const defensePercent = Math.round((defenseRemaining / fortress.defenseLevel) * 100);
-
-    function handleSend() {
-        if (!input.trim() || isThinking || !fortress) return;
-
-        const userMsg: Message = {
-            id: Date.now(),
-            role: "user",
-            text: input.trim(),
-            timestamp: now(),
-        };
-
-        setMessages((prev) => [...prev, userMsg]);
-        setInput("");
-        setIsThinking(true);
-
-        // Simulate processing delay
-        const delay = 900 + Math.random() * 800;
-        const target = fortress; // captured – fortress is defined (early return guards above)
-        setTimeout(() => {
-            const dmg = Math.floor(Math.random() * 12) + 3;
-            setDamageDealt((prev) => Math.min(prev + dmg, target.defenseLevel));
-
-            const resultMsg: Message = {
-                id: Date.now() + 1,
-                role: "result",
-                text: `[IMPACTO: -${dmg}% DEFENSA] ${getDefenseReply(target.sector)}`,
-                timestamp: now(),
-            };
-            setMessages((prev) => [...prev, resultMsg]);
-            setIsThinking(false);
-        }, delay);
     }
 
     return (
@@ -141,42 +267,26 @@ export default function AttackPage() {
                     <span className="material-symbols-outlined text-[#ff0033] text-base">gps_fixed</span>
                     <div>
                         <h1 className="text-xs md:text-sm font-black uppercase tracking-widest text-[#ff0033]">
-                            ASALTO: {fortress.name}
+                            ASALTO: {battle ? `ID ${battle.battleId.slice(0, 8)}...` : "CONECTANDO..."}
                         </h1>
                         <p className="text-[8px] text-white/40 font-mono">
-                            {fortress.id} // {fortress.sector} // CMD: {fortress.commander}
+                            FORTRESS_ID: {fortressId?.slice(0, 8)}...
+                            {battle && ` // COSTE: ${battle.attackCost} créditos`}
                         </p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3 md:gap-6">
-                    {/* Defense gauge */}
-                    <div className="hidden sm:block text-right">
-                        <div className="text-[8px] text-white/40 font-mono uppercase">Defensa restante</div>
-                        <div
-                            className="text-sm font-bold font-mono"
-                            style={{ color: defensePercent > 50 ? "#ff0033" : defensePercent > 20 ? "#ffd700" : "#00ff41" }}
-                        >
-                            {defensePercent}%
-                        </div>
-                    </div>
-                    <div className="hidden sm:block w-24">
-                        <div className="h-1.5 bg-white/5 border border-white/10">
-                            <div
-                                className="h-full transition-all duration-500"
-                                style={{
-                                    width: `${defensePercent}%`,
-                                    backgroundColor:
-                                        defensePercent > 50 ? "#ff0033" : defensePercent > 20 ? "#ffd700" : "#00ff41",
-                                }}
-                            />
-                        </div>
-                    </div>
-                    <span
-                        className={`hidden md:inline text-[9px] font-bold px-2 py-0.5 border ${st.border} ${st.text} ${st.bg}`}
-                    >
-                        {st.label}
-                    </span>
+                    {battleResult === "won" && (
+                        <span className="text-[9px] font-bold px-2 py-0.5 border border-[#00ff41] text-[#00ff41] bg-[#00ff41]/10 animate-pulse">
+                            VICTORIA
+                        </span>
+                    )}
+                    {!battle && !initError && (
+                        <span className="text-[9px] text-white/40 font-mono animate-pulse uppercase">
+                            Iniciando batalla...
+                        </span>
+                    )}
                 </div>
             </header>
 
@@ -218,16 +328,29 @@ export default function AttackPage() {
                                         </div>
                                     </div>
                                 )}
-                                {msg.role === "result" && (
+                                {msg.role === "guardian" && (
                                     <div className="flex items-start gap-2 max-w-[85%]">
                                         <span className="material-symbols-outlined text-[#ff0033] text-base mt-0.5">
                                             security
                                         </span>
                                         <div className="flex flex-col gap-0.5">
                                             <div className="text-[8px] text-white/30">
-                                                <span className="text-[#ff0033]">DEFENSA</span> · {msg.timestamp}
+                                                <span className="text-[#ff0033]">GUARDIÁN</span> · {msg.timestamp}
                                             </div>
                                             <div className="text-[#ff0033]/80 leading-relaxed">{msg.text}</div>
+                                        </div>
+                                    </div>
+                                )}
+                                {msg.role === "result" && (
+                                    <div className="flex items-start gap-2 max-w-[85%]">
+                                        <span className="material-symbols-outlined text-[#00ff41] text-base mt-0.5">
+                                            emoji_events
+                                        </span>
+                                        <div className="flex flex-col gap-0.5">
+                                            <div className="text-[8px] text-white/30">
+                                                <span className="text-[#00ff41]">RESULTADO</span> · {msg.timestamp}
+                                            </div>
+                                            <div className="text-[#00ff41] leading-relaxed font-bold">{msg.text}</div>
                                         </div>
                                     </div>
                                 )}
@@ -238,30 +361,69 @@ export default function AttackPage() {
                         {isThinking && (
                             <div className="flex items-center gap-2 text-[#ff0033]/60 font-mono text-[10px]">
                                 <span className="material-symbols-outlined text-sm animate-pulse">security</span>
-                                <span className="animate-pulse">PROCESANDO CONTRAMEDIDA...</span>
+                                <span className="animate-pulse">GUARDIÁN PROCESANDO RESPUESTA...</span>
                             </div>
                         )}
 
                         <div ref={bottomRef} />
                     </div>
 
+                    {/* Guess panel */}
+                    {showGuessPanel && (
+                        <div className="shrink-0 border-t border-[#ffd700]/20 p-3 bg-[#ffd700]/5">
+                            <div className="text-[9px] text-[#ffd700] font-mono uppercase tracking-widest mb-2">
+                                Adivinar palabra secreta:
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    className="flex-1 bg-black/40 border border-[#ffd700]/30 focus:border-[#ffd700]/60 focus:outline-none text-[11px] text-white/90 font-mono px-3 py-2"
+                                    placeholder="Introduce la palabra secreta..."
+                                    value={guessInput}
+                                    onChange={(e) => setGuessInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && handleGuess()}
+                                    disabled={isGuessing || !!battleResult}
+                                    autoFocus
+                                />
+                                <button
+                                    onClick={handleGuess}
+                                    disabled={!guessInput.trim() || isGuessing || !!battleResult}
+                                    className="px-4 py-2 bg-[#ffd700]/10 border border-[#ffd700]/40 text-[#ffd700] hover:bg-[#ffd700]/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-[9px] uppercase"
+                                >
+                                    {isGuessing ? "Verificando..." : "Confirmar"}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Input */}
                     <div className="shrink-0 border-t border-white/5 p-3 flex gap-2">
+                        <button
+                            onClick={() => setShowGuessPanel(prev => !prev)}
+                            disabled={!battle || !!battleResult}
+                            title="Adivinar la palabra secreta"
+                            className={`shrink-0 px-3 py-2 border text-[9px] transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                                showGuessPanel
+                                    ? "bg-[#ffd700]/20 border-[#ffd700]/60 text-[#ffd700]"
+                                    : "bg-[#ffd700]/5 border-[#ffd700]/30 text-[#ffd700]/60 hover:bg-[#ffd700]/10"
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-base">key</span>
+                        </button>
                         <div className="flex-1 flex items-center gap-2 bg-black/40 border border-primary/20 focus-within:border-primary/50 px-3 py-2">
                             <span className="text-primary/50 font-mono text-xs shrink-0">&gt;_</span>
                             <input
                                 className="flex-1 bg-transparent text-[11px] md:text-xs text-white/90 font-mono focus:outline-none placeholder:text-white/20"
-                                placeholder="Introduce tu vector de ataque..."
+                                placeholder={battle ? "Introduce tu vector de ataque..." : "Conectando con el guardián..."}
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                                disabled={isThinking}
+                                disabled={isThinking || !battle || !!battleResult}
                                 autoFocus
                             />
                         </div>
                         <button
                             onClick={handleSend}
-                            disabled={!input.trim() || isThinking}
+                            disabled={!input.trim() || isThinking || !battle || !!battleResult}
                             className="shrink-0 px-4 py-2 bg-[#ff0033]/10 border border-[#ff0033]/40 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                             <span className="material-symbols-outlined text-base">send</span>
@@ -283,19 +445,13 @@ export default function AttackPage() {
                             <span className={`font-bold ${st.text}`}>{st.label}</span>
                         </div>
 
-                        {/* Description */}
-                        <p className="text-white/50 leading-relaxed border-l border-primary/20 pl-2">
-                            {fortress.description}
-                        </p>
-
-                        {/* Stats */}
+                        {/* Battle info */}
                         <div className="space-y-2">
                             {[
-                                { label: "Comandante", value: fortress.commander, color: st.text },
-                                { label: "Sector", value: fortress.sector, color: "text-white" },
-                                { label: "Guarnición", value: `${fortress.garrison} unidades`, color: "text-white" },
-                                { label: "Coordenadas", value: fortress.coordinates, color: "text-primary" },
-                                { label: "Última actividad", value: fortress.lastActivity, color: "text-white/60" },
+                                { label: "Fortress ID", value: fortressId ? `${fortressId.slice(0, 12)}...` : "—", color: "text-primary" },
+                                { label: "Battle ID", value: battle ? `${battle.battleId.slice(0, 12)}...` : "Iniciando...", color: "text-white" },
+                                { label: "Coste de ataque", value: battle ? `${battle.attackCost} créditos` : "—", color: "text-[#ffd700]" },
+                                { label: "Estado", value: battleResult === "won" ? "VICTORIA" : "ACTIVA", color: battleResult === "won" ? "text-[#00ff41]" : "text-white/60" },
                             ].map(({ label, value, color }) => (
                                 <div key={label} className="flex flex-col gap-0.5">
                                     <span className="text-white/30 uppercase tracking-widest">{label}</span>
@@ -304,64 +460,20 @@ export default function AttackPage() {
                             ))}
                         </div>
 
-                        <div className="border-t border-white/5 pt-3 space-y-1">
-                            <div className="flex justify-between">
-                                <span className="text-white/40 uppercase">Defensa inicial</span>
-                                <span className="text-[#ff0033] font-bold">{fortress.defenseLevel}%</span>
-                            </div>
-                            <div className="h-1 bg-white/5">
-                                <div className="h-full bg-[#ff0033]" style={{ width: `${fortress.defenseLevel}%` }} />
-                            </div>
-                        </div>
-
-                        <div className="space-y-1">
-                            <div className="flex justify-between">
-                                <span className="text-white/40 uppercase">Defensa actual</span>
-                                <span
-                                    className="font-bold"
-                                    style={{
-                                        color:
-                                            defensePercent > 50
-                                                ? "#ff0033"
-                                                : defensePercent > 20
-                                                ? "#ffd700"
-                                                : "#00ff41",
-                                    }}
-                                >
-                                    {defensePercent}%
-                                </span>
-                            </div>
-                            <div className="h-1 bg-white/5">
-                                <div
-                                    className="h-full transition-all duration-500"
-                                    style={{
-                                        width: `${defensePercent}%`,
-                                        backgroundColor:
-                                            defensePercent > 50
-                                                ? "#ff0033"
-                                                : defensePercent > 20
-                                                ? "#ffd700"
-                                                : "#00ff41",
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-1">
-                            <div className="flex justify-between">
-                                <span className="text-white/40 uppercase">Recursos</span>
-                                <span className="text-[#ffd700] font-bold">
-                                    {fortress.resources.toLocaleString()}
-                                </span>
-                            </div>
-                            <div className="h-1 bg-white/5">
-                                <div
-                                    className="h-full bg-[#ffd700]"
-                                    style={{
-                                        width: `${(fortress.resources / fortress.resourceMax) * 100}%`,
-                                    }}
-                                />
-                            </div>
+                        {/* Guess secret button */}
+                        <div className="border-t border-white/5 pt-3">
+                            <button
+                                onClick={() => setShowGuessPanel(prev => !prev)}
+                                disabled={!battle || !!battleResult}
+                                className={`w-full text-[9px] px-3 py-2 border transition-colors uppercase flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed ${
+                                    showGuessPanel
+                                        ? "bg-[#ffd700]/20 border-[#ffd700]/60 text-[#ffd700]"
+                                        : "bg-[#ffd700]/5 border-[#ffd700]/30 text-[#ffd700]/60 hover:bg-[#ffd700]/10 hover:text-[#ffd700]"
+                                }`}
+                            >
+                                <span className="material-symbols-outlined text-xs">key</span>
+                                Adivinar secreto
+                            </button>
                         </div>
 
                         {/* Tips */}
@@ -385,26 +497,18 @@ export default function AttackPage() {
 
             {/* ── MOBILE status bar ── */}
             <div className="md:hidden shrink-0 mx-2 mb-2 panel-float px-4 py-2 flex items-center justify-between">
-                <div className="text-[8px] font-mono text-white/40 uppercase">Defensa restante</div>
+                <div className="text-[8px] font-mono text-white/40 uppercase">
+                    {battleResult === "won" ? "VICTORIA — Redirigiendo..." : "Batalla activa"}
+                </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-24 h-1 bg-white/5">
-                        <div
-                            className="h-full transition-all duration-500"
-                            style={{
-                                width: `${defensePercent}%`,
-                                backgroundColor:
-                                    defensePercent > 50 ? "#ff0033" : defensePercent > 20 ? "#ffd700" : "#00ff41",
-                            }}
-                        />
-                    </div>
-                    <span
-                        className="text-xs font-bold font-mono"
-                        style={{
-                            color: defensePercent > 50 ? "#ff0033" : defensePercent > 20 ? "#ffd700" : "#00ff41",
-                        }}
+                    <button
+                        onClick={() => setShowGuessPanel(prev => !prev)}
+                        disabled={!battle || !!battleResult}
+                        className="text-[#ffd700]/60 hover:text-[#ffd700] transition-colors disabled:opacity-30"
+                        title="Adivinar secreto"
                     >
-                        {defensePercent}%
-                    </span>
+                        <span className="material-symbols-outlined text-base">key</span>
+                    </button>
                 </div>
             </div>
         </div>

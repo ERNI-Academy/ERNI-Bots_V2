@@ -23,6 +23,15 @@ const TEAM = [
         src: "/samuel.jpg",
         link: "https://www.linkedin.com/in/samuel-hernandez-martos/",
     },
+    {
+        block: "03",
+        codename: "Nil Martinez Hernandez",
+        job: "Software Developer & Cybersecurity Specialist",
+        bio: "Operativo joven en la red, curtido en las trincheras del MedTech, con una obsesión enfermiza por la ciberseguridad que empezó el día que descubrió que CheatEngine podía doblar la realidad de un videojuego desde su propio ordenador. Desde entonces, el bando del atacante nunca ha tenido mejor candidato. Durante el día construye software. Cuando cae la noche, estudia cómo romperlo. Su trayectoria profesional tiene coordenadas claras: developer ahora, red teamer después. No porque el código no le apasione, sino porque entiende que la mejor defensa la diseña quien ya ha cruzado el perímetro.",
+        skills: [".NET", "Cybersecurity", "CTF", "Red_Teaming", "LUA", "Python"],
+        src: "https://media.licdn.com/dms/image/v2/D4E03AQGbD40lETf1Ew/profile-displayphoto-scale_200_200/B4EZwva62OKQAY-/0/1770322114564?e=1773273600&v=beta&t=tFpF7ECHK070nNnPqA6zjyq_W5XnxGMmZvQjCjaU63A",
+        link: "https://www.linkedin.com/in/nil-martinez-hernandez-57a2aa16a/",
+    },
 ];
 
 export default function AboutPage() {

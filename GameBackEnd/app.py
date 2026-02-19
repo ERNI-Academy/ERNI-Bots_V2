@@ -9,6 +9,7 @@ from routes.players import players_bp
 from routes.fortresses import fortresses_bp
 from routes.battles import battles_bp
 from routes.leaderboard import leaderboard_bp
+from routes.admin import admin_bp
 
 
 def create_app():
@@ -68,6 +69,7 @@ def create_app():
     app.register_blueprint(fortresses_bp,  url_prefix="/api/v1/fortresses")
     app.register_blueprint(battles_bp,     url_prefix="/api/v1/battles")
     app.register_blueprint(leaderboard_bp, url_prefix="/api/v1/leaderboard")
+    app.register_blueprint(admin_bp,      url_prefix="/api/v1/admin")
 
     return app
 
