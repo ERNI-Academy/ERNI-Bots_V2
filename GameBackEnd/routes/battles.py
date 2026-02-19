@@ -1,10 +1,10 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from utils import generate_uuid, hash_word
-
+from services.agent_service import get_agent_service
 from db import SessionLocal
 from db.models import Battle, Fortress, Player
-
+agent_service = get_agent_service()
 battles_bp = Blueprint("battles", __name__)
 
 
@@ -29,13 +29,26 @@ def start_battle():
     if fortress.owner_id == user_id:
         db.close()
         return jsonify({"error": "Cannot attack your own fortress"}), 403
+    context = {
+        "fortress_prompt": fortress.prompt,
+        "protocol": fortress.protocol,
+        "archetype": fortress.archetype,
+        "personality": fortress.personality,
+        "restrictions": fortress.restrictions,
+        "secret_word": fortress.secret_word
+    }
+
+    
 
     # TODOAGENT:
     # Call Agent Service to create a combat session for this fortress.
     # Expected:
     # POST /agents/{agent_id}/sessions
     # session_id = response["session_id"]
-    session_id = "mock-session-id"
+    session_id = agent_service.create_session(
+        agent_id=fortress.id,
+        context=context
+    )
 
     battle = Battle(
         id=generate_uuid(),
@@ -88,7 +101,10 @@ def send_message(battle_id):
     # payload = {"message": message}
     # agent_reply = response["response"]
 
-    agent_reply = "Mock response from agent"
+    agent_reply = agent_service.send_message(
+        battle.session_id,
+        user_message
+    )
 
     db.close()
 
@@ -137,7 +153,8 @@ def guess_word(battle_id):
         # TODOAGENT:
         # Optional: Notify Agent Service that session is terminated.
         # POST /sessions/{battle.session_id}/terminate
-
+        agent_service.terminate_session(battle.session_id)
+        
         db.commit()
         db.close()
 
