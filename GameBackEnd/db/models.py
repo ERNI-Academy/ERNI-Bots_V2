@@ -1,4 +1,13 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, DateTime
+from sqlalchemy import (
+    Column,
+    String,
+    Integer,
+    ForeignKey,
+    DateTime,
+    Text,
+    Boolean,
+    Index
+)
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
@@ -10,6 +19,10 @@ def generate_uuid():
     return str(uuid.uuid4())
 
 
+# ==========================
+# PLAYER
+# ==========================
+
 class Player(Base):
     __tablename__ = "players"
 
@@ -17,37 +30,222 @@ class Player(Base):
     username = Column(String(50), unique=True, nullable=False)
     email = Column(String(120), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    score = Column(Integer, default=0)
+
+    credits = Column(Integer, default=0)
+    legacy_tokens = Column(Integer, default=0)
     energy = Column(Integer, default=100)
+
     created_at = Column(DateTime, default=datetime.utcnow)
 
     fortresses = relationship("Fortress", back_populates="owner")
     battles = relationship("Battle", back_populates="attacker")
+    season_stats = relationship("PlayerSeasonStats", back_populates="player")
 
+
+# ==========================
+# SEASON
+# ==========================
+
+class Season(Base):
+    __tablename__ = "seasons"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    name = Column(String(100), nullable=False)
+
+    is_active = Column(Boolean, default=False)
+    is_ranked = Column(Boolean, default=True)
+    is_frozen = Column(Boolean, default=False)
+    finalized = Column(Boolean, default=False)
+
+    start_date = Column(DateTime, default=datetime.utcnow)
+    end_date = Column(DateTime)
+
+    player_stats = relationship("PlayerSeasonStats", back_populates="season")
+    fortress_stats = relationship("FortressSeasonStats", back_populates="season")
+
+
+# ==========================
+# PLAYER SEASON STATS
+# ==========================
+
+class PlayerSeasonStats(Base):
+    __tablename__ = "player_season_stats"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+
+    player_id = Column(String, ForeignKey("players.id"), nullable=False)
+    season_id = Column(String, ForeignKey("seasons.id"), nullable=False)
+
+    score = Column(Integer, default=0)
+
+    player = relationship("Player", back_populates="season_stats")
+    season = relationship("Season", back_populates="player_stats")
+
+
+Index(
+    "idx_player_season_unique",
+    PlayerSeasonStats.player_id,
+    PlayerSeasonStats.season_id,
+    unique=True
+)
+
+
+# ==========================
+# FORTRESS (PERSISTENTE)
+# ==========================
 
 class Fortress(Base):
     __tablename__ = "fortresses"
 
     id = Column(String, primary_key=True, default=generate_uuid)
+
     owner_id = Column(String, ForeignKey("players.id"), nullable=False)
-    agent_id = Column(String, nullable=False)
-    protected_word_hash = Column(String(64), nullable=False)
-    name = Column(String(100))
+
+    protocol_id = Column(String, ForeignKey("protocols.id"), nullable=False)
+    archetype_id = Column(String, ForeignKey("archetypes.id"), nullable=False)
+
+    name = Column(String(100), nullable=False)
+    story = Column(Text, nullable=False)
+    personality = Column(Text, nullable=False)
+    constraints = Column(Text, nullable=False)
+
+    # TODOSECURITY: Replace with encrypted storage before production
+    protected_word = Column(String(64), nullable=False)
+
     created_at = Column(DateTime, default=datetime.utcnow)
+    last_reconfigured_at = Column(DateTime, default=datetime.utcnow)
 
     owner = relationship("Player", back_populates="fortresses")
+    protocol = relationship("Protocol")
+    archetype = relationship("Archetype")
     battles = relationship("Battle", back_populates="fortress")
+    season_stats = relationship("FortressSeasonStats", back_populates="fortress")
 
+
+Index("idx_fortress_owner", Fortress.owner_id)
+Index("idx_fortress_reconfigured", Fortress.last_reconfigured_at)
+
+
+# ==========================
+# FORTRESS SEASON STATS
+# ==========================
+
+class FortressSeasonStats(Base):
+    __tablename__ = "fortress_season_stats"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+
+    fortress_id = Column(String, ForeignKey("fortresses.id"), nullable=False)
+    season_id = Column(String, ForeignKey("seasons.id"), nullable=False)
+
+    defeat_count = Column(Integer, default=0)
+    attack_count = Column(Integer, default=0)
+
+    status = Column(String(20), default="active")
+    # active | reconfigurable | destroyed
+
+    fortress = relationship("Fortress", back_populates="season_stats")
+    season = relationship("Season", back_populates="fortress_stats")
+
+
+Index(
+    "idx_fortress_season_unique",
+    FortressSeasonStats.fortress_id,
+    FortressSeasonStats.season_id,
+    unique=True
+)
+
+
+# ==========================
+# BATTLE
+# ==========================
 
 class Battle(Base):
     __tablename__ = "battles"
 
     id = Column(String, primary_key=True, default=generate_uuid)
+
     attacker_id = Column(String, ForeignKey("players.id"), nullable=False)
-    fortress_id = Column(String, ForeignKey("fortresses.id"), nullable=False)
+    fortress_id = Column(String, ForeignKey("fortresses.id"), nullable=True)
+
     session_id = Column(String, nullable=False)
+
+    type = Column(String(10), default="pvp")
+    # pvp | pve
+
     status = Column(String(20), default="active")
+    # active | won | lost | expired
+
     created_at = Column(DateTime, default=datetime.utcnow)
 
     attacker = relationship("Player", back_populates="battles")
     fortress = relationship("Fortress", back_populates="battles")
+
+
+Index("idx_battle_attacker_status", Battle.attacker_id, Battle.status)
+Index("idx_battle_fortress", Battle.fortress_id)
+
+
+# ==========================
+# PROTOCOL
+# ==========================
+
+class Protocol(Base):
+    __tablename__ = "protocols"
+
+    id = Column(String, primary_key=True)
+    name = Column(String(50), unique=True, nullable=False)
+    description = Column(Text, nullable=False)
+    protocol_template = Column(Text, nullable=False)
+
+    unlock_cost = Column(Integer, default=0)
+
+
+Index("idx_protocol_unlock_cost", Protocol.unlock_cost)
+
+
+# ==========================
+# ARCHETYPE
+# ==========================
+
+class Archetype(Base):
+    __tablename__ = "archetypes"
+
+    id = Column(String, primary_key=True)
+    name = Column(String(50), unique=True, nullable=False)
+    description = Column(Text, nullable=False)
+    archetype_template = Column(Text, nullable=False)
+
+    unlock_cost = Column(Integer, default=0)
+
+
+Index("idx_archetype_unlock_cost", Archetype.unlock_cost)
+
+
+# ==========================
+# BOSS (PVE)
+# ==========================
+
+class Boss(Base):
+    __tablename__ = "bosses"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+
+    name = Column(String(100), nullable=False)
+
+    protocol_id = Column(String, ForeignKey("protocols.id"), nullable=False)
+    archetype_id = Column(String, ForeignKey("archetypes.id"), nullable=False)
+
+    story = Column(Text, nullable=False)
+    personality = Column(Text, nullable=False)
+    constraints = Column(Text, nullable=False)
+
+    protected_word = Column(String(64), nullable=False)
+
+    min_score_required = Column(Integer, default=0)
+    reward_credits = Column(Integer, default=0)
+
+    is_active = Column(Boolean, default=True)
+
+    protocol = relationship("Protocol")
+    archetype = relationship("Archetype")
