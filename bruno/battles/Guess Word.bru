@@ -1,0 +1,25 @@
+meta {
+  name: Guess Word
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/battles/:battle_id/guess
+  body: json
+  auth: bearer
+}
+
+params:path {
+  battle_id: {{battleId}}
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "word": "SHADOWKEY"
+  }
+}

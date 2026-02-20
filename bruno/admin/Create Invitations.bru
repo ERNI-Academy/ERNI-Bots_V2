@@ -1,0 +1,24 @@
+meta {
+  name: Create Invitations
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/invitations
+  body: json
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+}
+
+body:json {
+  {
+    "count": 5,
+    "expires": "2026-12-31",
+    "max_uses": 1,
+    "created_by": "admin"
+  }
+}

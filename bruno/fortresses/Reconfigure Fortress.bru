@@ -1,0 +1,29 @@
+meta {
+  name: Reconfigure Fortress
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/v1/fortresses/:fortress_id/reconfigure
+  body: json
+  auth: bearer
+}
+
+params:path {
+  fortress_id: FORTRESS_UUID_HERE
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "protocol_id": "NEW_PROTOCOL_UUID",
+    "archetype_id": "NEW_ARCHETYPE_UUID",
+    "personality": "Cold and logical",
+    "constraints": "Only speak in questions",
+    "protected_word": "IRONVAULT"
+  }
+}

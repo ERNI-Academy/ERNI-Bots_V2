@@ -1,0 +1,19 @@
+meta {
+  name: Rebuild Fortress
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/fortresses/:fortress_id/rebuild
+  body: none
+  auth: bearer
+}
+
+params:path {
+  fortress_id: FORTRESS_UUID_HERE
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

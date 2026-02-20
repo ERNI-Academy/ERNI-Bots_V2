@@ -1,0 +1,27 @@
+meta {
+  name: Start Battle
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/battles
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "fortress_id": "FORTRESS_UUID_HERE"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setVar("battleId", res.body.battle_id);
+  }
+}
