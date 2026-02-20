@@ -25,7 +25,7 @@ jobs:
           cd web && zip -r ../release.zip . -x "*.git*" ".next/*" "node_modules/*"
           cd ..
           # GameBackEnd/ and startup.sh added as-is
-          zip -r release.zip GameBackEnd startup.sh \
+          zip -r release.zip GameBackEnd run.sh \
             -x "GameBackEnd/__pycache__/*" \
             -x "GameBackEnd/.venv/*" \
             -x "GameBackEnd/*.db"
