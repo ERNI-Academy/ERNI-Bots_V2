@@ -74,12 +74,25 @@ def create_fortress():
         db.close()
         return jsonify({"error": "Player not found"}), 404
 
+    # Check if player already has a fortress
+    existing_fortress = db.query(Fortress).filter_by(owner_id=user_id).first()
+    if existing_fortress:
+        db.close()
+        return jsonify({"error": "Player already has a fortress"}), 400
+
     protocol = db.query(Protocol).filter_by(id=protocol_id).first()
     archetype = db.query(Archetype).filter_by(id=archetype_id).first()
 
     if not protocol or not archetype:
         db.close()
         return jsonify({"error": "Invalid protocol or archetype"}), 400
+    
+    # DESBLOQUEO POR CREDITS
+    total_cost = protocol.unlock_cost + archetype.unlock_cost
+
+    if player.credits < total_cost:
+        db.close()
+        return jsonify({"error": "Not enough credits"}), 403
 
     # DESBLOQUEO POR CREDITS
     total_cost = protocol.unlock_cost + archetype.unlock_cost
@@ -118,21 +131,23 @@ def create_fortress():
 
 @fortresses_bp.get("/me")
 @jwt_required()
-def list_my_fortresses():
+def get_my_fortress():
     user_id = get_jwt_identity()
     db = SessionLocal()
 
-    fortresses = db.query(Fortress).filter_by(owner_id=user_id).all()
+    fortress = db.query(Fortress).filter_by(owner_id=user_id).first()
 
-    result = []
-    for f in fortresses:
-        result.append({
-            "id": f.id,
-            "name": f.name,
-            "protocol": f.protocol.name,
-            "archetype": f.archetype.name,
-            "created_at": f.created_at
-        })
+    if not fortress:
+        db.close()
+        return jsonify({"error": "No fortress found"}), 404
+
+    result = {
+        "id": fortress.id,
+        "name": fortress.name,
+        "protocol": fortress.protocol.name,
+        "archetype": fortress.archetype.name,
+        "created_at": fortress.created_at
+    }
 
     db.close()
     return jsonify(result)
