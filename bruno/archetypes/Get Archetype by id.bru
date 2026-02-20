@@ -1,0 +1,20 @@
+meta {
+  name: Get Archetype by id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/archetypes/arch-oraculo
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc3MTYwMDE2MCwianRpIjoiM2RkMmQ0N2MtM2EwMC00NmZiLWJkMTUtMGM4M2U2YzUyNWY1IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6ImY5YjEwZTU2LWMzMzgtNGUzYS04YWM1LTFkYzA5NWRmMTAyNCIsIm5iZiI6MTc3MTYwMDE2MCwiY3NyZiI6IjIxYTJlYjkzLWZiYzktNGMwZS05ZDJiLWZjZGQzNmY1ZTA5YSIsImV4cCI6MTc3MTYwMzc2MH0.tr5m-X6r_t0uvG05l_H_y2-NEZJ13ube7OhvektP8kY
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
