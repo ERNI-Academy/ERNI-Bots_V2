@@ -1,9 +1,5 @@
 #!/bin/bash
 # Azure App Service startup script for Flask (application factory pattern)
-#
-# Azure Oryx extracts the app to /tmp/<hash>/ and injects that path into
-# PATH and PYTHONPATH. The env var APP_PATH points to the extracted dir.
-# We use it (or fall back to searching for app.py) to set the working dir.
 
 APP_DIR="${APP_PATH:-}"
 
@@ -22,5 +18,8 @@ if [ -d "$ANTENV" ]; then
 fi
 
 cd "$APP_DIR"
+
+echo "[startup] Initializing database..."
+python create_db.py
 
 exec gunicorn --bind=0.0.0.0:8000 --timeout 600 --workers 2 "app:create_app()"
