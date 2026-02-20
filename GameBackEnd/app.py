@@ -10,6 +10,8 @@ from routes.fortresses import fortresses_bp
 from routes.battles import battles_bp
 from routes.leaderboard import leaderboard_bp
 from routes.admin import admin_bp
+from routes.archetypes import archetypes_bp
+from routes.protocols import protocols_bp
 
 
 def create_app():
@@ -70,6 +72,8 @@ def create_app():
     app.register_blueprint(battles_bp,     url_prefix="/api/v1/battles")
     app.register_blueprint(leaderboard_bp, url_prefix="/api/v1/leaderboard")
     app.register_blueprint(admin_bp,      url_prefix="/api/v1/admin")
+    app.register_blueprint(archetypes_bp, url_prefix="/api/v1/archetypes")
+    app.register_blueprint(protocols_bp,  url_prefix="/api/v1/protocols")
 
     return app
 
