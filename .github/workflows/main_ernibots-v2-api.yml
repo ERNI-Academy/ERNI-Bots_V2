@@ -15,7 +15,7 @@ jobs:
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11' # Versión estable soportada en Azure
+          python-version: '3.14'
 
       # Entramos en GameBackEnd para instalar dependencias y validar
       - name: Install dependencies
