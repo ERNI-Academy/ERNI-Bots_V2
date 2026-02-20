@@ -37,7 +37,7 @@ class Player(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    fortresses = relationship("Fortress", back_populates="owner")
+    fortress = relationship("Fortress", back_populates="owner", uselist=False)
     battles = relationship("Battle", back_populates="attacker")
     season_stats = relationship("PlayerSeasonStats", back_populates="player")
 
@@ -99,7 +99,7 @@ class Fortress(Base):
 
     id = Column(String, primary_key=True, default=generate_uuid)
 
-    owner_id = Column(String, ForeignKey("players.id"), nullable=False)
+    owner_id = Column(String, ForeignKey("players.id"), nullable=False, unique=True)
 
     protocol_id = Column(String, ForeignKey("protocols.id"), nullable=False)
     archetype_id = Column(String, ForeignKey("archetypes.id"), nullable=False)
@@ -115,7 +115,7 @@ class Fortress(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     last_reconfigured_at = Column(DateTime, default=datetime.utcnow)
 
-    owner = relationship("Player", back_populates="fortresses")
+    owner = relationship("Player", back_populates="fortress")
     protocol = relationship("Protocol")
     archetype = relationship("Archetype")
     battles = relationship("Battle", back_populates="fortress")

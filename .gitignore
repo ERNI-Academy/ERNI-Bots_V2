@@ -55,3 +55,4 @@ __pycache__/
 *.pyc
 *.pyo
 GameBackend/.venv/
+dev.db
