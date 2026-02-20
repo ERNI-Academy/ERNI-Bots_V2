@@ -1,4 +1,4 @@
-name: Deploy Next.js + Flask to Azure
+name: Deploy Next.js to Azure
 
 on:
   push:
@@ -20,15 +20,9 @@ jobs:
           cache-dependency-path: ./web/package-lock.json
 
       - name: Zip artifact for deployment
+        working-directory: ./web
         run: |
-          # web/ content goes to the root of the zip (Oryx detects package.json)
-          cd web && zip -r ../release.zip . -x "*.git*" ".next/*" "node_modules/*"
-          cd ..
-          # GameBackEnd/ and startup.sh added as-is
-          zip -r release.zip GameBackEnd run.sh \
-            -x "GameBackEnd/__pycache__/*" \
-            -x "GameBackEnd/.venv/*" \
-            -x "GameBackEnd/*.db"
+          zip -r ../release.zip . -x "*.git*" ".next/*" "node_modules/*"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
