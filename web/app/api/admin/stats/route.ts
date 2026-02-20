@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND = process.env.API_URL ?? "http://localhost:5000";
+import { BACKEND } from "@/lib/backend";
 
 export async function GET(request: NextRequest) {
   const secret = request.headers.get("X-Admin-Secret");

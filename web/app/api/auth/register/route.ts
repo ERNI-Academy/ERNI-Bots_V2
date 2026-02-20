@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND = process.env.API_URL ?? "http://localhost:5000";
+import { BACKEND } from "@/lib/backend";
 
 export async function POST(request: NextRequest) {
   let body: unknown;

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// API_URL sin NEXT_PUBLIC_: solo existe en el servidor, nunca en el bundle
 // del cliente. El navegador nunca sabe que Flask existe.
-const BACKEND = process.env.API_URL ?? "http://localhost:5000";
+import { BACKEND } from "@/lib/backend";
 
 export async function POST(request: NextRequest) {
   let body: unknown;
