@@ -1,4 +1,4 @@
-name: Deploy Next.js Standard to Azure
+name: Deploy Next.js + Flask to Azure
 
 on:
   push:
@@ -19,10 +19,23 @@ jobs:
           cache: 'npm'
           cache-dependency-path: ./web/package-lock.json
 
-      - name: Zip artifact for deployment
+      - name: Build Next.js
         working-directory: ./web
         run: |
-          zip -r ../release.zip . -x "*.git*" ".next/*" "node_modules/*"
+          npm ci
+          npm run build
+
+      - name: Zip artifact for deployment
+        run: |
+          zip -r release.zip \
+            web \
+            GameBackEnd \
+            startup.sh \
+            -x "*.git*" \
+            -x "web/node_modules/*" \
+            -x "GameBackEnd/__pycache__/*" \
+            -x "GameBackEnd/.venv/*" \
+            -x "GameBackEnd/*.db"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -50,4 +63,4 @@ jobs:
           app-name: 'ernibots-v2'
           slot-name: 'Production'
           package: release.zip
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D714FF7A49F94EC5ADB11F943A71ABCB }}
+          startup-command: 'bash /home/site/wwwroot/startup.sh'
