@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "bash run.sh 2>/dev/null || next start -p ${PORT:-8080}",
+    "start": "bash run.sh 2>/dev/null; next start -p ${PORT:-8080}",
     "lint": "eslint"
   },
   "dependencies": {
