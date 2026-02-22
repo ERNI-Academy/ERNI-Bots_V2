@@ -13,7 +13,7 @@ def leaderboard():
     players = (
         db.query(Player)
         .order_by(Player.score.desc())
-        .limit(100)
+        .limit(500)
         .all()
     )
 
