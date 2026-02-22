@@ -172,3 +172,36 @@ body {
   50%  { transform: scale(1.05); opacity: 0.5; }
   100% { transform: scale(0.95); opacity: 0.2; }
 }
+
+/* ── Scoreboard styles ───────────────────────────────────────────────────── */
+.scoreboard-cursor::after {
+  content: "▊";
+  animation: scoreboard-blink 1s step-start infinite;
+  margin-left: 8px;
+}
+
+@keyframes scoreboard-blink {
+  50% { opacity: 0; }
+}
+
+.scoreboard-glitch {
+  animation: scoreboard-noise 4s infinite;
+}
+
+@keyframes scoreboard-noise {
+  0%   { transform: translate(0, 0); }
+  1%   { transform: translate(1px, 1px); }
+  2%   { transform: translate(0, 0); }
+  98%  { transform: translate(0, 0); }
+  99%  { transform: translate(-1px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+
+.scoreboard-row-hover:hover {
+  background: rgba(0, 255, 255, 0.05);
+  text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+}
+
+.scoreboard-stream {
+  mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+}

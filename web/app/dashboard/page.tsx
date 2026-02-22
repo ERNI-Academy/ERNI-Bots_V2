@@ -201,6 +201,13 @@ export default function DashboardPage() {
                             </span>
                         </button>
                         <Link
+                            href="/scoreboard"
+                            className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors"
+                            title="Marcador Global"
+                        >
+                            <span className="material-symbols-outlined text-xs md:text-sm">leaderboard</span>
+                        </Link>
+                        <Link
                             href="/about"
                             className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors"
                             title="Quiénes Somos"
