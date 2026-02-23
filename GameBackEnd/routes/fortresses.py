@@ -145,6 +145,10 @@ def get_my_fortress():
     result = {
         "id": fortress.id,
         "name": fortress.name,
+        "story": fortress.story,
+        "personality": fortress.personality,
+        "protected_word": fortress.protected_word,
+        "constraints": fortress.constraints,
         "protocol": fortress.protocol.name,
         "archetype": fortress.archetype.name,
         "created_at": fortress.created_at
