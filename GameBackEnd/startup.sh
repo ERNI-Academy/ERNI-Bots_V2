@@ -22,4 +22,13 @@ cd "$APP_DIR"
 echo "[startup] Initializing database..."
 python create_db.py
 
+# Run seed only when SEED_DB=true is explicitly set (e.g. via Azure App Settings on first deploy)
+if [ "${SEED_DB:-false}" = "true" ]; then
+    echo "[startup] SEED_DB=true detected — running seed script..."
+    python scripts/seed.py
+    echo "[startup] Seed completed."
+else
+    echo "[startup] Skipping seed (set SEED_DB=true to run)."
+fi
+
 exec gunicorn --bind=0.0.0.0:8000 --timeout 600 --workers 2 "app:create_app()"
