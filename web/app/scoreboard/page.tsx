@@ -46,15 +46,10 @@ const MOCK_ENTRIES: LeaderboardEntry[] = [
   { rank: 25, username: "Warp_Signal",     score:   948_700 },
 ];
 
-const MOCK_PLAYER: PlayerProfile = { rank: 42_105, username: "Overseer", season_score: 0 };
+const MOCK_PLAYER: PlayerProfile = { rank: 12, username: "Overseer", season_score: 0 };
 
 function formatScore(n: number): string {
   return n.toLocaleString("en-US");
-}
-
-function getSyscycle(): string {
-  const now = new Date();
-  return `SYSCYCLE_${now.getDay()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getFullYear()).slice(-2)}`;
 }
 
 function rankColorClass(rank: number): string {
@@ -84,10 +79,8 @@ export default function ScoreboardPage() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [player, setPlayer] = useState<PlayerProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [syscycle, setSyscycle] = useState("");
 
   useEffect(() => {
-    setSyscycle(getSyscycle());
     async function load() {
       try {
         const [lbData, meData] = await Promise.all([
@@ -107,7 +100,7 @@ export default function ScoreboardPage() {
 
   return (
     <div
-      className={`${spaceMono.className} fixed inset-0 flex flex-col items-center justify-start md:justify-center p-4 md:p-8 bg-[#050505] text-primary overflow-hidden`}
+      className={`${spaceMono.className} fixed inset-0 flex flex-col bg-[#050505] text-primary overflow-hidden`}
     >
       {/* CRT scanlines */}
       <div className="scanlines" />
@@ -134,34 +127,38 @@ export default function ScoreboardPage() {
       <div className="fixed bottom-4 right-4 size-16 border-b border-r border-primary/30 pointer-events-none" />
 
       {/* ─── HEADER ─── */}
-      <header className="w-full max-w-5xl mb-6 md:mb-12 flex justify-between items-end border-b border-primary/30 pb-4 shrink-0">
-        <div className="flex flex-col gap-1">
-          <span className="hidden md:block text-[10px] tracking-[0.5em] uppercase opacity-50">Authorized Overseer Access Only</span>
-          <h1 className="text-base md:text-2xl font-bold tracking-tighter uppercase scoreboard-cursor flex items-center gap-2 md:gap-3">
-            <Link
-              href="/dashboard"
-              className="text-primary/40 hover:text-primary transition-colors"
-              title="Volver al Dashboard"
-            >
-              <span className="material-symbols-outlined text-sm align-middle">arrow_back</span>
-            </Link>
-            <span className="hidden sm:inline">Command_Hierarchy.exe</span>
-            <span className="sm:hidden">Cmd_Hierarchy.exe</span>
-          </h1>
+      <header className="flex items-center justify-between border-b border-primary/20 bg-[#050505]/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 sticky top-0 shrink-0">
+        <div className="flex items-center gap-2 md:gap-4">
+          <div className="size-6 text-primary flex items-center justify-center">
+            <span className="material-symbols-outlined text-xl md:text-2xl">leaderboard</span>
+          </div>
+          <div className="flex flex-col">
+            <h1 className="text-white text-[10px] md:text-xs font-mono font-bold leading-tight tracking-wider uppercase">
+              RANKING_GLOBAL_v2.0.0
+            </h1>
+            <p className="text-primary text-[8px] md:text-[10px] font-mono">
+             ¿QUIÉN DOMINARÁ EL RANKING GLOBAL?
+            </p>
+          </div>
         </div>
-        <div className="text-right">
-          <span className="text-[10px] tracking-[0.2em] uppercase opacity-50">Local_Time</span>
-          <p className="text-sm md:text-lg font-bold">{syscycle}</p>
+        <div className="flex items-center gap-2 md:gap-4">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-1 px-3 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary transition-colors font-mono text-[10px] uppercase tracking-widest"
+          >
+            <span className="material-symbols-outlined text-sm">arrow_back</span>
+            <span className="hidden sm:inline">DASHBOARD</span>
+          </Link>
         </div>
       </header>
 
       {/* ─── LEADERBOARD TABLE ─── */}
-      <main className="w-full max-w-5xl flex-1 scoreboard-stream overflow-hidden min-h-0">
+      <main className="w-full flex-1 scoreboard-stream overflow-hidden min-h-0 px-4 md:px-8">
         {/* Column headers */}
-        <div className="grid grid-cols-12 gap-2 md:gap-4 px-2 md:px-4 py-3 text-[9px] md:text-[10px] tracking-[0.2em] md:tracking-[0.4em] uppercase opacity-40 mb-2 md:mb-4 border-b border-primary/20">
-          <div className="col-span-2">Idx</div>
-          <div className="col-span-7">Entity_ID</div>
-          <div className="col-span-3 text-right">Shards</div>
+        <div className="grid grid-cols-12 gap-4 md:gap-6 px-2 md:px-4 py-3 text-[9px] md:text-[10px] tracking-[0.2em] md:tracking-[0.4em] uppercase  mb-2 md:mb-4 border-b border-primary/20">
+          <div className="col-span-2">Pos.</div>
+          <div className="col-span-7">Usuario</div>
+          <div className="col-span-3 text-right">Puntuación</div>
         </div>
 
         {loading ? (
@@ -183,7 +180,7 @@ export default function ScoreboardPage() {
               return (
                 <div
                   key={entry.rank}
-                  className={`grid grid-cols-12 gap-2 md:gap-4 px-2 md:px-4 ${sizes.py} items-center transition-all scoreboard-row-hover ${color} ${opacity}`}
+                  className={`grid grid-cols-12 gap-4 md:gap-6 px-2 md:px-4 ${sizes.py} items-center transition-all scoreboard-row-hover ${color} ${opacity}`}
                 >
                   <div className={`col-span-2 ${sizes.index} font-bold tracking-tighter`}>
                     {String(entry.rank).padStart(2, "0")}
@@ -204,20 +201,20 @@ export default function ScoreboardPage() {
       </main>
 
       {/* ─── FOOTER ─── */}
-      <footer className="w-full max-w-5xl mt-6 md:mt-12 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 border-t border-primary/30 pt-4 md:pt-6 shrink-0">
+      <footer className="w-full px-4 md:px-8 py-3 md:py-4 flex flex-row justify-between items-center gap-4 border-t border-primary/30 shrink-0">
         <div className="flex items-center gap-6 md:gap-12">
           <div className="flex flex-col">
-            <span className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase opacity-50">Global_Nodes</span>
+            <span className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase opacity-50">Jugadores totales</span>
             <span className="text-base md:text-xl font-bold">{loading ? "—" : entries.length.toLocaleString()}</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase opacity-50">Total_Shards</span>
+            <span className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase opacity-50">Puntos repartidos</span>
             <span className="text-base md:text-xl font-bold">{loading ? "—" : formatScore(totalShards)}</span>
           </div>
         </div>
         <div className="flex items-center gap-3 md:gap-4">
           <div className="flex flex-col text-right">
-            <span className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase opacity-50">Overseer_Rank</span>
+            <span className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase opacity-50">Mi posición</span>
             <span className="text-base md:text-xl font-bold">
               {player ? `#${player.rank.toLocaleString()}` : "—"}
             </span>
