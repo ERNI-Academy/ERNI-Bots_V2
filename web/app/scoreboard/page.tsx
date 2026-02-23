@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Space_Mono } from "next/font/google";
 
@@ -55,6 +55,11 @@ export default function ScoreboardPage() {
   const [page, setPage] = useState(0);
   const [retryKey, setRetryKey] = useState(0);
   const [total, setTotal] = useState<number | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    listRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [page]);
 
   useEffect(() => {
     async function load() {
@@ -140,7 +145,7 @@ export default function ScoreboardPage() {
       </header>
 
       {/* ─── LEADERBOARD TABLE ─── */}
-      <main className="w-full flex-1 scoreboard-stream overflow-hidden min-h-0 px-4 md:px-8">
+      <main className="w-full flex-1 scoreboard-stream overflow-hidden min-h-0 px-4 md:px-8 flex flex-col">
         {/* Column headers */}
         <div className="grid grid-cols-12 gap-4 md:gap-6 px-2 md:px-4 py-3 text-[9px] md:text-[10px] tracking-[0.2em] md:tracking-[0.4em] uppercase  mb-2 md:mb-4 border-b border-primary/20">
           <div className="col-span-2">Pos.</div>
@@ -168,7 +173,7 @@ export default function ScoreboardPage() {
             NO_DATA_FOUND
           </div>
         ) : (
-          <div className="space-y-1 overflow-y-auto h-full custom-scrollbar pr-1">
+          <div ref={listRef} className="space-y-1 overflow-y-auto flex-1 min-h-0 custom-scrollbar pr-1 pb-2">
             {entries.map((entry) => {
               const sizes = rankSizes(entry.rank);
               const color = rankColorClass(entry.rank);
