@@ -18,36 +18,6 @@ interface PlayerProfile {
   season_score: number;
 }
 
-const MOCK_ENTRIES: LeaderboardEntry[] = [
-  { rank: 1,  username: "Archon_Prime",    score: 9_524_100 },
-  { rank: 2,  username: "Void_Reaper",     score: 8_821_000 },
-  { rank: 3,  username: "Cyber_Squire",    score: 7_420_000 },
-  { rank: 4,  username: "Neon_Ghost",      score: 6_521_900 },
-  { rank: 5,  username: "Data_Wraith",     score: 5_110_200 },
-  { rank: 6,  username: "Krom_Digger",     score: 4_832_000 },
-  { rank: 7,  username: "Neural_Blight",   score: 4_102_500 },
-  { rank: 8,  username: "Static_Pulse",    score: 3_980_100 },
-  { rank: 9,  username: "Bit_Nomad",       score: 3_540_200 },
-  { rank: 10, username: "Vector_Zero",     score: 2_990_000 },
-  { rank: 11, username: "Phantom_Hex",     score: 2_761_400 },
-  { rank: 12, username: "Iron_Cipher",     score: 2_588_300 },
-  { rank: 13, username: "Dusk_Protocol",   score: 2_401_900 },
-  { rank: 14, username: "Sigma_Cult",      score: 2_280_750 },
-  { rank: 15, username: "Null_Predator",   score: 2_105_600 },
-  { rank: 16, username: "Glitch_Monk",     score: 1_987_200 },
-  { rank: 17, username: "Xen_Marauder",    score: 1_854_000 },
-  { rank: 18, username: "Rogue_Kernel",    score: 1_720_500 },
-  { rank: 19, username: "Void_Splicer",    score: 1_601_100 },
-  { rank: 20, username: "Dark_Lattice",    score: 1_490_800 },
-  { rank: 21, username: "Hex_Vagrant",     score: 1_388_400 },
-  { rank: 22, username: "Prism_Stalker",   score: 1_274_200 },
-  { rank: 23, username: "Echo_Tyrant",     score: 1_160_900 },
-  { rank: 24, username: "Binary_Shade",    score: 1_055_300 },
-  { rank: 25, username: "Warp_Signal",     score:   948_700 },
-];
-
-const MOCK_PLAYER: PlayerProfile = { rank: 12, username: "Overseer", season_score: 0 };
-
 function formatScore(n: number): string {
   return n.toLocaleString("en-US");
 }
@@ -75,28 +45,45 @@ function rowOpacityClass(rank: number): string {
   return "opacity-20";
 }
 
+const PAGE_SIZE = 20;
+
 export default function ScoreboardPage() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [player, setPlayer] = useState<PlayerProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [retryKey, setRetryKey] = useState(0);
+  const [total, setTotal] = useState<number | null>(null);
 
   useEffect(() => {
     async function load() {
+      setLoading(true);
+      setError(null);
+      const offset = page * PAGE_SIZE;
       try {
         const [lbData, meData] = await Promise.all([
-          fetch("/api/leaderboard").then((r) => (r.ok ? r.json() : null)).catch(() => null),
-          fetch("/api/players/me", { credentials: "include" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+          fetch(`/api/leaderboard?offset=${offset}&limit=${PAGE_SIZE}`)
+            .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+            .catch((e: Error) => { throw e; }),
+          fetch("/api/players/me", { credentials: "include" })
+            .then((r) => (r.ok ? r.json() : null))
+            .catch(() => null),
         ]);
-        setEntries(Array.isArray(lbData) && lbData.length > 0 ? lbData : MOCK_ENTRIES);
-        setPlayer(meData ?? MOCK_PLAYER);
+        setEntries(Array.isArray(lbData?.items) ? lbData.items : []);
+        setTotal(typeof lbData?.total === "number" ? lbData.total : null);
+        setPlayer(meData ?? null);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Error al cargar el ranking");
+        setEntries([]);
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, []);
+  }, [page, retryKey]);
 
-  const totalShards = entries.reduce((sum, e) => sum + e.score, 0);
+  const totalPages = total !== null ? Math.ceil(total / PAGE_SIZE) : null;
 
   return (
     <div
@@ -165,6 +152,17 @@ export default function ScoreboardPage() {
           <div className="flex items-center justify-center h-40 text-primary/50 text-xs animate-pulse uppercase tracking-widest">
             SINCRONIZANDO DATOS...
           </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-40 gap-2">
+            <span className="text-red-400/70 text-xs uppercase tracking-widest">ERROR_DE_CONEXION</span>
+            <span className="text-primary/30 text-[10px]">{error}</span>
+            <button
+              onClick={() => setRetryKey((k) => k + 1)}
+              className="mt-2 px-4 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary text-[10px] uppercase tracking-widest transition-colors"
+            >
+              REINTENTAR
+            </button>
+          </div>
         ) : entries.length === 0 ? (
           <div className="flex items-center justify-center h-40 text-primary/30 text-xs uppercase tracking-widest">
             NO_DATA_FOUND
@@ -202,16 +200,36 @@ export default function ScoreboardPage() {
 
       {/* ─── FOOTER ─── */}
       <footer className="w-full px-4 md:px-8 py-3 md:py-4 flex flex-row justify-between items-center gap-4 border-t border-primary/30 shrink-0">
-        <div className="flex items-center gap-6 md:gap-12">
-          <div className="flex flex-col">
-            <span className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase opacity-50">Jugadores totales</span>
-            <span className="text-base md:text-xl font-bold">{loading ? "—" : entries.length.toLocaleString()}</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase opacity-50">Puntos repartidos</span>
-            <span className="text-base md:text-xl font-bold">{loading ? "—" : formatScore(totalShards)}</span>
-          </div>
+        {/* Stat: total players */}
+        <div className="flex flex-col">
+          <span className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase opacity-50">Jugadores totales</span>
+          <span className="text-base md:text-xl font-bold">{loading ? "—" : (total ?? entries.length).toLocaleString()}</span>
         </div>
+
+        {/* Pagination controls */}
+        <div className="flex items-center gap-2 md:gap-3">
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={loading || page === 0}
+            className="flex items-center justify-center size-8 md:size-9 border border-primary/30 hover:bg-primary/20 text-primary disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+            aria-label="Página anterior"
+          >
+            <span className="material-symbols-outlined text-sm">chevron_left</span>
+          </button>
+          <span className="text-[10px] md:text-xs font-mono tracking-widest text-primary/70 min-w-[5rem] text-center">
+            {loading ? "…" : totalPages !== null ? `${page + 1} / ${totalPages}` : `PÁG. ${page + 1}`}
+          </span>
+          <button
+            onClick={() => setPage((p) => p + 1)}
+            disabled={loading || (totalPages !== null && page + 1 >= totalPages) || entries.length < PAGE_SIZE}
+            className="flex items-center justify-center size-8 md:size-9 border border-primary/30 hover:bg-primary/20 text-primary disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+            aria-label="Página siguiente"
+          >
+            <span className="material-symbols-outlined text-sm">chevron_right</span>
+          </button>
+        </div>
+
+        {/* Stat: player rank */}
         <div className="flex items-center gap-3 md:gap-4">
           <div className="flex flex-col text-right">
             <span className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase opacity-50">Mi posición</span>
