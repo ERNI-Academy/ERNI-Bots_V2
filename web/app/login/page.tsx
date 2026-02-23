@@ -1,21 +1,24 @@
 "use client";
 
-import { useState, FormEvent, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, FormEvent, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginApi } from "@/lib/auth";
 
-export default function LoginPage() {
+function LoginContent() {
   const [username, setUsername] = useState("");
   const [invitationCode, setInvitationCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    const code = searchParams.get("code");
+    if (code) setInvitationCode(code);
+  }, [searchParams]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -142,12 +145,13 @@ export default function LoginPage() {
                   &gt; CÓDIGO DE INVITACIÓN:
                 </p>
                 <input
-                  className="w-full bg-transparent border-0 border-b border-primary/30 p-0 py-2 focus:ring-0 focus:border-primary text-base sm:text-lg md:text-xl placeholder:text-primary/10 transition-all"
+                  className="w-full bg-transparent border-0 border-b border-primary/30 p-0 py-2 focus:ring-0 focus:border-primary text-base sm:text-lg md:text-xl placeholder:text-primary/10 transition-all disabled:cursor-not-allowed disabled:opacity-40 disabled:border-primary/10 disabled:select-none"
                   placeholder="XXXX-XXXX-XXXX..."
                   type="text"
                   spellCheck={false}
                   value={invitationCode}
                   onChange={(e) => setInvitationCode(e.target.value)}
+                  disabled={!!searchParams.get("code")}
                 />
               </div>
 
@@ -177,7 +181,7 @@ export default function LoginPage() {
               {/* Register Link */}
               <div className="text-center pt-4">
                 <Link
-                  href="/register"
+                  href={searchParams.get("code") ? `/register?code=${encodeURIComponent(searchParams.get("code")!)}` : "/register"}
                   className="text-[10px] sm:text-xs text-primary/60 hover:text-primary transition-colors tracking-widest uppercase font-mono"
                 >
                   &gt; ¿NO_TIENES_CUENTA? REGISTRARSE_AQUÍ
@@ -213,5 +217,13 @@ export default function LoginPage() {
       {/* Edge Vignette and Noise */}
       <div className="fixed inset-0 pointer-events-none z-[100] shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]"></div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }

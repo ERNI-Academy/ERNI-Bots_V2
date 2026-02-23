@@ -15,9 +15,11 @@ export function middleware(request: NextRequest) {
   // Verificar si hay un token de autenticación en las cookies
   const authToken = request.cookies.get("auth-token");
 
-  // Si no hay token, redirigir al login
+  // Si no hay token, redirigir al login (preservando ?code= si viene en la URL)
   if (!authToken) {
     const loginUrl = new URL("/login", request.url);
+    const code = request.nextUrl.searchParams.get("code");
+    if (code) loginUrl.searchParams.set("code", code);
     return NextResponse.redirect(loginUrl);
   }
 
