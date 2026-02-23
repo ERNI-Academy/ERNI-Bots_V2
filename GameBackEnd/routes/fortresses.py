@@ -9,7 +9,7 @@ from db.models import (
     Protocol,
     Archetype,
     Season,
-    FortressSeasonStats
+    FortressSeasonStats,ActivityLog
 )
 
 from utils import generate_uuid
@@ -94,13 +94,7 @@ def create_fortress():
         db.close()
         return jsonify({"error": "Not enough credits"}), 403
 
-    # DESBLOQUEO POR CREDITS
-    total_cost = protocol.unlock_cost + archetype.unlock_cost
-
-    if player.credits < total_cost:
-        db.close()
-        return jsonify({"error": "Not enough credits"}), 403
-
+  
     player.credits -= total_cost
 
     fortress = Fortress(
@@ -118,6 +112,13 @@ def create_fortress():
     )
 
     db.add(fortress)
+    log = ActivityLog(
+        type="fortress_create",
+        actor_id=player.id,
+        message=f"{player.username} ha entrado en el escenario con una nueva y flamante ciudadela."
+    )
+
+    db.add(log)
     db.commit()
     db.refresh(fortress)
     db.close()
@@ -206,7 +207,13 @@ def reconfigure_fortress(fortress_id):
     fortress.protected_word = data.get("protected_word", fortress.protected_word)
 
     fortress.last_reconfigured_at = datetime.utcnow()
+    log = ActivityLog(
+        type="fortress_reconfigured",
+        actor_id=player.id,
+        message=f"{player.username} ha reconfigurado su fortaleza"
+    )
 
+    db.add(log)
     stats.defeat_count = 0
     stats.status = "active"
 
@@ -255,6 +262,16 @@ def rebuild_fortress(fortress_id):
         return jsonify({"error": "Not enough credits"}), 403
 
     player.credits -= rebuild_cost
+    log = ActivityLog(
+        type="fortress_rebuilt",
+        actor_id=player.id,
+        message=f"{player.username} ha reconstruido su fortaleza"
+    )
 
+    db.add(log)
     stats.defeat_count = 0
-    stats.attack_coun_
+    stats.attack_count = 0
+    stats.status = "active"
+    fortress.last_reconfigured_at = datetime.utcnow()
+    db.commit()
+    db.close()

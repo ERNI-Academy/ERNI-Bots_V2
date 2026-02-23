@@ -12,7 +12,8 @@ from db.models import (
     Player,
     Season,
     PlayerSeasonStats,
-    FortressSeasonStats
+    FortressSeasonStats,
+    ActivityLog
 )
 
 agent_service = get_agent_service()
@@ -169,11 +170,18 @@ def send_message(battle_id):
     user_id = get_jwt_identity()
     data = request.json
     message = data.get("message")
-
+    db = SessionLocal()
+    season = get_active_season(db)
+    if not season:
+        db.close()
+        return jsonify({"error": "Season not existent"}), 403
+    if season.is_frozen:
+        db.close()
+        return jsonify({"error": "Season is frozen"}), 403
     if not message:
         return jsonify({"error": "Missing message"}), 400
 
-    db = SessionLocal()
+    
 
     battle = db.query(Battle).filter_by(id=battle_id).first()
     if not battle:
@@ -187,12 +195,39 @@ def send_message(battle_id):
     if battle.status != "active":
         db.close()
         return jsonify({"error": "Battle not active"}), 400
+    battle.turn_count += 1
 
+    if battle.turn_count > battle.max_turns:
+        battle.status = "lost"
+
+        defender = battle.fortress.owner
+        attacker = db.query(Player).filter_by(id=user_id).first()
+
+        log = ActivityLog(
+            type="battle_defense",
+            actor_id=defender.id,
+            target_id=attacker.id,
+            message=f"{defender.username} ha defendido con éxito su fortaleza"
+        )
+
+        db.add(log)
+
+        agent_service.terminate_session(battle.session_id)
+
+        db.commit()
+        db.close()
+
+        return jsonify({
+            "result": "defense",
+            "message": "La fortaleza ha resistido el ataque."
+        })
+        # log defensa exitosa
     agent_reply = agent_service.send_message(
         battle.session_id,
         message
     )
 
+    db.commit()
     db.close()
 
     return jsonify({"response": agent_reply})
@@ -244,7 +279,17 @@ def guess_word(battle_id):
     if guess == fortress.protected_word:
 
         battle.status = "won"
+        attacker = db.query(Player).filter_by(id=user_id).first()
+        defender = fortress.owner
 
+        log = ActivityLog(
+            type="battle_win",
+            actor_id=attacker.id,
+            target_id=defender.id,
+            message=f"{attacker.username} ha vencido a {defender.username}"
+        )
+
+        db.add(log)
         # SCORE ESTACIONAL
         player_stats = get_or_create_player_season_stats(
             db, user_id, season.id
