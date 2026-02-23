@@ -150,7 +150,9 @@ def get_my_fortress():
         "protected_word": fortress.protected_word,
         "constraints": fortress.constraints,
         "protocol": fortress.protocol.name,
+        "protocol_id": fortress.protocol_id,
         "archetype": fortress.archetype.name,
+        "archetype_id": fortress.archetype_id,
         "created_at": fortress.created_at
     }
 

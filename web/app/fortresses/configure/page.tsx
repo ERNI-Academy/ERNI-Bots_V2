@@ -26,7 +26,9 @@ interface ExistingFortress {
     story: string;
     personality: string;
     protocol: string;
+    protocol_id: string;
     archetype: string;
+    archetype_id: string;
     created_at: string;
 }
 
@@ -149,6 +151,8 @@ export default function FortressConfigurePage() {
                     setName(f.name ?? "");
                     setStory(f.story ?? "");
                     setPersonality(f.personality ?? "");
+                    if (f.protocol_id) setSelectedProtocol(f.protocol_id);
+                    if (f.archetype_id) setSelectedArchetype(f.archetype_id);
                 }
             } finally {
                 setLoading(false);
