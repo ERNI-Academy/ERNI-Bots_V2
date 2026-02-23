@@ -50,7 +50,7 @@ function RegisterContent() {
         setLoading(true);
         try {
             await registerApi(username, email, invitationCode);
-            router.push("/story");
+            router.push("/dashboard");
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Error de registro");
         } finally {

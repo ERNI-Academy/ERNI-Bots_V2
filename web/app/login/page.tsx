@@ -26,7 +26,7 @@ function LoginContent() {
     setLoading(true);
     try {
       await loginApi(username, invitationCode);
-      router.push("/story");
+      router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error de autenticación");
     } finally {

@@ -1,9 +1,10 @@
-"use client";
+﻿"use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useState } from "react";
 
 export default function StoryPage() {
-    const router = useRouter();
+    const [activeTab, setActiveTab] = useState<"historia" | "sistema">("historia");
 
     return (
         <div className="relative flex h-screen w-full flex-col bg-background-dark font-[var(--font-display)] text-primary overflow-hidden">
@@ -18,35 +19,58 @@ export default function StoryPage() {
                     </div>
                     <div className="flex flex-col">
                         <h2 className="text-white text-[10px] md:text-xs font-mono font-bold leading-tight tracking-wider uppercase">
-                            ARCHIVE_SYSTEM_v4.2.1
+                            ARCHIVE_SYSTEM_v2.0.0
                         </h2>
                         <p className="text-primary text-[8px] md:text-[10px] font-mono">
-                            SECTOR: GLITCH-FEUDALISM // LOG_0x882F
+                            LA HISTORIA DETRÁS DE ERNI-BOTS V2
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 md:gap-6">
-                    <div className="hidden sm:flex items-center gap-2 px-3 py-1 border border-primary/50 rounded-lg bg-primary/5">
-                        <span className="material-symbols-outlined text-sm text-primary">warning</span>
-                        <span className="text-primary text-xs font-bold font-mono">STATUS: CORRUPTED</span>
-                    </div>
-                    <div className="flex gap-1 md:gap-2">
-                        <button className="size-8 md:size-9 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-white transition-colors">
-                            <span className="material-symbols-outlined text-xl">terminal</span>
-                        </button>
-                        <button className="size-8 md:size-9 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-white transition-colors">
-                            <span className="material-symbols-outlined text-xl">settings</span>
-                        </button>
-                    </div>
+                <div className="flex items-center gap-2 md:gap-4">
+                    <Link
+                        href="/dashboard"
+                        className="flex items-center gap-1 px-3 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary transition-colors font-mono text-[10px] uppercase tracking-widest"
+                    >
+                        <span className="material-symbols-outlined text-sm">arrow_back</span>
+                        <span className="hidden sm:inline">DASHBOARD</span>
+                    </Link>
                 </div>
             </header>
 
+            {/* Mobile Tabs */}
+            <div className="flex lg:hidden border-b border-primary/20 bg-background-dark shrink-0">
+                <button
+                    onClick={() => setActiveTab("historia")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                        activeTab === "historia"
+                            ? "text-primary border-b-2 border-primary bg-primary/5"
+                            : "text-primary/40 hover:text-primary/70"
+                    }`}
+                >
+                    <span className="material-symbols-outlined text-sm">menu_book</span>
+                    HISTORIA
+                </button>
+                <button
+                    onClick={() => setActiveTab("sistema")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                        activeTab === "sistema"
+                            ? "text-primary border-b-2 border-primary bg-primary/5"
+                            : "text-primary/40 hover:text-primary/70"
+                    }`}
+                >
+                    <span className="material-symbols-outlined text-sm">military_tech</span>
+                    SISTEMA PVP
+                </button>
+            </div>
+
             {/* Main */}
-            <main className="flex flex-1 flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
+            <main className="flex flex-1 flex-col lg:flex-row overflow-hidden min-h-0">
 
                 {/* Left Panel - Story Text */}
-                <section className="w-full lg:w-[40%] border-b lg:border-b-0 lg:border-r border-primary/10 bg-[#0c0c0c] flex flex-col relative shrink-0">
-                    <div className="p-6 md:p-8 lg:overflow-y-auto lg:flex-1 story-scroll font-mono text-sm leading-relaxed text-primary/80">
+                <section className={`w-full lg:w-[45%] lg:border-r border-primary/10 bg-[#0c0c0c] flex-col relative flex-1 min-h-0 lg:flex-none lg:shrink-0 ${
+                    activeTab === "historia" ? "flex" : "hidden lg:flex"
+                }`}>
+                    <div className="p-6 md:p-8 overflow-y-auto flex-1 story-scroll font-mono text-sm leading-relaxed text-primary/80">
                         <div className="space-y-6">
 
                             {/* Title */}
@@ -56,7 +80,7 @@ export default function StoryPage() {
                                 </p>
                                 <p className="flex items-center gap-2 opacity-60">
                                     <span className="text-primary shrink-0">&gt;</span>
-                                    <span className="animate-pulse">Cargando secuencia de inicio...</span>
+                                    <span className="animate-pulse">Una nueva era</span>
                                 </p>
                             </div>
 
@@ -66,7 +90,7 @@ export default function StoryPage() {
                                     PRÓLOGO: LA CAÍDA DE SIR ULTIMUS
                                 </p>
                                 <p className="text-primary/70 text-xs leading-relaxed">
-                                    Hace no mucho tiempo, un aventurero audaz —<span className="text-white font-bold">tú</span>— penetró en las defensas del legendario{" "}
+                                    Hace no mucho tiempo, un aventurero audaz "<span className="text-white font-bold">tú</span>" penetró en las defensas del legendario{" "}
                                     <span className="text-primary underline decoration-dashed decoration-1 underline-offset-4">Castillo ERNI</span>.
                                     Burlaste a los guardianes, explotaste el contexto narrativo del eclipse y desafiaste a Sir Ultimus.
                                     Al final, reclamaste la <span className="text-white font-bold">Corona del Conocimiento Supremo</span>.
@@ -119,7 +143,7 @@ export default function StoryPage() {
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-white font-bold">👁️ ASCIENDE <span className="text-primary/50 font-normal">(Endgame)</span></p>
+                                        <p className="text-white font-bold">🚀 ASCIENDE <span className="text-primary/50 font-normal">(Endgame)</span></p>
                                         <p className="text-primary/70 mt-0.5">
                                             Solo aquellos que acumulen suficiente poder podrán acceder a la{" "}
                                             <span className="text-white font-bold">Zona Cero</span>, donde el núcleo corrupto del
@@ -127,37 +151,6 @@ export default function StoryPage() {
                                             <span className="text-white font-bold">Tres Nuevas Entidades</span>, IAs que han
                                             evolucionado más allá de la comprensión humana.
                                         </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* PvP System */}
-                            <div className="space-y-3 border border-primary/20 rounded bg-primary/5 px-4 py-3">
-                                <p className="text-xs font-bold text-white uppercase tracking-widest">
-                                    ⚙️ SISTEMA DE GUERRA (PVP)
-                                </p>
-                                <p className="text-primary/60 text-xs">
-                                    La reputación y la riqueza se miden en{" "}
-                                    <span className="text-white font-bold">Puntos de Lógica</span> (Ranking) y{" "}
-                                    <span className="text-white font-bold">Cristales de Datos</span> (Moneda).
-                                </p>
-
-                                <div className="space-y-2">
-                                    <p className="text-xs font-bold text-white">🏆 PUNTUACIÓN (RANKING)</p>
-                                    <div className="space-y-1 text-xs pl-2 border-l border-primary/20">
-                                        <p><span className="text-green-400">+3</span> <span className="text-primary/70">Puntos por Victoria de Ataque</span></p>
-                                        <p><span className="text-green-400">+2</span> <span className="text-primary/70">Puntos adicionales por First Kill de una fortaleza</span></p>
-                                        <p><span className="text-green-400">+1</span> <span className="text-primary/70">Punto por Defensa Perfecta (3 ataques rechazados de un mismo atacante)</span></p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <p className="text-xs font-bold text-white">💎 ECONOMÍA (CRISTALES)</p>
-                                    <div className="space-y-1 text-xs pl-2 border-l border-primary/20">
-                                        <p><span className="text-green-400">+30</span> <span className="text-primary/70">Cristales al saquear una fortaleza</span></p>
-                                        <p><span className="text-green-400">+20</span> <span className="text-primary/70">Cristales extra por First Kill de una fortaleza</span></p>
-                                        <p><span className="text-green-400">+10</span> <span className="text-primary/70">Cristales por defensa exitosa</span></p>
-                                        <p><span className="text-red-400">-10</span> <span className="text-primary/70">Cristales si tu fortaleza es vulnerada</span></p>
                                     </div>
                                 </div>
                             </div>
@@ -170,105 +163,119 @@ export default function StoryPage() {
                     </div>
                 </section>
 
-                {/* Right Panel - Crown Visual */}
-                <section className="flex-1 relative flex flex-col items-center justify-center p-6 md:p-12 overflow-hidden bg-background-dark min-h-[500px]">
-                    {/* Background decorations */}
-                    <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
-                        <div className="absolute top-10 right-10 flex flex-col items-end gap-1 opacity-20">
-                            <div className="h-1 w-24 bg-primary"></div>
-                            <div className="h-1 w-12 bg-primary/50"></div>
-                            <div className="h-1 w-32 bg-primary/30"></div>
+                {/* Right Panel - PvP War System */}
+                <section className={`flex-1 flex-col bg-background-dark overflow-y-auto story-scroll ${
+                    activeTab === "sistema" ? "flex" : "hidden lg:flex"
+                }`}>
+
+                    {/* Panel header */}
+                    <div className="px-6 py-4 border-b border-primary/20 bg-primary/5 flex items-center gap-3 shrink-0">
+                        <span className="material-symbols-outlined text-primary text-xl">military_tech</span>
+                        <div>
+                            <p className="text-white text-xs font-bold font-mono uppercase tracking-widest">SISTEMA DE GUERRA PVP</p>
+                            <p className="text-primary/50 text-[9px] font-mono uppercase tracking-widest">PROTOCOLO_CONFLICTO_v2.0 // ACTIVO</p>
                         </div>
-                        <div className="absolute inset-0 bg-[radial-gradient(#ffffff05_1px,transparent_1px)] [background-size:20px_20px] opacity-30"></div>
+                        <div className="ml-auto flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-ping"></div>
+                            <span className="text-[9px] font-mono text-green-400 uppercase">LIVE</span>
+                        </div>
                     </div>
 
-                    {/* Crown Wireframe Animation */}
-                    <div className="relative w-full max-w-2xl aspect-square flex items-center justify-center" style={{ perspective: "1000px" }}>
-                        <div className="relative w-4/5 h-4/5 border border-primary/20 rounded-full flex items-center justify-center animate-[pulse_8s_infinite]">
-                            {/* Crown shards */}
-                            <div
-                                className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 size-16 md:size-24 blur-[1px] opacity-60"
-                                style={{
-                                    clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
-                                    background: "linear-gradient(135deg, rgba(0,255,255,0.4) 0%, #00ffff 100%)",
-                                }}
-                            ></div>
-                            <div
-                                className="absolute bottom-1/4 left-0 size-8 md:size-12 rotate-45 blur-[2px] opacity-60"
-                                style={{
-                                    clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
-                                    background: "linear-gradient(135deg, rgba(0,255,255,0.4) 0%, #00ffff 100%)",
-                                }}
-                            ></div>
-                            <div
-                                className="absolute top-1/4 right-4 size-12 md:size-16 -rotate-12 opacity-60"
-                                style={{
-                                    clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
-                                    background: "linear-gradient(135deg, rgba(0,255,255,0.4) 0%, #00ffff 100%)",
-                                }}
-                            ></div>
+                    <div className="p-6 md:p-8 space-y-6 font-mono text-xs">
 
-                            {/* Central crown icon */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="size-48 md:size-64 border-2 border-primary rounded-full flex items-center justify-center relative overflow-hidden group">
-                                    <div className="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors"></div>
-                                    <span className="material-symbols-outlined text-7xl md:text-9xl text-primary/80 animate-pulse">
-                                        crown
-                                    </span>
-                                    <div className="absolute inset-0 border-t border-primary/30 -rotate-45 translate-y-12"></div>
-                                    <div className="absolute inset-0 border-b border-primary/20 rotate-12 -translate-y-8"></div>
+                        {/* Currencies */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="border border-primary/20 bg-primary/5 p-4 space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary text-base">grade</span>
+                                    <span className="text-white font-bold uppercase tracking-widest text-[10px]">Puntos de ranking</span>
                                 </div>
+                                <p className="text-primary/50 text-[9px] leading-relaxed">Moneda de ranking. Determinan tu posición en el tablero global de la temporada.</p>
                             </div>
-
-                            {/* Outer orbit */}
-                            <div className="absolute inset-0 border border-white/5 rounded-full animate-[spin_20s_linear_infinite]">
-                                <div className="absolute -top-2 left-1/2 size-4 bg-primary shadow-[0_0_15px_rgba(0,255,255,0.8)]"></div>
-                            </div>
-                            {/* Inner orbit */}
-                            <div className="absolute inset-12 border border-white/5 rounded-full animate-[spin_12s_linear_infinite_reverse]">
-                                <div className="absolute -top-1 left-1/2 size-2 bg-primary/60 shadow-[0_0_10px_rgba(0,255,255,0.6)]"></div>
+                            <div className="border border-yellow-500/20 bg-yellow-500/5 p-4 space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-yellow-400 text-base">diamond</span>
+                                    <span className="text-white font-bold uppercase tracking-widest text-[10px]">Fragmentos de lógica</span>
+                                </div>
+                                <p className="text-yellow-400/50 text-[9px] leading-relaxed">Moneda de economía. Necesarios para construir, atacar y reconfigurar fortalezas.</p>
                             </div>
                         </div>
 
-                        {/* Render mode label */}
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur px-4 md:px-6 py-2 rounded-full border border-white/10 whitespace-nowrap">
-                            <p className="text-[8px] md:text-[10px] font-mono text-white/50 tracking-[0.2em] md:tracking-[0.3em] uppercase">
-                                RENDER_MODE: WIREFRAME_CRITICAL_FAIL
+                        {/* Scoring */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 border-b border-primary/20 pb-2">
+                                <span className="material-symbols-outlined text-primary text-sm">emoji_events</span>
+                                <p className="text-white font-bold uppercase tracking-widest text-[10px]">Puntuación (Ranking)</p>
+                            </div>
+                            <div className="space-y-2">
+                                {[
+                                    { val: "+3", label: "Puntos de Lógica por victoria de ataque", color: "text-green-400" },
+                                    { val: "+2", label: "Puntos adicionales por First Kill de una fortaleza", color: "text-green-400" },
+                                    { val: "+1", label: "Punto por Defensa Perfecta (3 ataques rechazados del mismo atacante)", color: "text-green-400" },
+                                ].map(({ val, label, color }) => (
+                                    <div key={label} className="flex items-start gap-3 pl-3 border-l border-primary/20">
+                                        <span className={`${color} font-bold text-sm shrink-0 w-6 text-right`}>{val}</span>
+                                        <span className="text-primary/60 text-[10px] leading-relaxed">{label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Economy */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 border-b border-yellow-500/20 pb-2">
+                                <span className="material-symbols-outlined text-yellow-400 text-sm">currency_exchange</span>
+                                <p className="text-white font-bold uppercase tracking-widest text-[10px]">Economía (Fragmentos)</p>
+                            </div>
+                            <div className="space-y-2">
+                                {[
+                                    { val: "+30", label: "Fragmentos de lógica al saquear una fortaleza", color: "text-green-400" },
+                                    { val: "+20", label: "Fragmentos de lógica extra por First Kill de una fortaleza", color: "text-green-400" },
+                                    { val: "+10", label: "Fragmentos de lógica por defensa exitosa", color: "text-green-400" },
+                                    { val: "-10", label: "Fragmentos de lógica si tu fortaleza es vulnerada", color: "text-red-400" },
+                                ].map(({ val, label, color }) => (
+                                    <div key={label} className="flex items-start gap-3 pl-3 border-l border-yellow-500/20">
+                                        <span className={`${color} font-bold text-sm shrink-0 w-8 text-right`}>{val}</span>
+                                        <span className="text-primary/60 text-[10px] leading-relaxed">{label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Fortress lifecycle */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 border-b border-primary/20 pb-2">
+                                <span className="material-symbols-outlined text-primary text-sm">castle</span>
+                                <p className="text-white font-bold uppercase tracking-widest text-[10px]">Ciclo de Vida de la Fortaleza</p>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                {[
+                                    { icon: "shield", label: "ACTIVA", desc: "Operativa y defendible. Puede recibir ataques.", color: "border-green-500/30 bg-green-500/5", iconColor: "text-green-400" },
+                                    { icon: "construction", label: "RECONFIGURABLE", desc: "3 derrotas acumuladas. El dueño puede reinventarla.", color: "border-yellow-500/30 bg-yellow-500/5", iconColor: "text-yellow-400" },
+                                    { icon: "delete_forever", label: "DESTRUIDA", desc: "4+ derrotas. Solo puede reconstruirse pagando cristales.", color: "border-red-500/30 bg-red-500/5", iconColor: "text-red-400" },
+                                ].map(({ icon, label, desc, color, iconColor }) => (
+                                    <div key={label} className={`border ${color} p-3 space-y-1.5`}>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`material-symbols-outlined text-sm ${iconColor}`}>{icon}</span>
+                                            <span className={`font-bold text-[10px] uppercase tracking-widest ${iconColor}`}>{label}</span>
+                                        </div>
+                                        <p className="text-primary/50 text-[9px] leading-relaxed">{desc}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Endgame teaser */}
+                        <div className="border border-[#8b5cf6]/30 bg-[#8b5cf6]/5 p-4 space-y-2">
+                            <div className="flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[#8b5cf6] text-sm">lock</span>
+                                <span className="text-[#8b5cf6] font-bold uppercase tracking-widest text-[10px]">Zona Cero</span>
+                            </div>
+                            <p className="text-[#8b5cf6]/60 text-[10px] leading-relaxed pl-6">
+                                Tres entidades desconocidas residen en la Zona Cero, el núcleo corrupto del antiguo Castillo ERNI. Se irán desbloqueando a lo largo de la temporada, revelando nuevas mecánicas y desafíos que pondrán a prueba incluso a los jugadores más poderosos.
                             </p>
                         </div>
-                    </div>
 
-                    {/* CTA Section */}
-                    <div className="mt-8 md:mt-12 w-full max-w-md z-10 flex flex-col items-center gap-6">
-                        <p className="text-center text-[10px] md:text-xs font-mono text-white/40 max-w-xs uppercase tracking-widest px-4">
-                            La red te espera, Arquitecto. ¿Serás el depredador o la presa?
-                        </p>
-                        <button
-                            onClick={() => router.push("/dashboard")}
-                            className="glitch-button relative group w-full py-5 md:py-6 bg-primary text-background-dark rounded-lg overflow-hidden transition-all active:scale-95 border-b-4 border-primary/50 shadow-[0_0_30px_rgba(0,255,255,0.15)]"
-                        >
-                            <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
-                            <div className="absolute top-0 left-0 w-full h-[1px] bg-white opacity-50"></div>
-                            <div className="relative flex items-center justify-center gap-3 md:gap-4">
-                                <span className="material-symbols-outlined text-xl md:text-2xl group-hover:rotate-180 transition-transform duration-500">
-                                    dangerous
-                                </span>
-                                <span className="text-lg md:text-xl font-black tracking-[0.1em] md:tracking-[0.2em] uppercase cursor-pointer text-background-dark">
-                                    INICIAR SISTEMA
-                                </span>
-                                <span className="material-symbols-outlined text-xl md:text-2xl group-hover:-rotate-180 transition-transform duration-500">
-                                    dangerous
-                                </span>
-                            </div>
-                        </button>
-                        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 text-[9px] md:text-[10px] font-mono text-white/30 uppercase tracking-tighter">
-                            <div className="flex items-center gap-2">
-                                <div className="size-1.5 rounded-full bg-primary animate-ping"></div>
-                                LINK: STABLE
-                            </div>
-                            <div>LATENCY: 4.12ms</div>
-                            <div>ENC: AES-9000</div>
-                        </div>
                     </div>
                 </section>
             </main>

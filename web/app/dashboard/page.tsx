@@ -190,16 +190,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2 md:gap-6">
-                    <div className="text-right">
-                        <div className="text-[7px] md:text-[9px] text-white/40 uppercase">Latencia</div>
-                        <div className="text-[#00ff41] font-bold text-xs md:text-sm">12ms</div>
-                    </div>
                     <div className="flex gap-1 md:gap-2">
-                        <button className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors">
-                            <span className="material-symbols-outlined text-xs md:text-sm">
-                                settings_input_component
-                            </span>
-                        </button>
                         <Link
                             href="/scoreboard"
                             className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors"
@@ -208,11 +199,18 @@ export default function DashboardPage() {
                             <span className="material-symbols-outlined text-xs md:text-sm">leaderboard</span>
                         </Link>
                         <Link
+                            href="/story"
+                            className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors"
+                            title="Historia"
+                        >
+                            <span className="material-symbols-outlined text-xs md:text-sm">menu_book</span>
+                        </Link>
+                        <Link
                             href="/about"
                             className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors"
                             title="Quiénes Somos"
                         >
-                            <span className="material-symbols-outlined text-xs md:text-sm">info</span>
+                            <span className="material-symbols-outlined text-xs md:text-sm">people</span>
                         </Link>
                         <button
                             onClick={() => router.push("/login")}
