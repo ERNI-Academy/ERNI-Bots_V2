@@ -135,13 +135,6 @@ export default function DashboardPage() {
                     </button>
                 ))}
 
-                {/* SVG tactical lines */}
-                <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none">
-                    <line stroke="#00ffff" strokeDasharray="10,5" x1="25%" x2="50%" y1="33%" y2="50%" />
-                    <line stroke="#ff0033" strokeDasharray="5,5" x1="66%" x2="50%" y1="50%" y2="50%" />
-                    <circle cx="50%" cy="50%" fill="none" opacity="0.3" r="200" stroke="#00ffff" strokeDasharray="2" />
-                </svg>
-
                 {/* Viewport status */}
                 <div className="absolute bottom-20 md:bottom-6 left-6 font-mono text-primary/40 text-[8px] md:text-xs">
                     VIEWPORT_STATUS: FULL_SCAN_ACTIVE<br />
