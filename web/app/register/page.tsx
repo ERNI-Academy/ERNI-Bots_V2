@@ -220,7 +220,7 @@ function RegisterContent() {
                                         type="button"
                                         onClick={handleGenerateCode}
                                         disabled={generatingCode || !!invitationCode}
-                                        className="shrink-0 border border-primary/40 text-primary/70 hover:text-primary hover:border-primary font-mono text-[9px] tracking-widest uppercase px-2 py-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                                        className="shrink-0 border border-primary/40 text-primary/70 hover:text-primary hover:border-primary font-mono text-[9px] tracking-widest uppercase px-2 py-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
                                     >
                                         {generatingCode ? "[ ... ]" : invitationCode ? "[ OK ]" : "[ GENERAR ]"}
                                     </button>
