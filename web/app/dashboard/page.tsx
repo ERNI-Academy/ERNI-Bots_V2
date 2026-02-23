@@ -304,7 +304,7 @@ export default function DashboardPage() {
                                 </span>
                             </div>
                         </div>
-                        <button className="w-full border border-primary/30 bg-primary/5 p-2 text-[9px] text-primary hover:bg-primary/20 transition-all uppercase flex items-center justify-center gap-2">
+                        <button className="w-full border border-primary/30 bg-primary/5 p-2 text-[9px] text-primary hover:bg-primary/20 transition-all uppercase flex items-center justify-center gap-2 cursor-pointer">
                             <span className="material-symbols-outlined text-xs">radar</span>
                             CONFIGURAR MI FORTALEZA
                         </button>

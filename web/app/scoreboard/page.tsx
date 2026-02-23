@@ -163,7 +163,7 @@ export default function ScoreboardPage() {
             <span className="text-primary/30 text-[10px]">{error}</span>
             <button
               onClick={() => setRetryKey((k) => k + 1)}
-              className="mt-2 px-4 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary text-[10px] uppercase tracking-widest transition-colors"
+              className="mt-2 px-4 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary text-[10px] uppercase tracking-widest transition-colors cursor-pointer"
             >
               REINTENTAR
             </button>
@@ -216,7 +216,7 @@ export default function ScoreboardPage() {
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={loading || page === 0}
-            className="flex items-center justify-center size-8 md:size-9 border border-primary/30 hover:bg-primary/20 text-primary disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center justify-center size-8 md:size-9 border border-primary/30 hover:bg-primary/20 text-primary disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
             aria-label="Página anterior"
           >
             <span className="material-symbols-outlined text-sm">chevron_left</span>
@@ -227,7 +227,7 @@ export default function ScoreboardPage() {
           <button
             onClick={() => setPage((p) => p + 1)}
             disabled={loading || (totalPages !== null && page + 1 >= totalPages) || entries.length < PAGE_SIZE}
-            className="flex items-center justify-center size-8 md:size-9 border border-primary/30 hover:bg-primary/20 text-primary disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center justify-center size-8 md:size-9 border border-primary/30 hover:bg-primary/20 text-primary disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
             aria-label="Página siguiente"
           >
             <span className="material-symbols-outlined text-sm">chevron_right</span>
@@ -241,9 +241,6 @@ export default function ScoreboardPage() {
             <span className="text-base md:text-xl font-bold">
               {player ? `#${player.rank.toLocaleString()}` : "—"}
             </span>
-          </div>
-          <div className="size-10 md:size-12 border border-primary flex items-center justify-center">
-            <span className="material-symbols-outlined text-primary text-base md:text-xl">visibility</span>
           </div>
         </div>
       </footer>
