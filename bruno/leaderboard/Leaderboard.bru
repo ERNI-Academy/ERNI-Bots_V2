@@ -5,7 +5,12 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/leaderboard
+  url: {{baseUrl}}/api/v1/leaderboard?offset=0&limit=20
   body: none
   auth: none
+}
+
+params:query {
+  offset: 0
+  limit: 20
 }
