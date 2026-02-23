@@ -15,10 +15,10 @@ interface MarkerPos {
 interface PlayerProfile {
     id: string;
     username: string;
+    email: string;
     credits: number;
     energy: number;
-    season_score: number;
-    rank: number;
+    created_at: string;
 }
 
 // Safe zone: avoid header (~12% top), sidebars (~24% each side), bottom bars (~32% bottom)
@@ -72,7 +72,7 @@ export default function DashboardPage() {
             try {
                 const [fortressData, profileRes] = await Promise.all([
                     fetchMatchmakingFortresses().catch(() => [] as Fortress[]),
-                    fetch("/api/players/me", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
+                    fetch("/api/auth/me", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
                 ]);
                 setFortresses(fortressData);
                 setPlayer(profileRes);
@@ -294,27 +294,21 @@ export default function DashboardPage() {
                                     {player ? player.username : "—"}
                                 </div>
                                 <div className="text-[9px] text-white/40">
-                                    {player ? `Rango #${player.rank}` : "Cargando..."}
+                                    {player ? player.email : "Cargando..."}
                                 </div>
                             </div>
                         </div>
                         <div className="space-y-2">
                             <div className="flex justify-between text-[9px]">
-                                <span className="text-white/60 uppercase">Puntuación</span>
-                                <span className="text-[#00ff41] font-bold">
-                                    {player ? `${player.season_score} PTS` : "—"}
-                                </span>
-                            </div>
-                            <div className="flex justify-between text-[9px]">
-                                <span className="text-white/60 uppercase">Créditos</span>
+                                <span className="text-white/60 uppercase">Puntos</span>
                                 <span className="text-[#ffd700] font-bold">
-                                    {player ? player.credits : "—"}
+                                    {player !== null ? player.credits : "—"}
                                 </span>
                             </div>
                             <div className="flex justify-between text-[9px]">
-                                <span className="text-white/60 uppercase">Energía</span>
+                                <span className="text-white/60 uppercase">Fragmentos de Lógica</span>
                                 <span className="text-primary font-bold">
-                                    {player ? `${player.energy}/100` : "—"}
+                                    {player !== null ? `${player.energy}/3000` : "—"}
                                 </span>
                             </div>
                         </div>
@@ -362,34 +356,34 @@ export default function DashboardPage() {
                                 FRAGMENTOS DE LÓGICA
                             </h2>
                             <span className="text-primary text-[10px] font-bold">
-                                {player ? `${player.credits} CRÉDITOS` : "— CRÉDITOS"}
+                                {player !== null ? `${player.energy} / 3000` : "— / 3000"}
                             </span>
                         </div>
                         <div className="h-1.5 w-full bg-white/5 border border-white/10 relative">
-                            <div className="h-full bg-primary" style={{ width: `${player ? Math.min(100, (player.credits / 1000) * 100) : 0}%` }}></div>
+                            <div className="h-full bg-primary" style={{ width: `${player !== null ? Math.min(100, (player.energy / 3000) * 100) : 0}%` }}></div>
                         </div>
                         <div className="flex gap-4 text-[8px] text-white/40 font-mono">
-                            <span>FRAGMENTOS DE LÓGICA</span>
+                            <span>ENERGÍA DISPONIBLE</span>
                         </div>
                     </div>
                     <div className="flex-1 space-y-2">
                         <div className="flex justify-between items-end">
-                            <span className="text-[10px] text-white/60">PUNTUACIÓN</span>
-                            <span className="text-[#00ff41] text-[10px] font-bold">
-                                {player ? `${player.season_score} PUNTOS` : "— PUNTOS"}
+                            <span className="text-[10px] text-white/60">PUNTOS</span>
+                            <span className="text-[#ffd700] text-[10px] font-bold">
+                                {player !== null ? `${player.credits} PTS` : "— PTS"}
                             </span>
                         </div>
                         <div className="flex gap-1 h-1.5">
                             {[...Array(5)].map((_, i) => (
                                 <div
                                     key={i}
-                                    className={`flex-1 ${player && i < Math.ceil((player.season_score / 200) * 5) ? "bg-[#00ff41] shadow-[0_0_5px_#00ff41]" : "bg-white/10"}`}
+                                    className={`flex-1 ${player !== null && player.credits > 0 && i < Math.ceil(Math.min((player.credits / 500) * 5, 5)) ? "bg-[#ffd700] shadow-[0_0_5px_#ffd700]" : "bg-white/10"}`}
                                 ></div>
                             ))}
                         </div>
                         <div className="flex gap-4 text-[8px] text-white/40 font-mono">
-                            <span className="text-[#00ff41]">
-                                {player ? `RANGO #${player.rank}` : "CARGANDO..."}
+                            <span className="text-[#ffd700]">
+                                {player !== null ? `CRÉDITOS: ${player.credits}` : "CARGANDO..."}
                             </span>
                         </div>
                     </div>
