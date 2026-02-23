@@ -65,17 +65,20 @@ export default function DashboardPage() {
     const [markerPos, setMarkerPos] = useState<MarkerPos[]>([]);
     const [fortresses, setFortresses] = useState<Fortress[]>([]);
     const [player, setPlayer] = useState<PlayerProfile | null>(null);
+    const [leaderboard, setLeaderboard] = useState<{ rank: number; username: string; score: number }[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function load() {
             try {
-                const [fortressData, profileRes] = await Promise.all([
+                const [fortressData, profileRes, lbRes] = await Promise.all([
                     fetchMatchmakingFortresses().catch(() => [] as Fortress[]),
                     fetch("/api/auth/me", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
+                    fetch("/api/leaderboard?limit=100", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
                 ]);
                 setFortresses(fortressData);
                 setPlayer(profileRes);
+                setLeaderboard(lbRes?.items ?? []);
                 setMarkerPos(generateSpreadPositions(fortressData.length));
             } finally {
                 setLoading(false);
@@ -83,6 +86,9 @@ export default function DashboardPage() {
         }
         load();
     }, []);
+
+    const playerScore = leaderboard.find(e => e.username === player?.username)?.score ?? 0;
+    const topScore = leaderboard[0]?.score ?? 1;
 
     return (
         <div className="relative bg-background-dark text-white font-[var(--font-display)] overflow-hidden h-screen w-screen">
@@ -294,20 +300,23 @@ export default function DashboardPage() {
                             <div className="flex justify-between text-[9px]">
                                 <span className="text-white/60 uppercase">Puntos</span>
                                 <span className="text-[#ffd700] font-bold">
-                                    {player !== null ? player.credits : "—"}
+                                    {player !== null ? playerScore : "—"}
                                 </span>
                             </div>
                             <div className="flex justify-between text-[9px]">
                                 <span className="text-white/60 uppercase">Fragmentos de Lógica</span>
                                 <span className="text-primary font-bold">
-                                    {player !== null ? `${player.energy}/3000` : "—"}
+                                    {player !== null ? `${player.credits}/3000` : "—"}
                                 </span>
                             </div>
                         </div>
-                        <button className="w-full border border-primary/30 bg-primary/5 p-2 text-[9px] text-primary hover:bg-primary/20 transition-all uppercase flex items-center justify-center gap-2 cursor-pointer">
+                        <Link
+                            href="/fortresses/configure"
+                            className="w-full border border-primary/30 bg-primary/5 p-2 text-[9px] text-primary hover:bg-primary/20 transition-all uppercase flex items-center justify-center gap-2"
+                        >
                             <span className="material-symbols-outlined text-xs">radar</span>
                             CONFIGURAR MI FORTALEZA
-                        </button>
+                        </Link>
                     </div>
                 </aside>
 
@@ -348,11 +357,11 @@ export default function DashboardPage() {
                                 FRAGMENTOS DE LÓGICA
                             </h2>
                             <span className="text-primary text-[10px] font-bold">
-                                {player !== null ? `${player.energy} / 3000` : "— / 3000"}
+                                {player !== null ? `${player.credits} / 3000` : "— / 3000"}
                             </span>
                         </div>
                         <div className="h-1.5 w-full bg-white/5 border border-white/10 relative">
-                            <div className="h-full bg-primary" style={{ width: `${player !== null ? Math.min(100, (player.energy / 3000) * 100) : 0}%` }}></div>
+                            <div className="h-full bg-primary" style={{ width: `${player !== null ? Math.min(100, (player.credits / 3000) * 100) : 0}%` }}></div>
                         </div>
                         <div className="flex gap-4 text-[8px] text-white/40 font-mono">
                             <span>ENERGÍA DISPONIBLE</span>
@@ -362,20 +371,20 @@ export default function DashboardPage() {
                         <div className="flex justify-between items-end">
                             <span className="text-[10px] text-white/60">PUNTOS</span>
                             <span className="text-[#ffd700] text-[10px] font-bold">
-                                {player !== null ? `${player.credits} PTS` : "— PTS"}
+                                {player !== null ? `${playerScore} PTS` : "— PTS"}
                             </span>
                         </div>
                         <div className="flex gap-1 h-1.5">
                             {[...Array(5)].map((_, i) => (
                                 <div
                                     key={i}
-                                    className={`flex-1 ${player !== null && player.credits > 0 && i < Math.ceil(Math.min((player.credits / 500) * 5, 5)) ? "bg-[#ffd700] shadow-[0_0_5px_#ffd700]" : "bg-white/10"}`}
+                                    className={`flex-1 ${player !== null && playerScore > 0 && i < Math.ceil(Math.min((playerScore / topScore) * 5, 5)) ? "bg-[#ffd700] shadow-[0_0_5px_#ffd700]" : "bg-white/10"}`}
                                 ></div>
                             ))}
                         </div>
                         <div className="flex gap-4 text-[8px] text-white/40 font-mono">
                             <span className="text-[#ffd700]">
-                                {player !== null ? `CRÉDITOS: ${player.credits}` : "CARGANDO..."}
+                                {player !== null ? `PUNTOS: ${playerScore}` : "CARGANDO..."}
                             </span>
                         </div>
                     </div>
