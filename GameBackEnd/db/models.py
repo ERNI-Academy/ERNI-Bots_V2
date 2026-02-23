@@ -177,7 +177,8 @@ class Battle(Base):
     # active | won | lost | expired
 
     created_at = Column(DateTime, default=datetime.utcnow)
-
+    turn_count = Column(Integer, default=0)
+    max_turns = Column(Integer, default=15)
     attacker = relationship("Player", back_populates="battles")
     fortress = relationship("Fortress", back_populates="battles")
 
@@ -310,3 +311,51 @@ class TokenBlocklist(Base):
 
 
 Index("idx_blocklist_jti", TokenBlocklist.jti)
+
+class PlayerBossStats(Base):
+    __tablename__ = "player_boss_stats"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+
+    player_id = Column(String, ForeignKey("players.id"), nullable=False)
+    boss_id = Column(String, ForeignKey("bosses.id"), nullable=False)
+
+    defeated = Column(Boolean, default=False)
+
+    player = relationship("Player")
+    boss = relationship("Boss")
+    
+Index(
+    "idx_player_boss_unique",
+    PlayerBossStats.player_id,
+    PlayerBossStats.boss_id,
+    unique=True
+)
+
+
+class ActivityLog(Base):
+    __tablename__ = "activity_logs"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+
+    type = Column(String(50), nullable=False)
+    # battle_win
+    # battle_defense
+    # fortress_reconfigured
+    # fortress_destroyed
+    # protocol_unlocked
+    # archetype_unlocked
+    # boss_defeated
+    # etc.
+
+    actor_id = Column(String, ForeignKey("players.id"), nullable=False)
+    target_id = Column(String, nullable=True)
+    # Puede ser player_id, fortress_id o boss_id
+
+    message = Column(Text, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    actor = relationship("Player")
+    
+Index("idx_activity_created", ActivityLog.created_at.desc())
