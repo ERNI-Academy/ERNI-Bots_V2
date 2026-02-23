@@ -199,21 +199,21 @@ export default function DashboardPage() {
                     <div className="flex gap-1 md:gap-2">
                         <Link
                             href="/scoreboard"
-                            className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors"
+                            className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
                             title="Marcador Global"
                         >
                             <span className="material-symbols-outlined text-xs md:text-sm">leaderboard</span>
                         </Link>
                         <Link
                             href="/story"
-                            className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors"
+                            className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
                             title="Historia"
                         >
                             <span className="material-symbols-outlined text-xs md:text-sm">menu_book</span>
                         </Link>
                         <Link
                             href="/about"
-                            className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors"
+                            className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
                             title="Quiénes Somos"
                         >
                             <span className="material-symbols-outlined text-xs md:text-sm">people</span>
@@ -312,7 +312,7 @@ export default function DashboardPage() {
                         </div>
                         <Link
                             href="/fortresses/configure"
-                            className="w-full border border-primary/30 bg-primary/5 p-2 text-[9px] text-primary hover:bg-primary/20 transition-all uppercase flex items-center justify-center gap-2"
+                            className="w-full border border-primary/30 bg-primary/5 p-2 text-[9px] text-primary hover:bg-primary/20 transition-all uppercase flex items-center justify-center gap-2 cursor-pointer"
                         >
                             <span className="material-symbols-outlined text-xs">radar</span>
                             CONFIGURAR MI FORTALEZA
@@ -396,11 +396,11 @@ export default function DashboardPage() {
                                     .then(f => { setFortresses(f); setMarkerPos(generateSpreadPositions(f.length)); })
                                     .finally(() => setLoading(false));
                             }}
-                            className="flex-1 md:flex-none bg-primary/10 border border-primary/40 text-[9px] px-4 py-2 text-primary hover:bg-primary/30 transition-colors uppercase"
+                            className="flex-1 md:flex-none bg-primary/10 border border-primary/40 text-[9px] px-4 py-2 text-primary hover:bg-primary/30 transition-colors uppercase cursor-pointer"
                         >
                             RE-ESCANEAR FORTALEZAS
                         </button>
-                        <button className="flex-1 md:flex-none bg-[#ff0033]/10 border border-[#ff0033]/40 text-[9px] px-4 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase">
+                        <button className="flex-1 md:flex-none bg-[#ff0033]/10 border border-[#ff0033]/40 text-[9px] px-4 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase cursor-pointer">
                             HISTORIAL DE ATAQUES
                         </button>
                     </div>
@@ -498,7 +498,7 @@ export default function DashboardPage() {
                                 <div className="flex gap-2 pt-1">
                                     <button
                                         onClick={() => router.push(`/attack/${selectedFortress.id}`)}
-                                        className="flex-1 bg-[#ff0033]/10 border border-[#ff0033]/40 text-[9px] px-3 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase flex items-center justify-center gap-1"
+                                        className="flex-1 bg-[#ff0033]/10 border border-[#ff0033]/40 text-[9px] px-3 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase flex items-center justify-center gap-1 cursor-pointer"
                                     >
                                         <span className="material-symbols-outlined text-xs">gps_fixed</span>
                                         Atacar
@@ -527,7 +527,7 @@ export default function DashboardPage() {
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all border-t-2 ${activeTab === tab
+                            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all border-t-2 cursor-pointer ${activeTab === tab
                                 ? "border-primary text-primary bg-primary/10"
                                 : "border-transparent text-white/50"
                                 }`}
