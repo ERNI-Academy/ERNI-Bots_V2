@@ -17,6 +17,13 @@ function RegisterContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
+    const isFormValid =
+        username.length >= 3 &&
+        username.length <= 50 &&
+        /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) &&
+        invitationCode.trim().length > 0 &&
+        acceptTerms;
+
     useEffect(() => {
         setMounted(true);
         const code = searchParams.get("code");
@@ -43,6 +50,11 @@ function RegisterContent() {
 
         if (!acceptTerms) {
             alert("Debes aceptar los términos y protocolos para continuar");
+            return;
+        }
+
+        if (username.length < 3 || username.length > 50) {
+            setError("El nombre de usuario debe tener entre 3 y 50 caracteres");
             return;
         }
 
@@ -161,9 +173,16 @@ function RegisterContent() {
                                     spellCheck={false}
                                     type="text"
                                     value={username}
+                                    minLength={3}
+                                    maxLength={50}
                                     onChange={(e) => setUsername(e.target.value)}
                                     required
                                 />
+                                <p className="text-[8px] font-mono text-primary/30 text-right mt-1">
+                                    {username.length < 3
+                                        ? `MÍNIMO 3 CARACTERES (${username.length}/50)`
+                                        : `${username.length}/50`}
+                                </p>
                             </div>
 
                             <div className="space-y-2 group">
@@ -243,12 +262,14 @@ function RegisterContent() {
                             <div className="pt-4 sm:pt-6">
                                 <button
                                     type="submit"
-                                    disabled={loading}
+                                    disabled={loading || !isFormValid}
                                     className="glitch-button w-full bg-primary text-background-dark font-bold py-3 sm:py-4 text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase relative overflow-hidden group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <span className="relative z-10">{loading ? "[ INICIALIZANDO... ]" : "[ INYECTAR CONCIENCIA ]"}</span>
+                                    <span className="relative z-10">{loading ? "[ INICIALIZANDO... ]" : "[ UNIRSE A LA AVENTURA ]"}</span>
                                     {/* Button Hover Effect Layers */}
-                                    <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+                                    {isFormValid && !loading && (
+                                        <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+                                    )}
                                     <div className="absolute top-0 left-0 w-full h-[1px] bg-white opacity-50"></div>
                                     <div className="absolute bottom-0 left-0 w-full h-[1px] bg-black opacity-20"></div>
                                 </button>

@@ -14,6 +14,8 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const isFormValid = username.trim().length > 0 && invitationCode.trim().length > 0;
+
   useEffect(() => {
     setMounted(true);
     const code = searchParams.get("code");
@@ -167,12 +169,14 @@ function LoginContent() {
               <div className="pt-4 sm:pt-6">
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !isFormValid}
                   className="glitch-button w-full bg-primary text-background-dark font-bold py-3 sm:py-4 text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase relative overflow-hidden group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span className="relative z-10">{loading ? "[ AUTENTICANDO... ]" : "[ ACCEDER ]"}</span>
                   {/* Button Hover Effect Layers */}
-                  <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+                  {isFormValid && !loading && (
+                    <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+                  )}
                   <div className="absolute top-0 left-0 w-full h-[1px] bg-white opacity-50"></div>
                   <div className="absolute bottom-0 left-0 w-full h-[1px] bg-black opacity-20"></div>
                 </button>
