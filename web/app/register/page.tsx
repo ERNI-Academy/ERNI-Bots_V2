@@ -12,6 +12,7 @@ function RegisterContent() {
     const [acceptTerms, setAcceptTerms] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [generatingCode, setGeneratingCode] = useState(false);
     const [mounted, setMounted] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -21,6 +22,21 @@ function RegisterContent() {
         const code = searchParams.get("code");
         if (code) setInvitationCode(code);
     }, [searchParams]);
+
+    const handleGenerateCode = async () => {
+        setGeneratingCode(true);
+        setError("");
+        try {
+            const res = await fetch("/api/admin/generate-code", { method: "POST" });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error ?? "Error generando código");
+            setInvitationCode(data.codes[0]);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Error generando código");
+        } finally {
+            setGeneratingCode(false);
+        }
+    };
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -169,6 +185,7 @@ function RegisterContent() {
                                 <p className="text-[8px] sm:text-[10px] font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
                                     &gt; CÓDIGO_INVITACIÓN:
                                 </p>
+                                <div className="flex items-center gap-2">
                                 <input
                                     className="w-full bg-transparent border-0 border-b border-primary/30 p-0 py-2 focus:ring-0 focus:border-primary text-base sm:text-lg md:text-xl placeholder:text-primary/10 transition-all disabled:cursor-not-allowed disabled:opacity-40 disabled:border-primary/10 disabled:select-none"
                                     placeholder="ACCESS_KEY_REQUIRED"
@@ -179,6 +196,17 @@ function RegisterContent() {
                                     disabled={!!searchParams.get("code")}
                                     required
                                 />
+                                {!searchParams.get("code") && (
+                                    <button
+                                        type="button"
+                                        onClick={handleGenerateCode}
+                                        disabled={generatingCode || !!invitationCode}
+                                        className="shrink-0 border border-primary/40 text-primary/70 hover:text-primary hover:border-primary font-mono text-[9px] tracking-widest uppercase px-2 py-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                                    >
+                                        {generatingCode ? "[ ... ]" : invitationCode ? "[ OK ]" : "[ GENERAR ]"}
+                                    </button>
+                                )}
+                                </div>
                             </div>
 
                             {/* Terms Checkbox */}
