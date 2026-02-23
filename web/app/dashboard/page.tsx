@@ -259,14 +259,6 @@ export default function DashboardPage() {
                         <span className="text-[#8b5cf6]">ALERTA:</span> Actividad inusual detectada en &quot;Torre Vigilante&quot;. Posible escaneo de reconocimiento.
                     </div>
                 </div>
-                <div className="p-2 border-t border-white/5">
-                    <input
-                        suppressHydrationWarning
-                        className="bg-black/40 border border-white/10 focus:border-primary/50 focus:outline-none text-[9px] w-full text-white/80 p-1 px-2"
-                        placeholder="COMAND_INPUT >"
-                        type="text"
-                    />
-                </div>
             </aside>
 
             {/* ─── RIGHT SIDEBAR + BOTTOM BAR ─── */}
