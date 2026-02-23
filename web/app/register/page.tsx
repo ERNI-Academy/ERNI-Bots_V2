@@ -250,6 +250,11 @@ function RegisterContent() {
                                 </label>
                             </div>
 
+                            {/* Winners Communication Notice */}
+                            <p className="text-[8px] sm:text-[10px] font-bold tracking-wider text-primary/50 uppercase">
+                                La comunicación de los ganadores se realizará mediante correo electrónico.
+                            </p>
+
                             {/* Error Message */}
                             {error && (
                                 <p className="font-mono text-[10px] sm:text-xs text-red-500 tracking-widest uppercase flex items-center gap-2">
