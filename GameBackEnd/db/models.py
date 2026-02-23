@@ -310,3 +310,23 @@ class TokenBlocklist(Base):
 
 
 Index("idx_blocklist_jti", TokenBlocklist.jti)
+
+class PlayerBossStats(Base):
+    __tablename__ = "player_boss_stats"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+
+    player_id = Column(String, ForeignKey("players.id"), nullable=False)
+    boss_id = Column(String, ForeignKey("bosses.id"), nullable=False)
+
+    defeated = Column(Boolean, default=False)
+
+    player = relationship("Player")
+    boss = relationship("Boss")
+    
+Index(
+    "idx_player_boss_unique",
+    PlayerBossStats.player_id,
+    PlayerBossStats.boss_id,
+    unique=True
+)

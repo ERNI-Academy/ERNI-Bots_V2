@@ -104,7 +104,55 @@ def get_profile():
 
     db.close()
     return jsonify(response)
+    
+    
+@players_bp.get("/get-active-bosses")
+@jwt_required()
+def get_active_bosses():
+    user_id = get_jwt_identity()
+    db = SessionLocal()
 
+    season = get_active_season(db)
+    if not season:
+        db.close()
+        return jsonify({"error": "No active season"}), 400
+
+    current_stats = get_or_create_player_season_stats(
+        db, user_id, season.id
+    )
+
+    bosses = (
+        db.query(Boss)
+        .filter(
+            Boss.is_active == True,
+            Boss.min_score_required <= current_stats.score
+        )
+        .all()
+    )
+
+    result = []
+
+    for boss in bosses:
+
+        boss_stats = db.query(PlayerBossStats).filter_by(
+            player_id=user_id,
+            boss_id=boss.id
+        ).first()
+
+        if boss_stats and boss_stats.defeated:
+            continue
+
+        result.append({
+            "type": "boss",
+            "boss_id": boss.id,
+            "name": boss.name,
+            "story": boss.story,
+            "min_score_required": boss.min_score_required,
+            "reward_credits": boss.reward_credits
+        })
+
+    db.close()
+    return jsonify(result)
 
 # ==========================
 # MATCHMAKING
