@@ -246,13 +246,13 @@ def matchmaking():
 
     for player, fortress, f_stats in results:
         response.append({
-            "player_id": player.id,
             "username": player.username,
             "season_score": player.season_stats[0].score,
             "fortress_id": fortress.id,
             "fortress_name": fortress.name,
             "defeats": f_stats.defeat_count,
-            "attacks": f_stats.attack_count
+            "attacks": f_stats.attack_count,
+            "fortress_description": fortress.story
         })
 
     db.close()
