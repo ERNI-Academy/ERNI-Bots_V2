@@ -2054,12 +2054,14 @@ def seed():
             if existing:
                 print(f"  SKIP  FortressSeasonStats para '{f_name}' ya existe")
                 continue
+            _defeat = random.randint(0, 5)
+            _attack = random.randint(_defeat, _defeat + 5)
             f_stats = FortressSeasonStats(
                 id=_gen_uuid(),
                 fortress_id=fortress.id,
                 season_id=season.id,
-                defeat_count=0,
-                attack_count=0,
+                defeat_count=_defeat,
+                attack_count=_attack,
                 status="active",
             )
             db.add(f_stats)

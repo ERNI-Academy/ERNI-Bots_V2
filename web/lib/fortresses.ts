@@ -71,8 +71,8 @@ export const STATUS_STYLES: Record<
     FortressStatus,
     { border: string; text: string; bg: string; label: string; hex: string }
 > = {
-    DEBIL: { border: "border-primary", text: "text-primary", bg: "bg-primary/10", label: "INVENCIBLE", hex: "#00ffff" },
-    INVENCIBLE: { border: "border-[#ff0033]", text: "text-[#ff0033]", bg: "bg-[#ff0033]/10", label: "HOSTIL", hex: "#ff0033" },
-    HOSTIL: { border: "border-[#ffd700]", text: "text-[#ffd700]", bg: "bg-[#ffd700]/10", label: "DÉBIL", hex: "#ffd700" },
+    DEBIL: { border: "border-primary", text: "text-primary", bg: "bg-primary/10", label: "DEBIL", hex: "#00ffff" },
+    INVENCIBLE: { border: "border-[#ff0033]", text: "text-[#ff0033]", bg: "bg-[#ff0033]/10", label: "INVENCIBLE", hex: "#ff0033" },
+    HOSTIL: { border: "border-[#ffd700]", text: "text-[#ffd700]", bg: "bg-[#ffd700]/10", label: "HOSTIL", hex: "#ffd700" },
     DESTRUIDA: { border: "border-[#8b5cf6]", text: "text-[#8b5cf6]", bg: "bg-[#8b5cf6]/10", label: "DESTRUIDA", hex: "#8b5cf6" },
 };
