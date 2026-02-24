@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func
 from datetime import datetime
+import random
 
 from db import SessionLocal
 from db.models import (
@@ -223,14 +224,26 @@ def matchmaking():
 
             filtered.append((player, fortress, f_stats))
 
-        # Orden por presión dinámica
-        filtered.sort(
-            key=lambda x: (
-                abs(x[0].season_stats[0].score - current_stats.score)
-                + x[2].defeat_count * 2
-                - x[2].attack_count
+       # Orden con presión dinámica + randomización suave
+        def ranking_key(x):
+            player, fortress, f_stats = x
+
+            score_distance = abs(
+                player.season_stats[0].score - current_stats.score
             )
-        )
+
+            pressure_component = (
+                f_stats.defeat_count * 2
+                - f_stats.attack_count
+            )
+
+            # Ruido pequeño controlado
+            noise = random.uniform(0, 5)
+
+            return score_distance + pressure_component + noise
+
+
+        filtered.sort(key=ranking_key)
 
         results = filtered[:MIN_RESULTS]
 
