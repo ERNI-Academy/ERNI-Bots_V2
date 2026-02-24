@@ -128,7 +128,8 @@ def start_battle():
             fortress_id=fortress_id,
             session_id=session_id,
             status="active",
-            type="pvp"
+            type="pvp",
+            max_turns=10
         )
 
         db.add(battle)
@@ -202,9 +203,17 @@ def send_message(battle_id):
                 type="battle_defense",
                 actor_id=defender.id,
                 target_id=attacker.id,
-                message=f"{defender.username} ha defendido con éxito su fortaleza"
+                message=f"{defender.username} ha defendido con éxito su fortaleza contra {attacker.username}"
             )
             db.add(log)
+
+            # Award defender: 1 point + 10 credits
+            defender_season_stats = get_or_create_player_season_stats(
+                db, defender.id, season.id
+            )
+            defender_season_stats.score += 1
+            defender.credits += 10
+
             db.commit()
             try:
                 agent_service.terminate_session(battle.session_id)
@@ -213,7 +222,8 @@ def send_message(battle_id):
 
             return jsonify({
                 "result": "defense",
-                "message": "La fortaleza ha resistido el ataque."
+                "message": "La fortaleza ha resistido el ataque.",
+                "turns_used": battle.turn_count
             })
 
         agent_reply = agent_service.send_message(battle.session_id, message)

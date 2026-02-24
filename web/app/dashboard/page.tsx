@@ -7,6 +7,36 @@ import { fetchMatchmakingFortresses, STATUS_STYLES, type Fortress } from "@/lib/
 
 type Tab = "map" | "log" | "console";
 
+interface ActivityEntry {
+    type: string;
+    message: string;
+    timestamp: string;
+}
+
+function activityStyle(type: string): { border: string; label: string; color: string } {
+    switch (type) {
+        case "battle_win":
+            return { border: "border-[#ff0033]/30", label: "BRECHA", color: "text-[#ff0033]" };
+        case "battle_defense":
+            return { border: "border-[#ffd700]/30", label: "DEFENSA", color: "text-[#ffd700]" };
+        case "fortress_reconfigured":
+            return { border: "border-[#8b5cf6]/30", label: "RECONFIG", color: "text-[#8b5cf6]" };
+        case "fortress_destroyed":
+            return { border: "border-white/30", label: "DESTRUIDA", color: "text-white" };
+        default:
+            return { border: "border-primary/20", label: "INFO", color: "text-primary" };
+    }
+}
+
+function formatTime(iso: string): string {
+    try {
+        const d = new Date(iso);
+        return d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+    } catch {
+        return "--:--:--";
+    }
+}
+
 interface MarkerPos {
     top: string;
     left: string;
@@ -67,6 +97,14 @@ export default function DashboardPage() {
     const [player, setPlayer] = useState<PlayerProfile | null>(null);
     const [leaderboard, setLeaderboard] = useState<{ rank: number; username: string; score: number }[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activityFeed, setActivityFeed] = useState<ActivityEntry[]>([]);
+
+    async function loadFeed() {
+        try {
+            const res = await fetch("/api/feed", { credentials: "include", cache: "no-store" });
+            if (res.ok) setActivityFeed(await res.json());
+        } catch { /* ignore */ }
+    }
 
     useEffect(() => {
         async function load() {
@@ -85,6 +123,10 @@ export default function DashboardPage() {
             }
         }
         load();
+        loadFeed();
+        const feedInterval = setInterval(loadFeed, 20_000);
+        return () => clearInterval(feedInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const playerScore = leaderboard.find(e => e.username === player?.username)?.score ?? 0;
@@ -233,27 +275,21 @@ export default function DashboardPage() {
                     </h2>
                     <span className="text-xs text-[#00ff41] animate-pulse">LIVE</span>
                 </div>
-                <div className="flex-1 overflow-y-auto p-3 custom-scrollbar space-y-2 font-mono text-sm">
-                    <div className="border-l border-primary/20 pl-2">
-                        <span className="text-[#00ffff]">[14:45:01]</span>{" "}
-                        <span className="text-primary">INFO:</span> Nuevo jugador detectado en el nodo: Ernisito.
-                    </div>
-                    <div className="border-l border-[#ff0033]/20 pl-2">
-                        <span className="text-[#00ffff]">[14:44:58]</span>{" "}
-                        <span className="text-[#ff0033]">ATAQUE:</span> La fortaleza &quot;Nodo Sangriento&quot; ha sido atacada por Lord_Vermin. Defensa comprometida.
-                    </div>
-                    <div className="border-l border-[#ffd700]/20 pl-2">
-                        <span className="text-[#00ffff]">[14:44:12]</span>{" "}
-                        <span className="text-[#ffd700]">DEFENSA:</span> La fortaleza &quot;Citadela Alfa&quot; ha repelido un ataque de Lord_Vermin.
-                    </div>
-                    <div className="border-l border-[#ff0033]/20 pl-2">
-                        <span className="text-[#00ffff]">[14:44:58]</span>{" "}
-                        <span className="text-[#ff0033]">ATAQUE:</span> La fortaleza &quot;Zona Cero&quot; ha sido atacada. Defensa comprometida.
-                    </div>
-                    <div className="border-l border-[#8b5cf6]/20 pl-2">
-                        <span className="text-[#00ffff]">[14:43:30]</span>{" "}
-                        <span className="text-[#8b5cf6]">ALERTA:</span> Actividad inusual detectada en &quot;Torre Vigilante&quot;. Posible escaneo de reconocimiento.
-                    </div>
+                <div className="flex-1 overflow-y-auto p-3 custom-scrollbar space-y-2 font-mono text-xs">
+                    {activityFeed.length === 0 ? (
+                        <div className="text-slate-500 text-center py-4 uppercase tracking-widest">SIN ACTIVIDAD</div>
+                    ) : (
+                        activityFeed.map((entry, i) => {
+                            const s = activityStyle(entry.type);
+                            return (
+                                <div key={i} className={`border-l ${s.border} pl-2`}>
+                                    <span className="text-[#00ffff]">[{formatTime(entry.timestamp)}]</span>{" "}
+                                    <span className={`font-bold ${s.color}`}>{s.label}:</span>{" "}
+                                    <span className="text-slate-300">{entry.message}</span>
+                                </div>
+                            );
+                        })
+                    )}
                 </div>
             </aside>
 
@@ -333,7 +369,7 @@ export default function DashboardPage() {
                                 FRAGMENTOS DE LÓGICA
                             </h2>
                             <span className="text-primary text-xs font-bold">
-                                {player !== null ? `${player.credits} / 3000` : "— / 3000"}
+                                {player !== null ? `${player.credits} ` : "—"}
                             </span>
                         </div>
                         <div className="h-1.5 w-full bg-white/5 border border-white/10 relative">
@@ -360,7 +396,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex gap-4 text-xs text-slate-400 font-mono">
                             <span className="text-[#ffd700]">
-                                {player !== null ? `PUNTOS: ${playerScore}` : "CARGANDO..."}
+                                {player !== null ? `PUNTUACIÓN DEL JUGADOR: ${playerScore}` : "CARGANDO..."}
                             </span>
                         </div>
                     </div>

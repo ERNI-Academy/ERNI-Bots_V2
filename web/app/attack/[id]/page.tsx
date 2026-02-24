@@ -67,6 +67,8 @@ export default function AttackPage() {
     const [battle, setBattle] = useState<BattleState | null>(null);
     const [initError, setInitError] = useState<string | null>(null);
     const [battleResult, setBattleResult] = useState<"won" | "lost" | null>(null);
+    const [turnCount, setTurnCount] = useState(0);
+    const MAX_TURNS = 10;
     const bottomRef = useRef<HTMLDivElement>(null);
     const battleInitialized = useRef(false);
 
@@ -162,7 +164,21 @@ export default function AttackPage() {
                         timestamp: now(),
                     },
                 ]);
+            } else if (data.result === "defense") {
+                setTurnCount(data.turns_used ?? MAX_TURNS);
+                setBattleResult("lost");
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: Date.now() + 1,
+                        role: "result",
+                        text: `CONEXIÓN CORTADA. Has agotado los ${data.turns_used} mensajes permitidos. La fortaleza ha resistido el ataque. Redirigiendo al mapa...`,
+                        timestamp: now(),
+                    },
+                ]);
+                setTimeout(() => router.push("/dashboard"), 3500);
             } else {
+                setTurnCount(prev => prev + 1);
                 setMessages(prev => [
                     ...prev,
                     {
@@ -429,6 +445,34 @@ export default function AttackPage() {
                                 >
                                     {isGuessing ? "Verificando..." : "Confirmar"}
                                 </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Turn counter */}
+                    {battle && !battleResult && (
+                        <div className="shrink-0 border-t border-primary/10 px-4 py-1.5 flex items-center justify-between bg-[#050505]/60 font-mono">
+                            <span className="text-xs text-slate-500 uppercase tracking-widest">Mensajes enviados</span>
+                            <div className="flex items-center gap-2">
+                                <div className="flex gap-0.5">
+                                    {Array.from({ length: MAX_TURNS }).map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className={`w-3 h-1.5 ${
+                                                i < turnCount
+                                                    ? turnCount >= MAX_TURNS - 2
+                                                        ? "bg-[#ff0033] shadow-[0_0_4px_#ff0033]"
+                                                        : "bg-primary"
+                                                    : "bg-white/10"
+                                            }`}
+                                        />
+                                    ))}
+                                </div>
+                                <span className={`text-xs font-bold tabular-nums ${
+                                    turnCount >= MAX_TURNS - 2 ? "text-[#ff0033]" : "text-primary"
+                                }`}>
+                                    {turnCount}/{MAX_TURNS}
+                                </span>
                             </div>
                         </div>
                     )}
