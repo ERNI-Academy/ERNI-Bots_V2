@@ -170,6 +170,14 @@ def register():
         db.add(player)
         db.flush()  # populate player.id before linking invitation
 
+        # Assign 10 random protected words to the new player
+        from db.models import ProtectedWord, PlayerWord
+        import random
+        all_words = db.query(ProtectedWord).all()
+        chosen = random.sample(all_words, min(10, len(all_words)))
+        for pw in chosen:
+            db.add(PlayerWord(player_id=player.id, word_id=pw.id))
+
         # Claim the invitation
         inv.player_id    = player.id
         inv.current_uses += 1

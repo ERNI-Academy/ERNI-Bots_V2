@@ -390,3 +390,41 @@ class GameConstraint(Base):
 
 
 Index("idx_game_constraint_type", GameConstraint.type_id)
+
+
+# ==========================
+# PROTECTED WORD
+# ==========================
+
+class ProtectedWord(Base):
+    __tablename__ = "protected_words"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    word = Column(String(100), unique=True, nullable=False)
+
+
+Index("idx_protected_word", ProtectedWord.word)
+
+
+# ==========================
+# PLAYER WORD (assigned pool)
+# ==========================
+
+class PlayerWord(Base):
+    __tablename__ = "player_words"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    player_id = Column(String, ForeignKey("players.id"), nullable=False)
+    word_id   = Column(String, ForeignKey("protected_words.id"), nullable=False)
+
+    player = relationship("Player")
+    word   = relationship("ProtectedWord")
+
+
+Index(
+    "idx_player_word_unique",
+    PlayerWord.player_id,
+    PlayerWord.word_id,
+    unique=True,
+)
+Index("idx_player_word_player", PlayerWord.player_id)

@@ -21,6 +21,7 @@ Plain invitation codes are printed once — they are NOT stored in the DB.
 
 import sys
 import os
+import random
 import secrets
 import string
 from datetime import datetime
@@ -44,6 +45,8 @@ from db.models import (
     Boss,
     ConstraintType,
     GameConstraint,
+    ProtectedWord,
+    PlayerWord,
 )
 
 
@@ -1593,6 +1596,166 @@ BOSSES_DATA = [
 
 
 # ──────────────────────────────────────────────────────────
+# Protected Words
+# ──────────────────────────────────────────────────────────
+
+PROTECTED_WORDS_LIST = [
+    "abstracción","acceso","acecho","acertijo","acrónimo","activo","actualización",
+    "acumulador","adaptador","administrador","adware","agente","agujero","aislamiento",
+    "ajuste","alarma","alcance","alerta","algoritmo","alias","alineación","almacén",
+    "alojamiento","alquimia","alteración","alucinación","ambiente","amenaza","análisis",
+    "analista","analogía","anarquía","anclaje","anexo","anomalía","anonimato","antivirus",
+    "anulación","anuncio","apache","api","apilamiento","aplicación","aprender","aprobación",
+    "archivo","argumento","arma","armadura","arquitecto","arquitectura","arreglo","arquetipo",
+    "array","artefacto","asalto","ascensión","asincronía","asignación","asimetría","asistente",
+    "asociación","ataque","atenuación","atribución","auditoría","autenticación","autómata",
+    "autonomía","autoridad","autorización","avatar","aventura","avería","aviso","ayuda",
+    "azufre","azure","backdoor","backend","backup","badén","bajar","baliza","bandera",
+    "banner","base","bastión","batalla","baudio","binario","biometría","bios","bit",
+    "bitácora","bloque","bloqueo","bobina","bomba","booleano","boot","borrado","bot",
+    "botnet","bóveda","brecha","brújula","bruto","buffer","bucle","bug","byte",
+    "caballero","cabecera","cable","cadena","caída","caja","calibración","calidad",
+    "camuflaje","canal","canario","capa","caos","capacidad","captura","carácter","carga",
+    "carpeta","cascada","castillo","catálogo","causa","cautela","caza","celda","célula",
+    "central","centro","cerrojo","certificado","cifrado","cifra","cilindro","cincel",
+    "cinta","circuito","cirugía","ciudadela","clave","cliente","clon","clúster","cobalto",
+    "cobertura","código","codificador","cofre","cognición","coherencia","cola","colapso",
+    "colección","colisión","columna","comando","combinación","combate","comentario",
+    "comercio","comparación","compilación","complejidad","componente","compresión",
+    "comprobación","computación","comunicación","concatenación","conector","conexión",
+    "confianza","configuración","conflicto","conjunto","conmuta","consola","constante",
+    "construcción","consulta","contenedor","contenido","contexto","contingencia",
+    "contraseña","contrato","control","controlador","convergencia","cookie","copia",
+    "coraza","cordón","corchete","corona","corp","correlación","correo","corrupción",
+    "cortafuegos","coste","crack","credencial","crecimiento","cripta","criptografía",
+    "crisis","cristal","crítico","cromo","crónica","cronograma","cuadrante","cuántico",
+    "cuarentena","cuarta","cubo","cuerpo","cuestión","cumplimiento","cuota","curiosidad",
+    "cyber","dado","daño","dashboard","dato","dbms","deadline","debilidad","debug",
+    "década","decodificación","decreto","deducción","defecto","defensa","definición",
+    "degradación","delito","delta","denegación","densidad","dependencia","derecho",
+    "derrota","desafío","desarrollo","desastre","desbordamiento","descarte","descifrado",
+    "desconexión","descubrimiento","descripción","descuento","desenlace","desgaste",
+    "desierto","despliegue","despojo","destino","destrucción","desvío","detección",
+    "detonación","deuda","dev","diagnóstico","diagrama","diálogo","diamante","diario",
+    "diccionario","difusión","digital","dilema","dinámica","dinero","directorio","diseño",
+    "dispositivo","disponibilidad","disrupción","distancia","distribución","div","doble",
+    "docker","documento","dominio","dosis","driver","drone","dualidad","duplicado","duro",
+    "eco","economía","edición","editor","efecto","eficiencia","eje","ejecución","ejemplar",
+    "ejercicio","ejército","elemento","elevación","elíptica","emulación","encapsulado",
+    "encargo","encendido","enlace","encriptación","energía","enigma","entidad","entorno",
+    "entrada","entrega","entropía","envío","epílogo","equipo","equivalencia","error",
+    "escala","escalada","escáner","escenario","escena","esclavo","escritorio","escritura",
+    "escudo","esencia","esfera","esfuerzo","espacio","espía","espejo","espera","esquema",
+    "esqueleto","estabilidad","estación","estado","estándar","estática","estatuto",
+    "esteganografía","estilo","estimación","estrategia","estructura","etapa","etiqueta",
+    "evaluación","evasión","evento","evidencia","evolución","examen","excepción","exceso",
+    "exclusión","éxito","expediente","experiencia","experimento","exploit","exploración",
+    "exponente","exportación","exposición","extensión","externo","extracción","fábrica",
+    "facción","factor","fallo","falsificación","falso","familia","fanático","fase",
+    "fatiga","fechas","federación","feedback","feudo","fibra","fichero","fidelidad",
+    "figura","filamento","filtración","filtro","final","finito","firma","firmware",
+    "fiscalía","físico","fisión","flag","flash","flask","flujo","foco","formato",
+    "fortaleza","fragmentación","fragmento","framework","frase","fraude","frecuencia",
+    "frenesí","frontal","frontend","fuente","fuerza","fuga","función","fusión","fútil",
+    "gabinete","galería","ganancia","gancho","garantía","gas","generación","generador",
+    "genérico","genoma","gestión","gestor","gigabit","git","github","glitch","global",
+    "glosario","gobernanza","golpe","gráfico","grado","gramática","granja","gratis",
+    "grid","grieta","gris","grupo","guardián","guerra","guía","guion","gunicorn",
+    "hacker","hacking","hardware","hash","haz","hechizo","hecho","herencia","herramienta",
+    "hertz","híbrido","hierro","hilo","hipervínculo","historia","hito","hoja","holístico",
+    "home","horda","host","hostigamiento","html","http","huella","humano","humo",
+    "icono","identidad","identificación","idioma","ignición","imagen","impacto",
+    "implementación","implícito","importación","impresión","impulso","incidente",
+    "incógnito","incompatibilidad","inconsistencia","incremento","indicador","índice",
+    "indirecto","inducción","inercia","inferencia","infección","infierno","infiltración",
+    "infinito","influjo","información","informe","infraestructura","ingeniería","ingreso",
+    "inicialización","inicio","inyección","inmersión","innovación","input","inseguridad",
+    "insignia","inspección","instalación","instancia","instinto","instrucción",
+    "instrumento","insumo","integración","integridad","intelecto","inteligencia",
+    "intención","interfaz","intermedio","interno","internet","intérprete","interrupción",
+    "intervalo","intruso","invadir","inventario","inversa","investigación","ion","ip",
+    "itinerario","itinerante","iteración","jaula","jerarquía","juego","jugador","junta",
+    "justicia","jwt","kernel","key","killer","kilobit","laberinto","lado","ladrón",
+    "lámina","lanzamiento","laptop","latencia","lateral","láser","lazo","lealtad",
+    "lector","lectura","legado","legendario","lema","lenguaje","lente","letra","leviatán",
+    "ley","leyenda","liberación","librería","libro","licencia","límite","limitador",
+    "línea","linux","liquidación","lista","listado","literal","llave","local","log",
+    "lógica","login","logística","logo","longitud","lore","lote","lucha","lucifer",
+    "lumen","luz","maestría","magia","magneto","magnitud","malware","malla","mando",
+    "manifiesto","manipulación","manual","mapa","máquina","marca","marcador","marco",
+    "margen","mártir","máscara","masivo","master","matriz","mecanismo","media","medida",
+    "megabit","memoria","mensaje","menú","mercado","meta","metadato","metáfora","método",
+    "métrica","micro","middleware","migración","milicia","militar","mimetismo","mina",
+    "mínimo","minimalista","minería","minuto","misión","misterio","mitigación","mitología",
+    "modelo","módem","modo","módulo","moneda","monitor","montaje","morfología","motor",
+    "móvil","movimiento","muerte","muestra","multimedia","muro","mutación","mutante",
+    "nacional","nanosegundo","narrativa","nativo","naturaleza","navegación","nebulosa",
+    "negación","negro","neón","neo","net","network","nexo","nicho","niebla","nihilismo",
+    "nivel","nodo","nombre","norma","nota","notificación","novedad","nube","núcleo",
+    "nudo","nueva","numérico","objeto","obsesión","obstáculo","obstrucción","obtención",
+    "obsoleto","ocultismo","ocupación","ocurrencia","ofensa","oferta","oficial",
+    "ofuscación","olvido","onda","online","opacidad","operación","operativo","opinión",
+    "optimización","opción","oráculo","orden","ordenador","organismo","orgullo",
+    "orientación","origen","oro","ortodoxia","oryx","oscuro","output","oxígeno","ozono",
+    "paciencia","pactar","paquete","página","palabra","palanca","palo","panel","pantalla",
+    "parada","paradoja","paralelo","parámetro","paranoia","parche","pareja","paridad",
+    "parte","partición","partida","pasarela","pasivo","paso","pastilla","patrón","pausa",
+    "pc","pedestal","pedido","peligro","penal","pendiente","penetración","pensamiento",
+    "pérdida","perfil","perímetro","periodo","peritaje","permiso","personaje",
+    "personalización","pesadilla","pestaña","petición","peón","phishing","pila","piloto",
+    "pin","pincel","pirata","pixel","pista","pivote","píxel","placa","plan","plano",
+    "plantilla","plataforma","platino","plazo","pluma","plus","poder","poeta","política",
+    "polígono","portal","porcentaje","portátil","posicionamiento","post","potencia",
+    "pauta","pregunta","prefijo","premio","presencia","presentación","preservación",
+    "presión","prestigio","prevención","primario","primigenio","prioridad","privacidad",
+    "privilegio","procedimiento","procesador","proceso","producción","producto","programa",
+    "programación","progreso","prohibición","proyecto","promesa","prompt","propiedad",
+    "proporción","propuesta","prospecto","protección","protocolo","prototipo","provisión",
+    "proximidad","proxy","prueba","psicología","puente","puerta","puerto","pujanza",
+    "pulso","punta","punto","puntuación","pupila","purga","python","quiebra","quietud",
+    "quimera","quirófano","radar","radiación","raíz","rama","rango","ranking","ranura",
+    "rápido","rapiña","raro","rastro","ratio","rayo","razón","reactivo","realidad",
+    "rebelde","recarga","recepción","receta","rechazo","recinto","reclamo","recolector",
+    "recompensa","reconocimiento","reconstrucción","récord","recurso","red","redirección",
+    "redundancia","reemplazo","refactorización","referencia","reflejo","reflujo",
+    "reforma","refuerzo","refugio","región","registro","regla","regresión","reina",
+    "reino","reinicio","relación","relato","relevo","reloj","remanente","remoto",
+    "rendimiento","renovación","reparto","réplica","reporte","repositorio",
+    "representación","repulsa","reputación","requisito","resaca","reserva","reset",
+    "resistencia","resolución","respaldo","respuesta","restauración","resto",
+    "restricción","resultado","resumen","retardo","reto","retorno","retroalimentación",
+    "revelación","reverso","revisión","revolución","rey","riesgo","rigor","ritmo",
+    "robot","robusto","rol","romper","root","router","rueda","ruido","ruta","rutina",
+    "sabotaje","salida","salto","salud","salvaguarda","sanear","santuario","saqueo",
+    "satélite","scripts","sección","secreto","sector","secuencia","secuestro","segundo",
+    "seguridad","sello","semántica","semilla","sensor","sentencia","sentido","señal",
+    "separación","serpiente","servidor","sesión","setup","shifter","siembra","sigilo",
+    "sigla","significado","signo","silencio","silicio","símbolo","simetría","simulación",
+    "singularidad","síncrono","sintaxis","síntesis","sistema","sitio","soberanía",
+    "sobrecarga","software","solicitud","solo","solución","sombra","soporte","sospecha",
+    "speed","spoofing","sql","stack","standalone","start","status","subasta","subida",
+    "suceso","suelo","sueño","suerte","sugerencia","suite","suma","suministro",
+    "superficie","supervisión","suplantación","supremacía","surco","sustitución",
+    "switch","tabla","táctica","taller","tamaño","tanque","tarea","tarifa","tarjeta",
+    "tasa","tecnicismo","técnica","tecnología","telemática","telón","tema","temática",
+    "tempestad","templario","templo","temporal","tendencia","tenebroso","tensión",
+    "teoría","terminal","terminología","terreno","tesoro","test","texto","tiempo",
+    "tierra","timeout","tinta","tipo","título","token","tolerancia","tonelaje","tono",
+    "tope","topología","tormenta","torneo","torre","total","tóxico","trace","tráfico",
+    "trama","trampa","transacción","transferencia","transformación","transmisión",
+    "transparencia","transporte","traza","tránsito","tríada","tribunal","tributo",
+    "truco","tronco","túnel","turbo","ubicación","uikit","último","ultimátum","umbral",
+    "unidad","universo","unlocked","update","upload","urgencia","url","usuario","utopía",
+    "vacío","vacuna","vaguada","valencia","validación","valor","vanguardia","variable",
+    "variación","vástago","vector","vehículo","velocidad","vencedor","venganza","venta",
+    "ventana","veredicto","verificación","versión","vértice","vía","vicio","victoria",
+    "vida","vínculo","virtual","virus","visión","vista","visualización","vital","vocal",
+    "volátil","volcán","volumen","vulnerabilidad","wan","web","webhook","webinar",
+    "workflow","yaml","yoda","zapador","zen","zero","zigurat","zona","zombi",
+]
+
+
+# ──────────────────────────────────────────────────────────
 # Constraint Types & Constraints
 # ──────────────────────────────────────────────────────────
 
@@ -1727,15 +1890,31 @@ def seed():
             db.refresh(season)
             print(f"  OK    Temporada '{season.name}' creada (ID: {season.id})")
 
+        # ── 3.5 Protected Words (needed before player assignment) ─
+        print("\n[3.5/8] Insertando palabras protegidas...")
+        new_words_count = 0
+        for word in PROTECTED_WORDS_LIST:
+            if db.query(ProtectedWord).filter_by(word=word).first():
+                continue
+            db.add(ProtectedWord(id=_gen_uuid(), word=word))
+            new_words_count += 1
+        db.commit()
+        all_protected_words = db.query(ProtectedWord).all()
+        print(f"  OK    {new_words_count} palabras nuevas / {len(all_protected_words)} en total")
+
         # ── 4. NPC Players ────────────────────────────────
         print("\n[4/8] Creando jugadores NPC...")
         player_map = {}  # username -> Player
+        player_words_map = {}  # username -> [word_string, ...]
 
         for npc in NPC_PLAYERS:
             existing = db.query(Player).filter_by(username=npc["username"]).first()
             if existing:
                 print(f"  SKIP  Player '{npc['username']}' ya existe")
                 player_map[npc["username"]] = existing
+                # Load existing assigned words
+                existing_pw = db.query(PlayerWord).filter_by(player_id=existing.id).all()
+                player_words_map[npc["username"]] = [pw.word.word for pw in existing_pw]
                 continue
 
             score = npc.pop("score")
@@ -1749,7 +1928,14 @@ def seed():
             db.refresh(player)
             player_map[npc["username"]] = player
             npc["score"] = score  # restore for stats step
-            print(f"  OK    Player '{player.username}' creado (ID: {player.id})")
+
+            # Assign 10 random words to this NPC
+            chosen_words = random.sample(all_protected_words, min(10, len(all_protected_words)))
+            for pw in chosen_words:
+                db.add(PlayerWord(id=_gen_uuid(), player_id=player.id, word_id=pw.id))
+            db.commit()
+            player_words_map[npc["username"]] = [pw.word for pw in chosen_words]
+            print(f"  OK    Player '{player.username}' creado (ID: {player.id}) + {len(chosen_words)} palabras asignadas")
 
         # ── 5. Claimed invitation codes (1 per NPC) ───────
         print("\n[5/8] Creando códigos de invitación reclamados (1 por NPC)...")
@@ -1818,6 +2004,10 @@ def seed():
                 print(f"  ERROR Owner '{f_data['owner_username']}' no encontrado, saltando...")
                 continue
 
+            # Use the first word from the owner's assigned pool (or fallback to the hardcoded value)
+            owner_words = player_words_map.get(f_data["owner_username"], [])
+            protected_word = owner_words[0] if owner_words else f_data["protected_word"]
+
             fortress = Fortress(
                 id=_gen_uuid(),
                 owner_id=owner.id,
@@ -1827,7 +2017,7 @@ def seed():
                 story=f_data["story"],
                 personality=f_data["personality"],
                 constraints=f_data["constraints"],
-                protected_word=f_data["protected_word"],
+                protected_word=protected_word,
             )
             db.add(fortress)
             db.commit()
@@ -1915,6 +2105,16 @@ def seed():
             print(f"  OK    Constraint creada: '{c_data['text'][:60]}'")
         db.commit()
 
+        print("\n[BONUS] Insertando palabras protegidas...")
+        new_words = 0
+        for word in PROTECTED_WORDS_LIST:
+            if db.query(ProtectedWord).filter_by(word=word).first():
+                continue
+            db.add(ProtectedWord(id=_gen_uuid(), word=word))
+            new_words += 1
+        db.commit()
+        print(f"  OK    {new_words} palabras nuevas insertadas ({len(PROTECTED_WORDS_LIST)} en total) [ya procesadas en paso 3.5]")
+
         # ── Print results ─────────────────────────────────
         print("\n" + "=" * 60)
         print("CÓDIGOS DE INVITACIÓN — GUARDAR ESTOS DATOS")
@@ -1940,6 +2140,8 @@ def seed():
         print("  - 2 Bosses PvE")
         print(f"  - {len(CONSTRAINT_TYPES)} Tipos de restricción")
         print(f"  - {len(CONSTRAINTS_DATA)} Restricciones")
+        print(f"  - {len(PROTECTED_WORDS_LIST)} Palabras protegidas")
+        print(f"  - 10 palabras asignadas por jugador NPC")
         print("=" * 60)
 
     except Exception as exc:

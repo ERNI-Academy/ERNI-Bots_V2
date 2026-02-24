@@ -25,6 +25,7 @@ interface ExistingFortress {
     name: string;
     story: string;
     personality: string;
+    protected_word: string;
     protocol: string;
     protocol_id: string;
     archetype: string;
@@ -54,21 +55,6 @@ interface PlayerProfile {
 
 // ─── Static Data ─────────────────────────────────────────────────────────────
 
-const PROTECTED_WORDS = [
-    "EXCALIBUR_EXE",
-    "SHOGUN_ZERO",
-    "NEURAL_SIEGE",
-    "VOID_OATH",
-    "PHANTOM_KEY",
-    "CRYSTAL_SPIRE",
-    "IRON_OATH",
-    "NEON_BASTION",
-    "VORTEX_GATE",
-    "SHADOW_BREACH",
-];
-
-
-
 const ARCHETYPE_ICONS = [
     "swords",
     "psychology",
@@ -91,6 +77,7 @@ export default function FortressConfigurePage() {
     const [protocols, setProtocols] = useState<Protocol[]>([]);
     const [archetypes, setArchetypes] = useState<Archetype[]>([]);
     const [constraintTypes, setConstraintTypes] = useState<ConstraintTypeGroup[]>([]);
+    const [words, setWords] = useState<string[]>([]);
     const [player, setPlayer] = useState<PlayerProfile | null>(null);
     const [existingFortress, setExistingFortress] = useState<ExistingFortress | null>(null);
     const [loading, setLoading] = useState(true);
@@ -99,7 +86,7 @@ export default function FortressConfigurePage() {
     const [name, setName] = useState("");
     const [story, setStory] = useState("");
     const [personality, setPersonality] = useState("");
-    const [protectedWord, setProtectedWord] = useState(PROTECTED_WORDS[0]);
+    const [protectedWord, setProtectedWord] = useState("");
     const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null);
     const [selectedArchetype, setSelectedArchetype] = useState<string | null>(null);
     const [constraints, setConstraints] = useState<Set<string>>(new Set());
@@ -121,10 +108,11 @@ export default function FortressConfigurePage() {
     useEffect(() => {
         async function load() {
             try {
-                const [protocolsRes, archetypesRes, constraintsRes, profileRes, fortressRes] = await Promise.all([
+                const [protocolsRes, archetypesRes, constraintsRes, wordsRes, profileRes, fortressRes] = await Promise.all([
                     fetch("/api/protocols", { credentials: "include" }),
                     fetch("/api/archetypes", { credentials: "include" }),
                     fetch("/api/constraints", { credentials: "include" }),
+                    fetch("/api/words", { credentials: "include" }),
                     fetch("/api/auth/me", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
                     fetch("/api/fortresses/me", { credentials: "include" }),
                 ]);
@@ -146,6 +134,13 @@ export default function FortressConfigurePage() {
                     setConstraintTypes(ct);
                 }
 
+                if (wordsRes.ok) {
+                    const w: { id: string; word: string }[] = await wordsRes.json();
+                    const wordList = w.map(x => x.word);
+                    setWords(wordList);
+                    if (wordList.length > 0) setProtectedWord(wordList[0]);
+                }
+
                 setPlayer(profileRes);
 
                 if (fortressRes.ok) {
@@ -154,6 +149,7 @@ export default function FortressConfigurePage() {
                     setName(f.name ?? "");
                     setStory(f.story ?? "");
                     setPersonality(f.personality ?? "");
+                    if (f.protected_word) setProtectedWord(f.protected_word);
                     if (f.protocol_id) setSelectedProtocol(f.protocol_id);
                     if (f.archetype_id) setSelectedArchetype(f.archetype_id);
                 }
@@ -359,13 +355,17 @@ export default function FortressConfigurePage() {
                                         🔐 Palabra Secreta (Código de Acceso)
                                     </label>
                                     <select
-                                        className="bg-black/60 border border-[#00ffff]/30 text-[#00ffff] p-2.5 text-sm rounded-sm focus:outline-none focus:border-[#00ffff] font-mono"
+                                        className="bg-black/60 border border-[#00ffff]/30 text-[#00ffff] p-2.5 text-sm rounded-sm focus:outline-none focus:border-[#00ffff] font-mono uppercase"
                                         value={protectedWord}
                                         onChange={e => setProtectedWord(e.target.value)}
                                     >
-                                        {PROTECTED_WORDS.map(w => (
-                                            <option key={w} value={w}>{w}</option>
-                                        ))}
+                                        {words.length === 0 ? (
+                                            <option value="">Cargando palabras...</option>
+                                        ) : (
+                                            words.map(w => (
+                                                <option key={w} value={w}>{w}</option>
+                                            ))
+                                        )}
                                     </select>
                                     <p className="text-sm text-slate-300 font-mono mt-0.5">
                                         Los atacantes deben descubrir esta palabra para ganar.
