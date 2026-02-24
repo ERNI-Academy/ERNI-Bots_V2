@@ -359,3 +359,34 @@ class ActivityLog(Base):
     actor = relationship("Player")
     
 Index("idx_activity_created", ActivityLog.created_at.desc())
+
+
+# ==========================
+# CONSTRAINT TYPE
+# ==========================
+
+class ConstraintType(Base):
+    __tablename__ = "constraint_types"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    name = Column(String(100), unique=True, nullable=False)
+
+    constraints = relationship("GameConstraint", back_populates="type")
+
+
+# ==========================
+# GAME CONSTRAINT
+# ==========================
+
+class GameConstraint(Base):
+    __tablename__ = "game_constraints"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    type_id = Column(String, ForeignKey("constraint_types.id"), nullable=False)
+    text = Column(Text, nullable=False)
+    price = Column(Integer, default=0)
+
+    type = relationship("ConstraintType", back_populates="constraints")
+
+
+Index("idx_game_constraint_type", GameConstraint.type_id)

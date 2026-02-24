@@ -13,6 +13,7 @@ from routes.admin import admin_bp
 from routes.archetypes import archetypes_bp
 from routes.protocols import protocols_bp
 from routes.feed import feed_bp
+from routes.constraints import constraints_bp
 
 
 def create_app():
@@ -76,6 +77,7 @@ def create_app():
     app.register_blueprint(archetypes_bp,  url_prefix="/api/v1/archetypes")
     app.register_blueprint(protocols_bp,   url_prefix="/api/v1/protocols")
     app.register_blueprint(feed_bp,        url_prefix="/api/v1/feed")
+    app.register_blueprint(constraints_bp, url_prefix="/api/v1/constraints")
     return app
 
 
