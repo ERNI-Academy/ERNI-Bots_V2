@@ -51,9 +51,9 @@ function generateSpreadPositions(count: number): MarkerPos[] {
 
 function markerClass(status: Fortress["status"]): string {
     switch (status) {
-        case "HOSTIL": return "absolute w-6 h-6 bg-[#ff0033] rounded-full shadow-[0_0_20px_#ff0033] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
-        case "DEBIL": return "absolute w-4 h-4 bg-[#ffd700] rounded-full shadow-[0_0_15px_#ffd700] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
-        case "INVENCIBLE": return "absolute w-8 h-8 border-2 border-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors focus:outline-none -translate-x-1/2 -translate-y-1/2";
+        case "INVENCIBLE": return "absolute w-6 h-6 bg-[#ff0033] rounded-full shadow-[0_0_20px_#ff0033] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
+        case "HOSTIL": return "absolute w-4 h-4 bg-[#ffd700] rounded-full shadow-[0_0_15px_#ffd700] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
+        case "DEBIL": return "absolute w-8 h-8 border-2 border-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors focus:outline-none -translate-x-1/2 -translate-y-1/2";
         default: return "absolute w-4 h-4 bg-white rounded-full shadow-[0_0_15px_white] animate-pulse cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
     }
 }
