@@ -44,7 +44,7 @@ def get_or_create_fortress_season_stats(db, fortress_id, season_id):
             status="active"
         )
         db.add(stats)
-        db.commit()
+        db.flush()
 
     return stats
 

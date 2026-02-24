@@ -169,12 +169,9 @@ class HttpAgentService(AgentService):
         self.timeout = timeout
         self.internal_key = os.getenv("AGENT_INTERNAL_KEY")
 
-        if not self.internal_key:
-            raise ValueError("AGENT_INTERNAL_KEY must be set in HTTP mode.")
-
-        self.headers = {
-            "X-Internal-Key": self.internal_key
-        }
+        self.headers = {}
+        if self.internal_key:
+            self.headers["X-Internal-Key"] = self.internal_key
 
     def create_session(self, agent_id: str, context: dict) -> str:
         try:
@@ -228,7 +225,7 @@ class HttpAgentService(AgentService):
 
 def get_agent_service() -> AgentService:
     mode = os.getenv("AGENT_MODE", "mock").lower()
-
+    print(f"Initializing AgentService in {mode.upper()} mode.")
     if mode == "mock":
         return MockAgentService()
 

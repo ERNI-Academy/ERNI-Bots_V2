@@ -23,7 +23,7 @@ interface MatchmakingEntry {
     fortress_description: string;
 }
 
-function statusFromDefeats(defeats: number): FortressStatus {
+export function statusFromDefeats(defeats: number): FortressStatus {
     if (defeats === 0) return "INVENCIBLE";
     if (defeats <= 2) return "HOSTIL";
     if (defeats > 4) return "DESTRUIDA";

@@ -1,6 +1,9 @@
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from config import Config
 from extensions import limiter
