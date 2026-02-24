@@ -310,7 +310,7 @@ export default function FortressConfigurePage() {
                             <div className="panel-header px-4 py-2.5 flex items-center gap-2">
                                 <span className="material-symbols-outlined text-[#ff0033] text-lg">fingerprint</span>
                                 <h2 className="text-sm font-bold text-[#ff0033] uppercase tracking-widest">
-                                    // IDENT_PROTOCOL
+                                    Mi Fortaleza
                                 </h2>
                             </div>
                             <div className="px-4 pb-4 flex flex-col gap-4">
@@ -318,7 +318,7 @@ export default function FortressConfigurePage() {
                                 {/* Name */}
                                 <div className="flex flex-col gap-1">
                                     <label className="text-xs text-[#00ffff] uppercase tracking-widest">
-                                        Designación de Fortaleza
+                                        Nombre de la Fortaleza
                                     </label>
                                     <input
                                         type="text"
@@ -333,7 +333,7 @@ export default function FortressConfigurePage() {
                                 {/* Story */}
                                 <div className="flex flex-col gap-1">
                                     <label className="text-xs text-[#00ffff] uppercase tracking-widest">
-                                        Archivo Histórico
+                                        Descripción de la Fortaleza
                                     </label>
                                     <textarea
                                         className="bg-black/60 border border-[#00ffff]/30 text-slate-300 p-2.5 text-sm rounded-sm placeholder:text-slate-600 focus:outline-none focus:border-[#00ffff] focus:ring-1 focus:ring-[#00ffff]/40 resize-none custom-scrollbar"
@@ -359,7 +359,7 @@ export default function FortressConfigurePage() {
                                         ))}
                                     </select>
                                     <p className="text-xs text-slate-500 font-mono mt-0.5">
-                                        Los atacantes deben descubrir esta frase para ganar.
+                                        Los atacantes deben descubrir esta palabra para ganar.
                                     </p>
                                 </div>
                             </div>
@@ -370,12 +370,12 @@ export default function FortressConfigurePage() {
                             <div className="panel-header px-4 py-2.5 flex items-center gap-2">
                                 <span className="material-symbols-outlined text-[#8b5cf6] text-lg">theater_comedy</span>
                                 <h2 className="text-sm font-bold text-[#8b5cf6] uppercase tracking-widest">
-                                    // PERSONALITY_MATRIX
+                                    Personalidad de la IA Defensora
                                 </h2>
                             </div>
                             <div className="px-4 pb-4 pt-3 flex flex-col gap-3">
                                 <textarea
-                                    className="bg-black/60 border border-[#8b5cf6]/30 text-[#8b5cf6] p-2.5 text-sm rounded-sm placeholder:text-[#8b5cf6]/25 focus:outline-none focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6]/40 resize-none custom-scrollbar"
+                                    className="bg-black/60 border border-[#8b5cf6]/30 text-[#8b5cf6] p-2.5 text-sm rounded-sm placeholder:text-[#8b5cf6]/55 focus:outline-none focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6]/40 resize-none custom-scrollbar"
                                     placeholder="Define la personalidad de tu IA defensora... ¿Cómo responde a los intrusos? ¿Cuál es su actitud? ¿Qué secretos guarda celosamente?"
                                     rows={7}
                                     value={personality}
@@ -402,10 +402,10 @@ export default function FortressConfigurePage() {
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-[#00ff41] text-lg">extension</span>
                                     <h2 className="text-sm font-bold text-[#00ff41] uppercase tracking-widest">
-                                        🧩 Protocolo Base
+                                        Protocolo
                                     </h2>
                                 </div>
-                                <span className="text-xs text-slate-500 font-mono">CATEGORY: CORE_LOGIC</span>
+                                <span className="text-xs text-slate-500 font-mono">Comportamiento de la IA</span>
                             </div>
                             <div className="p-4">
                                 {protocols.length === 0 ? (
@@ -419,7 +419,8 @@ export default function FortressConfigurePage() {
                                                 <button
                                                     key={protocol.id}
                                                     onClick={() => setSelectedProtocol(protocol.id)}
-                                                    className={`text-left p-3 flex justify-between items-start transition-all border cursor-pointer ${isSelected
+                                                    disabled={!affordable}
+                                                    className={`text-left p-3 flex justify-between items-start transition-all border cursor-pointer disabled:cursor-not-allowed ${isSelected
                                                         ? "border-[#00ff41] bg-[#00ff41]/15 shadow-[0_0_10px_#00ff4120]"
                                                         : affordable
                                                             ? "border-[#00ff41]/20 bg-[#00ff41]/5 hover:border-[#00ff41]/50 hover:bg-[#00ff41]/10"
@@ -445,7 +446,7 @@ export default function FortressConfigurePage() {
                                                         )}
                                                         {!affordable && !isSelected && (
                                                             <span className="text-[10px] border border-slate-700 px-1 text-slate-500 mt-1">
-                                                                LOCKED
+                                                                BLOQUEADO
                                                             </span>
                                                         )}
                                                     </div>
@@ -463,10 +464,10 @@ export default function FortressConfigurePage() {
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-[#00ffff] text-lg">psychology</span>
                                     <h2 className="text-sm font-bold text-[#00ffff] uppercase tracking-widest">
-                                        🧠 Arquetipo
+                                        Arquetipo
                                     </h2>
                                 </div>
-                                <span className="text-xs text-slate-500 font-mono">CATEGORY: SOUL_SYNTH</span>
+                                <span className="text-xs text-slate-500 font-mono">Cerebro de la IA</span>
                             </div>
                             <div className="p-4">
                                 {archetypes.length === 0 ? (
@@ -481,7 +482,8 @@ export default function FortressConfigurePage() {
                                                 <button
                                                     key={archetype.id}
                                                     onClick={() => setSelectedArchetype(archetype.id)}
-                                                    className={`text-left p-3 flex flex-col gap-1.5 transition-all border relative overflow-hidden cursor-pointer ${isSelected
+                                                    disabled={!affordable}
+                                                    className={`text-left p-3 flex flex-col gap-1.5 transition-all border relative overflow-hidden cursor-pointer disabled:cursor-not-allowed ${isSelected
                                                         ? "border-2 border-[#00ffff] bg-[#00ffff]/15 shadow-[0_0_12px_#00ffff20]"
                                                         : affordable
                                                             ? "border border-[#00ffff]/20 bg-[#00ffff]/5 hover:border-[#00ffff]/50 hover:bg-[#00ffff]/10"
@@ -519,10 +521,10 @@ export default function FortressConfigurePage() {
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-[#ff0033] text-lg">settings</span>
                                     <h2 className="text-sm font-bold text-[#ff0033] uppercase tracking-widest">
-                                        ⚙️ Restricciones
+                                       Restricciones
                                     </h2>
                                 </div>
-                                <span className="text-xs text-slate-500 font-mono">CATEGORY: LIMIT_BREAK</span>
+                                <span className="text-xs text-slate-500 font-mono">Extra de seguridad</span>
                             </div>
                             <div className="p-4 space-y-2.5">
                                 {CONSTRAINT_DEFS.map(constraint => {
@@ -625,8 +627,8 @@ export default function FortressConfigurePage() {
                                     {saving
                                         ? "DESPLEGANDO..."
                                         : isEditMode
-                                            ? "RECONFIGURAR_FORTALEZA"
-                                            : "DEPLOY_FORTALEZA"
+                                            ? "RECONFIGURAR FORTALEZA"
+                                            : "DESPLEGAR FORTALEZA"
                                     }
                                 </button>
                                 {/* Abort */}
@@ -635,7 +637,7 @@ export default function FortressConfigurePage() {
                                     className="flex items-center justify-center gap-2 bg-black border border-[#ff0033]/40 text-[#ff0033] font-bold text-sm px-6 py-2.5 hover:bg-[#ff0033]/20 transition-all uppercase tracking-widest cursor-pointer"
                                 >
                                     <span className="material-symbols-outlined text-sm">close</span>
-                                    ABORT_INIT
+                                    Cancelar
                                 </Link>
                             </div>
                         </div>
