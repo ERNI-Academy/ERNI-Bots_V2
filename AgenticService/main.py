@@ -25,18 +25,21 @@ engine = LLMEngine()
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 REDIS_DB = int(os.getenv("REDIS_DB", 0))
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
+REDIS_SSL = os.getenv("REDIS_SSL", "false").lower() == "true"
 SESSION_TTL = int(os.getenv("SESSION_TTL_SECONDS", 3600))
 
 redis_client = redis.Redis(
     host=REDIS_HOST,
     port=REDIS_PORT,
     db=REDIS_DB,
+    password=REDIS_PASSWORD,
+    ssl=REDIS_SSL,
+    ssl_cert_reqs=None if REDIS_SSL else None,
     decode_responses=True,
     socket_connect_timeout=5,
     socket_timeout=5,
 )
-
-logger.warning(f"Redis configured at {REDIS_HOST}:{REDIS_PORT} (DB={REDIS_DB})")
 
 # ==========================
 # Health Check
