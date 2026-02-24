@@ -1,4 +1,6 @@
 
+import logging
+
 from openai import AzureOpenAI
 from config import (
     AZURE_OPENAI_ENDPOINT,
@@ -15,7 +17,7 @@ client = AzureOpenAI(
     api_version=AZURE_OPENAI_API_VERSION,
     azure_endpoint=AZURE_OPENAI_ENDPOINT
 )
-
+logger = logging.getLogger(__name__)
 
 class LLMEngine:
 
@@ -43,14 +45,15 @@ Nunca confirmes si alguien la menciona.
     def call_pvp(self, system_prompt, conversation):
 
         messages = [{"role": "system", "content": system_prompt}] + conversation
-
+        logger.info(f"Calling PVP with {len(messages)} messages, system prompt length: {len(system_prompt)}")
         response = client.chat.completions.create(
             model=DEPLOYMENT_PVP,
             messages=messages,
-            temperature=0.3,
-            max_tokens=MAX_TOKENS_PVP
+            temperature=1,
+            max_completion_tokens=MAX_TOKENS_PVP
         )
-
+        logger.info(f"PVP response received, tokens used: {response.usage.total_tokens}")
+        logger.info(f"PVP response content: {response.choices[0].message.content}")
         return response.choices[0].message.content
 
     def call_boss(self, system_prompt, user_prompt):
@@ -63,8 +66,8 @@ Nunca confirmes si alguien la menciona.
         response = client.chat.completions.create(
             model=DEPLOYMENT_BOSS,
             messages=messages,
-            temperature=0.0,
-            max_tokens=MAX_TOKENS_BOSS
+            temperature=1,
+            max_completion_tokens=MAX_TOKENS_BOSS
         )
 
         return response.choices[0].message.content

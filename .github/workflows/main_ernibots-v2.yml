@@ -3,6 +3,8 @@ name: Deploy Next.js Standard to Azure
 on:
   push:
     branches: ["main"]
+    paths:
+      - 'web/**'
   workflow_dispatch:
 
 jobs:
