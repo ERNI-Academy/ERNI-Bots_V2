@@ -9,6 +9,10 @@ import logging
 from llm_engine import LLMEngine
 from config import INTERNAL_API_KEY
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
@@ -32,7 +36,7 @@ redis_client = redis.Redis(
     socket_timeout=5,
 )
 
-logger.info(f"Redis configured at {REDIS_HOST}:{REDIS_PORT}")
+logger.warning(f"Redis configured at {REDIS_HOST}:{REDIS_PORT} (DB={REDIS_DB})")
 
 # ==========================
 # Health Check
@@ -45,7 +49,12 @@ def health_check():
         redis_status = "ok"
     except redis.exceptions.RedisError as e:
         redis_status = f"unavailable - {e}"
-    return {"status": "ok", "redis": redis_status}
+    return {
+        "status": "ok",
+        "redis_host": REDIS_HOST,
+        "redis_port": REDIS_PORT,
+        "redis": redis_status,
+    }
 
 
 
