@@ -13,3 +13,7 @@ get {
 headers {
   X-Admin-Secret: {{adminSecret}}
 }
+
+vars:pre-request {
+  baseUrl: http://localhost:5000
+}

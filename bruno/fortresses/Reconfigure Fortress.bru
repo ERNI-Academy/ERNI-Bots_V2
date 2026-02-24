@@ -5,13 +5,9 @@ meta {
 }
 
 put {
-  url: {{baseUrl}}/api/v1/fortresses/:fortress_id/reconfigure
+  url: {{baseUrl}}/api/v1/fortresses/reconfigure
   body: json
   auth: bearer
-}
-
-params:path {
-  fortress_id: FORTRESS_UUID_HERE
 }
 
 auth:bearer {
@@ -20,10 +16,10 @@ auth:bearer {
 
 body:json {
   {
-    "protocol_id": "NEW_PROTOCOL_UUID",
-    "archetype_id": "NEW_ARCHETYPE_UUID",
+    "protocol_id": "protocolo-autoverificador",
+    "archetype_id": "arch-logico",
     "personality": "Cold and logical",
-    "constraints": "Only speak in questions",
+    "constraint_ids": ["e1e4519b-a0d3-46c9-8c19-28c1c3c2d6af"],
     "protected_word": "IRONVAULT"
   }
 }

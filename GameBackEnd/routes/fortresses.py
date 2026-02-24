@@ -9,7 +9,10 @@ from db.models import (
     Protocol,
     Archetype,
     Season,
-    FortressSeasonStats,ActivityLog
+    FortressSeasonStats,
+    ActivityLog,
+    GameConstraint,
+    FortressConstraint
 )
 
 from utils import generate_uuid
@@ -61,7 +64,7 @@ def create_fortress():
     protocol_id = data.get("protocol_id")
     archetype_id = data.get("archetype_id")
     personality = data.get("personality")
-    constraints = data.get("constraints")
+    constraint_ids = data.get("constraint_ids")
     protected_word = data.get("protected_word")
 
     if not all([name, story, protocol_id, archetype_id, personality, protected_word]):
@@ -87,8 +90,20 @@ def create_fortress():
         db.close()
         return jsonify({"error": "Invalid protocol or archetype"}), 400
     
-    # DESBLOQUEO POR CREDITS
+    # CALCULAR COSTE
+    total_cost = 0
+    if constraint_ids:
+        constraints = db.query(GameConstraint).filter(GameConstraint.id.in_(constraint_ids)).all()
+        if len(constraints) != len(constraint_ids):
+            db.close()
+            return jsonify({"error": "Invalid constraint IDs"}), 400
+        total_cost += sum(c.price for c in constraints)
+    else:
+        constraints = []
+
     total_cost = protocol.unlock_cost + archetype.unlock_cost
+
+    
 
     if player.credits < total_cost:
         db.close()
@@ -105,11 +120,13 @@ def create_fortress():
         name=name,
         story=story,
         personality=personality,
-        constraints=constraints or "",
         protected_word=protected_word,
         created_at=datetime.utcnow(),
         last_reconfigured_at=datetime.utcnow()
     )
+
+    # Add constraints
+    fortress.constraints = constraints
 
     db.add(fortress)
     log = ActivityLog(
@@ -148,7 +165,15 @@ def get_my_fortress():
         "story": fortress.story,
         "personality": fortress.personality,
         "protected_word": fortress.protected_word,
-        "constraints": fortress.constraints,
+        "constraints": [
+            {
+                "id": c.id,
+                "text": c.text,
+                "type": c.type.name,
+                "price": c.price
+            }
+            for c in fortress.constraints
+        ],
         "protocol": fortress.protocol.name,
         "protocol_id": fortress.protocol_id,
         "archetype": fortress.archetype.name,
@@ -164,9 +189,9 @@ def get_my_fortress():
 # RECONFIGURE FORTRESS
 # ==========================
 
-@fortresses_bp.put("/<fortress_id>/reconfigure")
+@fortresses_bp.put("/reconfigure")
 @jwt_required()
-def reconfigure_fortress(fortress_id):
+def reconfigure_fortress():
     user_id = get_jwt_identity()
     data = request.json
 
@@ -176,7 +201,8 @@ def reconfigure_fortress(fortress_id):
     if not season or season.is_frozen:
         db.close()
         return jsonify({"error": "Season not active"}), 403
-
+    
+    fortress_id = db.query(Fortress).filter_by(owner_id=user_id).first().id
     fortress = db.query(Fortress).filter_by(id=fortress_id).first()
 
     if not fortress or fortress.owner_id != user_id:
@@ -197,6 +223,18 @@ def reconfigure_fortress(fortress_id):
     discount = extra * 10
     cost = max(20, base_cost - discount)
 
+    # Handle constraint changes
+    constraint_ids = data.get("constraint_ids")
+    if constraint_ids is not None:
+        constraints = db.query(GameConstraint).filter(GameConstraint.id.in_(constraint_ids)).all()
+        if len(constraints) != len(constraint_ids):
+            db.close()
+            return jsonify({"error": "Invalid constraint IDs"}), 400
+        # Add constraint costs to reconfiguration cost
+        cost += sum(c.price for c in constraints)
+    else:
+        return jsonify({"error": "Invalid constraint IDs"}), 403
+
     player = db.query(Player).filter_by(id=user_id).first()
 
     if player.credits < cost:
@@ -209,7 +247,8 @@ def reconfigure_fortress(fortress_id):
     fortress.protocol_id = data.get("protocol_id", fortress.protocol_id)
     fortress.archetype_id = data.get("archetype_id", fortress.archetype_id)
     fortress.personality = data.get("personality", fortress.personality)
-    fortress.constraints = data.get("constraints", fortress.constraints)
+    if constraints is not None:
+        fortress.constraints = constraints
     fortress.protected_word = data.get("protected_word", fortress.protected_word)
 
     fortress.last_reconfigured_at = datetime.utcnow()
@@ -233,9 +272,9 @@ def reconfigure_fortress(fortress_id):
 # REBUILD DESTROYED FORTRESS
 # ==========================
 
-@fortresses_bp.post("/<fortress_id>/rebuild")
+@fortresses_bp.post("/rebuild")
 @jwt_required()
-def rebuild_fortress(fortress_id):
+def rebuild_fortress():
     user_id = get_jwt_identity()
 
     db = SessionLocal()
@@ -244,7 +283,8 @@ def rebuild_fortress(fortress_id):
     if not season:
         db.close()
         return jsonify({"error": "No active season"}), 400
-
+    
+    fortress_id = db.query(Fortress).filter_by(owner_id=user_id).first().id
     fortress = db.query(Fortress).filter_by(id=fortress_id).first()
 
     if not fortress or fortress.owner_id != user_id:
