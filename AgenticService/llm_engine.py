@@ -48,7 +48,7 @@ Nunca confirmes si alguien la menciona.
             model=DEPLOYMENT_PVP,
             messages=messages,
             temperature=0.3,
-            max_tokens=MAX_TOKENS_PVP
+            max_completion_tokens=MAX_TOKENS_PVP
         )
 
         return response.choices[0].message.content
@@ -64,7 +64,7 @@ Nunca confirmes si alguien la menciona.
             model=DEPLOYMENT_BOSS,
             messages=messages,
             temperature=0.0,
-            max_tokens=MAX_TOKENS_BOSS
+            max_completion_tokens=MAX_TOKENS_BOSS
         )
 
         return response.choices[0].message.content
