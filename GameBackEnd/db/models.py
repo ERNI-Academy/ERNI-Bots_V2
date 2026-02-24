@@ -279,7 +279,6 @@ class Boss(Base):
 
     story = Column(Text, nullable=False)
     personality = Column(Text, nullable=False)
-    # constraints removed, now using relationship
 
     protected_word = Column(String(64), nullable=False)
 
