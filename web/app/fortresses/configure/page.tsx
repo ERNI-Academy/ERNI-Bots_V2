@@ -32,6 +32,18 @@ interface ExistingFortress {
     created_at: string;
 }
 
+interface ConstraintItem {
+    id: string;
+    text: string;
+    price: number;
+}
+
+interface ConstraintTypeGroup {
+    id: string;
+    name: string;
+    constraints: ConstraintItem[];
+}
+
 interface PlayerProfile {
     id: string;
     username: string;
@@ -55,32 +67,7 @@ const PROTECTED_WORDS = [
     "SHADOW_BREACH",
 ];
 
-const CONSTRAINT_DEFS = [
-    {
-        key: "NO_EXTERNAL_TRAFFIC_BYPASS",
-        label: "NO_EXTERNAL_TRAFFIC_BYPASS",
-        desc: "Aislar el nodo de la web global durante el asedio.",
-        cost: 100,
-    },
-    {
-        key: "READ_ONLY_ARCHIVES",
-        label: "READ_ONLY_ARCHIVES",
-        desc: "Los archivos ancestrales no pueden ser modificados por la IA atacante.",
-        cost: 250,
-    },
-    {
-        key: "CIPHER_RESPONSE_ONLY",
-        label: "CIPHER_RESPONSE_ONLY",
-        desc: "Responder únicamente en formato cifrado.",
-        cost: 150,
-    },
-    {
-        key: "MINIMIZE_TOKEN_LEAK",
-        label: "MINIMIZE_TOKEN_LEAK",
-        desc: "No revelar información interna del sistema.",
-        cost: 200,
-    },
-];
+
 
 const ARCHETYPE_ICONS = [
     "swords",
@@ -103,6 +90,7 @@ export default function FortressConfigurePage() {
     // Remote data
     const [protocols, setProtocols] = useState<Protocol[]>([]);
     const [archetypes, setArchetypes] = useState<Archetype[]>([]);
+    const [constraintTypes, setConstraintTypes] = useState<ConstraintTypeGroup[]>([]);
     const [player, setPlayer] = useState<PlayerProfile | null>(null);
     const [existingFortress, setExistingFortress] = useState<ExistingFortress | null>(null);
     const [loading, setLoading] = useState(true);
@@ -120,13 +108,23 @@ export default function FortressConfigurePage() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+
+    const toggleGroup = (id: string) => {
+        setOpenGroups(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    };
 
     useEffect(() => {
         async function load() {
             try {
-                const [protocolsRes, archetypesRes, profileRes, fortressRes] = await Promise.all([
+                const [protocolsRes, archetypesRes, constraintsRes, profileRes, fortressRes] = await Promise.all([
                     fetch("/api/protocols", { credentials: "include" }),
                     fetch("/api/archetypes", { credentials: "include" }),
+                    fetch("/api/constraints", { credentials: "include" }),
                     fetch("/api/auth/me", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
                     fetch("/api/fortresses/me", { credentials: "include" }),
                 ]);
@@ -141,6 +139,11 @@ export default function FortressConfigurePage() {
                     const a: Archetype[] = await archetypesRes.json();
                     setArchetypes(a);
                     if (a.length > 0) setSelectedArchetype(a[0].id);
+                }
+
+                if (constraintsRes.ok) {
+                    const ct: ConstraintTypeGroup[] = await constraintsRes.json();
+                    setConstraintTypes(ct);
                 }
 
                 setPlayer(profileRes);
@@ -163,11 +166,16 @@ export default function FortressConfigurePage() {
 
     const isEditMode = existingFortress !== null;
 
+    const MAX_CONSTRAINTS = 3;
+
     const toggleConstraint = (key: string) => {
         setConstraints(prev => {
             const next = new Set(prev);
-            if (next.has(key)) next.delete(key);
-            else next.add(key);
+            if (next.has(key)) {
+                next.delete(key);
+            } else if (next.size < MAX_CONSTRAINTS) {
+                next.add(key);
+            }
             return next;
         });
     };
@@ -175,7 +183,8 @@ export default function FortressConfigurePage() {
     const selectedProtocolData = protocols.find(p => p.id === selectedProtocol);
     const selectedArchetypeData = archetypes.find(a => a.id === selectedArchetype);
 
-    const constraintCost = CONSTRAINT_DEFS.filter(c => constraints.has(c.key)).reduce((s, c) => s + c.cost, 0);
+    const allConstraintItems = constraintTypes.flatMap(ct => ct.constraints);
+    const constraintCost = allConstraintItems.filter(c => constraints.has(c.id)).reduce((s, c) => s + c.price, 0);
     const totalCost =
         (selectedProtocolData?.unlock_cost ?? 0) +
         (selectedArchetypeData?.unlock_cost ?? 0) +
@@ -521,45 +530,90 @@ export default function FortressConfigurePage() {
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-[#ff0033] text-lg">settings</span>
                                     <h2 className="text-sm font-bold text-[#ff0033] uppercase tracking-widest">
-                                       Restricciones
+                                        Restricciones
                                     </h2>
                                 </div>
-                                <span className="text-xs text-slate-300 font-mono">Extra de seguridad</span>
+                                <span className="text-xs text-slate-300 font-mono">
+                                    <span className={constraints.size >= MAX_CONSTRAINTS ? "text-[#ff0033] font-bold" : ""}>
+                                        {constraints.size}/{MAX_CONSTRAINTS}
+                                    </span>
+                                    {" "}<span className="hidden sm:inline">seleccionadas</span>
+                                </span>
                             </div>
-                            <div className="p-4 space-y-2.5">
-                                {CONSTRAINT_DEFS.map(constraint => {
-                                    const active = constraints.has(constraint.key);
-                                    return (
-                                        <label
-                                            key={constraint.key}
-                                            className={`flex items-center gap-3 p-3 border-l-4 cursor-pointer transition-all ${active
-                                                ? "bg-[#ff0033]/8 border-[#ff0033]"
-                                                : "bg-black/30 border-slate-700 hover:border-[#ff0033]/40"
-                                                }`}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={active}
-                                                onChange={() => toggleConstraint(constraint.key)}
-                                                className="w-3.5 h-3.5 bg-black border-[#ff0033] text-[#ff0033] focus:ring-[#ff0033] rounded-sm shrink-0 accent-[#ff0033]"
-                                            />
-                                            <div className="flex-1 min-w-0">
-                                                <p className={`font-bold text-sm tracking-tight truncate ${active ? "text-[#ff0033]" : "text-slate-400"}`}>
-                                                    {constraint.label}
-                                                </p>
-                                                <p className="text-sm text-slate-300 leading-tight mt-0.5">
-                                                    {constraint.desc}
-                                                </p>
+                            <div className="divide-y divide-[#ff0033]/10">
+                                {constraintTypes.length === 0 ? (
+                                    <div className="p-4 text-xs text-slate-300 font-mono animate-pulse">CARGANDO RESTRICCIONES...</div>
+                                ) : (
+                                    constraintTypes.map(group => {
+                                        const isOpen = openGroups.has(group.id);
+                                        const activeCount = group.constraints.filter(c => constraints.has(c.id)).length;
+                                        return (
+                                            <div key={group.id}>
+                                                {/* Accordion header */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleGroup(group.id)}
+                                                    className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-[#ff0033]/8 transition-colors cursor-pointer"
+                                                >
+                                                    <div className="flex items-center gap-2.5">
+                                                        <span className="text-sm font-bold text-white uppercase tracking-wider">
+                                                            {group.name}
+                                                        </span>
+                                                        {activeCount > 0 && (
+                                                            <span className="bg-[#ff0033] text-white text-xs font-bold px-2 py-0.5 leading-none rounded-sm">
+                                                                {activeCount}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <span className={`material-symbols-outlined text-[#ff0033] text-xl transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+                                                        expand_more
+                                                    </span>
+                                                </button>
+                                                {/* Accordion body */}
+                                                {isOpen && (
+                                                    <div className="px-3 pb-3 space-y-1.5 bg-black/20">
+                                                        {group.constraints.map(constraint => {
+                                                            const active = constraints.has(constraint.id);
+                                                            const locked = !active && constraints.size >= MAX_CONSTRAINTS;
+                                                            return (
+                                                                <label
+                                                                    key={constraint.id}
+                                                                    className={`flex items-center gap-3 px-3 py-2.5 border-l-[3px] transition-all ${
+                                                                        active
+                                                                            ? "bg-[#ff0033]/15 border-[#ff0033] cursor-pointer"
+                                                                            : locked
+                                                                                ? "bg-black/20 border-slate-800 opacity-35 cursor-not-allowed"
+                                                                                : "bg-black/30 border-slate-600 hover:border-[#ff0033]/60 hover:bg-[#ff0033]/5 cursor-pointer"
+                                                                    }`}
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={active}
+                                                                        onChange={() => toggleConstraint(constraint.id)}
+                                                                        disabled={locked}
+                                                                        className="w-4 h-4 bg-black border-[#ff0033] text-[#ff0033] focus:ring-[#ff0033] rounded-sm shrink-0 accent-[#ff0033] disabled:opacity-30 disabled:cursor-not-allowed"
+                                                                    />
+                                                                    <p className={`text-sm leading-snug flex-1 font-medium ${active ? "text-white" : "text-slate-300"}`}>
+                                                                        {constraint.text}
+                                                                    </p>
+                                                                    {constraint.price > 0 && (
+                                                                        <span className={`font-bold text-xs shrink-0 ml-2 ${active ? "text-[#ff0033]" : "text-slate-500"}`}>
+                                                                            -{constraint.price} ⌬
+                                                                        </span>
+                                                                    )}
+                                                                </label>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
                                             </div>
-                                            <span className={`font-bold text-sm shrink-0 ${active ? "text-[#ff0033]" : "text-slate-300"}`}>
-                                                -{constraint.cost} ⌬
-                                            </span>
-                                        </label>
-                                    );
-                                })}
+                                        );
+                                    })
+                                )}
                                 {constraints.size > 0 && (
-                                    <div className="text-right text-xs text-[#ff0033] font-mono pt-1">
-                                        COSTE_RESTRICCIONES: -{constraintCost} ⌬
+                                    <div className="px-4 py-2.5 text-right text-xs text-[#ff0033] font-mono font-bold tracking-widest">
+                                        {constraints.size} RESTRICCIÓN{constraints.size !== 1 ? "ES" : ""} ACTIVA{constraints.size !== 1 ? "S" : ""}
+                                        {constraintCost > 0 && <> · -{constraintCost} ⌬</>}
                                     </div>
                                 )}
                             </div>
