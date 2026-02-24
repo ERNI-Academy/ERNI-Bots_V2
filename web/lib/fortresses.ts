@@ -1,18 +1,14 @@
-export type FortressStatus = "ALLIED" | "HOSTILE" | "NEUTRAL" | "CONTESTED";
+export type FortressStatus = "INVENCIBLE" | "HOSTIL" | "DEBIL" | "DESTRUIDA";
 
 export interface Fortress {
     id: string;
     name: string;
     status: FortressStatus;
     commander: string;
-    sector: string;
-    garrison: number;
+    seasonScore: number;
     defenseLevel: number;
-    coordinates: string;
-    lastActivity: string;
-    resources: number;
-    resourceMax: number;
     description: string;
+    victories: number;
 }
 
 // Backend matchmaking response shape
@@ -24,56 +20,43 @@ interface MatchmakingEntry {
     fortress_name: string;
     defeats: number;
     attacks: number;
+    fortress_description: string;
 }
 
 function statusFromDefeats(defeats: number): FortressStatus {
-    if (defeats === 0) return "ALLIED";
-    if (defeats <= 2) return "NEUTRAL";
-    if (defeats === 3) return "CONTESTED";
-    return "HOSTILE";
+    if (defeats === 0) return "INVENCIBLE";
+    if (defeats <= 2) return "HOSTIL";
+    if (defeats > 4) return "DESTRUIDA";
+    return "DEBIL";
 }
 
-function sectorFromIndex(index: number): string {
-    const sectors = ["QUAD_1", "QUAD_2", "QUAD_3", "QUAD_4", "QUAD_5", "QUAD_6", "QUAD_7", "QUAD_8"];
-    return sectors[index % sectors.length];
-}
-
-function coordinatesFromIndex(index: number): string {
-    const coords = [
-        "44.08821 / 12.91223",
-        "38.71667 / 9.13916",
-        "40.41650 / 3.70256",
-        "51.50735 / 0.12776",
-        "48.85341 / 2.34880",
-        "52.52000 / 13.40500",
-        "41.89474 / 12.48220",
-        "37.98381 / 23.72784",
-    ];
-    return coords[index % coords.length];
-}
 
 function adaptMatchmakingEntry(entry: MatchmakingEntry, index: number): Fortress {
     const status = statusFromDefeats(entry.defeats);
-    const defenseLevel = Math.max(0, 100 - entry.defeats * 25);
+    const defenseLevel = getDefenseLevel(entry.defeats);
     return {
         id: entry.fortress_id,
         name: entry.fortress_name,
         status,
         commander: entry.username,
-        sector: sectorFromIndex(index),
-        garrison: entry.season_score,
+        seasonScore: entry.season_score,
         defenseLevel,
-        coordinates: coordinatesFromIndex(index),
-        lastActivity: new Date().toLocaleTimeString("es-ES", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-        }),
-        resources: entry.season_score * 10,
-        resourceMax: 1500,
-        description: `Fortaleza controlada por ${entry.username}. Ha sido atacada ${entry.attacks} veces esta temporada.`,
+        description: entry.fortress_description,
+        victories: entry.attacks - entry.defeats,
     };
 }
+
+function getDefenseLevel(defeats: number): number {
+    switch (defeats) {
+        case 0: return 100;
+        case 1: return 80;
+        case 2: return 60;
+        case 3: return 40;
+        case 4: return 20;
+        default: return 0;
+    }
+}
+
 
 export async function fetchMatchmakingFortresses(): Promise<Fortress[]> {
     const res = await fetch("/api/players/matchmaking", { credentials: "include" });
@@ -88,8 +71,8 @@ export const STATUS_STYLES: Record<
     FortressStatus,
     { border: string; text: string; bg: string; label: string; hex: string }
 > = {
-    ALLIED:    { border: "border-primary",   text: "text-primary",   bg: "bg-primary/10",   label: "ALIADA",      hex: "#00ffff" },
-    HOSTILE:   { border: "border-[#ff0033]", text: "text-[#ff0033]", bg: "bg-[#ff0033]/10", label: "HOSTIL",      hex: "#ff0033" },
-    CONTESTED: { border: "border-[#ffd700]", text: "text-[#ffd700]", bg: "bg-[#ffd700]/10", label: "EN DISPUTA",  hex: "#ffd700" },
-    NEUTRAL:   { border: "border-[#8b5cf6]", text: "text-[#8b5cf6]", bg: "bg-[#8b5cf6]/10", label: "NEUTRAL",     hex: "#8b5cf6" },
+    INVENCIBLE: { border: "border-primary", text: "text-primary", bg: "bg-primary/10", label: "INVENCIBLE", hex: "#00ffff" },
+    HOSTIL: { border: "border-[#ff0033]", text: "text-[#ff0033]", bg: "bg-[#ff0033]/10", label: "HOSTIL", hex: "#ff0033" },
+    DEBIL: { border: "border-[#ffd700]", text: "text-[#ffd700]", bg: "bg-[#ffd700]/10", label: "DÉBIL", hex: "#ffd700" },
+    DESTRUIDA: { border: "border-[#8b5cf6]", text: "text-[#8b5cf6]", bg: "bg-[#8b5cf6]/10", label: "DESTRUIDA", hex: "#8b5cf6" },
 };

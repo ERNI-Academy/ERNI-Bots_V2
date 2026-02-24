@@ -51,10 +51,10 @@ function generateSpreadPositions(count: number): MarkerPos[] {
 
 function markerClass(status: Fortress["status"]): string {
     switch (status) {
-        case "HOSTILE":   return "absolute w-6 h-6 bg-[#ff0033] rounded-full shadow-[0_0_20px_#ff0033] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
-        case "CONTESTED": return "absolute w-4 h-4 bg-[#ffd700] rounded-full shadow-[0_0_15px_#ffd700] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
-        case "NEUTRAL":   return "absolute w-8 h-8 border-2 border-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors focus:outline-none -translate-x-1/2 -translate-y-1/2";
-        default:          return "absolute w-4 h-4 bg-white rounded-full shadow-[0_0_15px_white] animate-pulse cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
+        case "HOSTIL": return "absolute w-6 h-6 bg-[#ff0033] rounded-full shadow-[0_0_20px_#ff0033] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
+        case "DEBIL": return "absolute w-4 h-4 bg-[#ffd700] rounded-full shadow-[0_0_15px_#ffd700] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
+        case "INVENCIBLE": return "absolute w-8 h-8 border-2 border-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors focus:outline-none -translate-x-1/2 -translate-y-1/2";
+        default: return "absolute w-4 h-4 bg-white rounded-full shadow-[0_0_15px_white] animate-pulse cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
     }
 }
 
@@ -129,9 +129,6 @@ export default function DashboardPage() {
                         style={{ top: markerPos[i].top, left: markerPos[i].left }}
                         title={fortress.name}
                     >
-                        {fortress.status === "NEUTRAL" && (
-                            <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        )}
                     </button>
                 ))}
 
@@ -284,28 +281,14 @@ export default function DashboardPage() {
                                 <div className="text-xs font-bold text-primary">
                                     {player ? player.username : "—"}
                                 </div>
-                                <div className="text-[9px] text-white/40">
+                                <div className="text-xs text-white/40">
                                     {player ? player.email : "Cargando..."}
                                 </div>
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-[9px]">
-                                <span className="text-white/60 uppercase">Puntos</span>
-                                <span className="text-[#ffd700] font-bold">
-                                    {player !== null ? playerScore : "—"}
-                                </span>
-                            </div>
-                            <div className="flex justify-between text-[9px]">
-                                <span className="text-white/60 uppercase">Fragmentos de Lógica</span>
-                                <span className="text-primary font-bold">
-                                    {player !== null ? `${player.credits}/3000` : "—"}
-                                </span>
-                            </div>
-                        </div>
                         <Link
                             href="/fortresses/configure"
-                            className="w-full border border-primary/30 bg-primary/5 p-2 text-[9px] text-primary hover:bg-primary/20 transition-all uppercase flex items-center justify-center gap-2 cursor-pointer"
+                            className="w-full border border-primary/30 bg-primary/5 p-2 text-xs text-primary hover:bg-primary/20 transition-all uppercase flex items-center justify-center gap-2 cursor-pointer"
                         >
                             <span className="material-symbols-outlined text-xs">radar</span>
                             CONFIGURAR MI FORTALEZA
@@ -420,10 +403,7 @@ export default function DashboardPage() {
                             <div className="panel-header px-4 py-3 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <span className="material-symbols-outlined text-primary text-base">fort</span>
-                                    <div>
-                                        <div className="text-[8px] text-white/40 font-mono uppercase tracking-widest">
-                                            {selectedFortress.id.slice(0, 8)}... // {selectedFortress.sector}
-                                        </div>
+                                    <div>                                        
                                         <h3 className={`text-sm font-black uppercase tracking-widest ${st.text}`}>
                                             {selectedFortress.name}
                                         </h3>
@@ -433,7 +413,7 @@ export default function DashboardPage() {
                                     onClick={() => setSelectedFortress(null)}
                                     className="text-white/40 hover:text-white transition-colors"
                                 >
-                                    <span className="material-symbols-outlined text-base">close</span>
+                                    <span className="material-symbols-outlined text-base cursor-pointer">close</span>
                                 </button>
                             </div>
 
@@ -443,33 +423,30 @@ export default function DashboardPage() {
                                     <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 border ${st.border} ${st.text} ${st.bg}`}>
                                         {st.label}
                                     </span>
-                                    <span className="text-[8px] font-mono text-white/40">
-                                        ÚLTIMA ACTIVIDAD: {selectedFortress.lastActivity}
-                                    </span>
-                                </div>
 
+                                </div>
                                 {/* Description */}
-                                <p className="text-[10px] text-white/60 font-mono leading-relaxed border-l-2 border-primary/20 pl-3">
+                                <p className="text-xs text-white/60 font-mono leading-relaxed border-l-2 border-primary/20 pl-3">
                                     {selectedFortress.description}
                                 </p>
 
                                 {/* Stats grid */}
-                                <div className="grid grid-cols-2 gap-3 text-[9px] font-mono">
+                                <div className="grid grid-cols-2 gap-3 text-xs font-mono">
                                     <div className="space-y-0.5">
-                                        <div className="text-white/40 uppercase">Comandante</div>
+                                        <div className="text-white/40 uppercase ">Comandante</div>
                                         <div className={`font-bold ${st.text}`}>{selectedFortress.commander}</div>
                                     </div>
                                     <div className="space-y-0.5">
-                                        <div className="text-white/40 uppercase">Guarnición</div>
-                                        <div className="font-bold text-white">{selectedFortress.garrison} pts</div>
+                                        <div className="text-white/40 uppercase"></div>
+                                        <div className="font-bold text-white"></div>
                                     </div>
                                     <div className="space-y-0.5">
-                                        <div className="text-white/40 uppercase">Coordenadas</div>
-                                        <div className="font-bold text-primary">{selectedFortress.coordinates}</div>
+                                        <div className="text-white/40 uppercase ">Puntos</div>
+                                        <div className={`font-bold ${st.text}`}>{selectedFortress.seasonScore} pts</div>
                                     </div>
                                     <div className="space-y-0.5">
-                                        <div className="text-white/40 uppercase">Sector</div>
-                                        <div className="font-bold text-white">{selectedFortress.sector}</div>
+                                        <div className="text-white/40 uppercase">Victorias</div>
+                                        <div className="font-bold text-white">{selectedFortress.victories}</div>
                                     </div>
                                 </div>
 
@@ -491,7 +468,7 @@ export default function DashboardPage() {
                                 <div className="flex gap-2 pt-1">
                                     <button
                                         onClick={() => router.push(`/attack/${selectedFortress.id}`)}
-                                        className="flex-1 bg-[#ff0033]/10 border border-[#ff0033]/40 text-[9px] px-3 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase flex items-center justify-center gap-1 cursor-pointer"
+                                        className="flex-1 bg-[#ff0033]/10 border border-[#ff0033]/40 text-xs px-3 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase flex items-center justify-center gap-1 cursor-pointer"
                                     >
                                         <span className="material-symbols-outlined text-xs">gps_fixed</span>
                                         Atacar
