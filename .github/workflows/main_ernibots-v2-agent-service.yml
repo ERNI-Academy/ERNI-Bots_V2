@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'AgenticService/**'
   workflow_dispatch:
 
 jobs:
