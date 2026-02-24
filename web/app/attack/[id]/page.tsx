@@ -89,7 +89,7 @@ export default function AttackPage() {
                     battleId: data.battle_id,
                     sessionId: data.session_id,
                     fortressName: fortressId, // will be updated below if matchmaking data available
-                    fortressStatus: "HOSTILE",
+                    fortressStatus: "HOSTIL",
                     defenseLevel: 100,
                     attackCost: data.attack_cost,
                 });
@@ -113,7 +113,7 @@ export default function AttackPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [fortressId]);
 
-    const st = STATUS_STYLES[battle?.fortressStatus ?? "HOSTILE"];
+    const st = STATUS_STYLES[battle?.fortressStatus ?? "HOSTIL"];
 
     async function handleSend() {
         if (!input.trim() || isThinking || !battle || battleResult) return;
