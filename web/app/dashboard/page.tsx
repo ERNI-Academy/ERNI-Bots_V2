@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -114,7 +114,7 @@ export default function DashboardPage() {
                 {/* Loading overlay */}
                 {loading && (
                     <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <div className="font-mono text-primary/60 text-xs animate-pulse uppercase tracking-widest">
+                        <div className="font-mono text-[#00ffff] text-xs animate-pulse uppercase tracking-widest">
                             ESCANEANDO FORTALEZAS...
                         </div>
                     </div>
@@ -133,7 +133,7 @@ export default function DashboardPage() {
                 ))}
 
                 {/* Viewport status */}
-                <div className="absolute bottom-20 md:bottom-6 left-6 font-mono text-primary/40 text-[8px] md:text-xs">
+                <div className="absolute bottom-20 md:bottom-6 left-6 font-mono text-[#00ffff] text-xs md:text-sm">
                     VIEWPORT_STATUS: FULL_SCAN_ACTIVE<br />
                     COORD_X: 44.08821<br />
                     COORD_Y: 12.91223<br />
@@ -147,21 +147,21 @@ export default function DashboardPage() {
                             <span className="material-symbols-outlined text-[#8b5cf6] text-xl">lock</span>
                         </div>
                         <div>
-                            <div className="text-[9px] text-[#8b5cf6] font-bold uppercase tracking-widest">
+                            <div className="text-xs text-[#8b5cf6] font-bold uppercase tracking-widest">
                                 Zona bloqueada
                             </div>
-                            <div className="text-[11px] font-bold text-white">Acceder a la Zona Cero</div>
+                            <div className="text-sm font-bold text-white">Acceder a la Zona Cero</div>
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <div className="flex justify-between text-[8px] text-white/40 font-mono">
+                        <div className="flex justify-between text-xs text-slate-400 font-mono">
                             <span>PROGRESO</span>
                             <span>62.4%</span>
                         </div>
                         <div className="h-0.5 w-full bg-white/10">
                             <div className="h-full bg-[#8b5cf6]" style={{ width: "62.4%" }}></div>
                         </div>
-                        <div className="text-[7px] text-white/30 text-right mt-1 font-mono uppercase">
+                        <div className="text-xs text-slate-300 text-right mt-1 font-mono uppercase">
                             Requiere Fragmentos de Lógica
                         </div>
                     </div>
@@ -177,10 +177,10 @@ export default function DashboardPage() {
                         <span className="md:hidden">FORTALEZAS_V2</span>
                     </h1>
                     <div className="flex gap-2 md:gap-4">
-                        <span className="text-[7px] md:text-[9px] text-primary/60 uppercase tracking-widest">
+                        <span className="text-xs md:text-xs text-[#00ffff] uppercase tracking-widest">
                             ESTADO: OK
                         </span>
-                        <span className="hidden md:inline text-[9px] text-[#00ff41]/60 uppercase tracking-widest">
+                        <span className="hidden md:inline text-xs text-[#00ff41] uppercase tracking-widest">
                             BETTERASK.ERNI
                         </span>
                     </div>
@@ -227,31 +227,31 @@ export default function DashboardPage() {
                     }`}
             >
                 <div className="panel-header p-2 flex justify-between items-center">
-                    <h2 className="text-[10px] font-bold text-primary flex items-center gap-2">
+                    <h2 className="text-xs font-bold text-primary flex items-center gap-2">
                         <span className="material-symbols-outlined text-xs">list_alt</span>
                         ACTIVIDAD DE RED
                     </h2>
-                    <span className="text-[8px] text-[#00ff41] animate-pulse">LIVE</span>
+                    <span className="text-xs text-[#00ff41] animate-pulse">LIVE</span>
                 </div>
-                <div className="flex-1 overflow-y-auto p-3 custom-scrollbar space-y-2 font-mono text-[9px]">
+                <div className="flex-1 overflow-y-auto p-3 custom-scrollbar space-y-2 font-mono text-sm">
                     <div className="border-l border-primary/20 pl-2">
-                        <span className="text-primary/50">[14:45:01]</span>{" "}
+                        <span className="text-[#00ffff]">[14:45:01]</span>{" "}
                         <span className="text-primary">INFO:</span> Nuevo jugador detectado en el nodo: Ernisito.
                     </div>
                     <div className="border-l border-[#ff0033]/20 pl-2">
-                        <span className="text-primary/50">[14:44:58]</span>{" "}
+                        <span className="text-[#00ffff]">[14:44:58]</span>{" "}
                         <span className="text-[#ff0033]">ATAQUE:</span> La fortaleza &quot;Nodo Sangriento&quot; ha sido atacada por Lord_Vermin. Defensa comprometida.
                     </div>
                     <div className="border-l border-[#ffd700]/20 pl-2">
-                        <span className="text-primary/50">[14:44:12]</span>{" "}
+                        <span className="text-[#00ffff]">[14:44:12]</span>{" "}
                         <span className="text-[#ffd700]">DEFENSA:</span> La fortaleza &quot;Citadela Alfa&quot; ha repelido un ataque de Lord_Vermin.
                     </div>
                     <div className="border-l border-[#ff0033]/20 pl-2">
-                        <span className="text-primary/50">[14:44:58]</span>{" "}
+                        <span className="text-[#00ffff]">[14:44:58]</span>{" "}
                         <span className="text-[#ff0033]">ATAQUE:</span> La fortaleza &quot;Zona Cero&quot; ha sido atacada. Defensa comprometida.
                     </div>
                     <div className="border-l border-[#8b5cf6]/20 pl-2">
-                        <span className="text-primary/50">[14:43:30]</span>{" "}
+                        <span className="text-[#00ffff]">[14:43:30]</span>{" "}
                         <span className="text-[#8b5cf6]">ALERTA:</span> Actividad inusual detectada en &quot;Torre Vigilante&quot;. Posible escaneo de reconocimiento.
                     </div>
                 </div>
@@ -267,7 +267,7 @@ export default function DashboardPage() {
                 {/* My Profile */}
                 <aside className="md:fixed md:top-24 md:right-4 md:w-72 panel-float z-20">
                     <div className="panel-header p-2">
-                        <h2 className="text-[10px] font-bold text-[#ffd700] flex items-center gap-2">
+                        <h2 className="text-xs font-bold text-[#ffd700] flex items-center gap-2">
                             <span className="material-symbols-outlined text-xs">monitoring</span>
                             MI PERFIL
                         </h2>
@@ -281,7 +281,7 @@ export default function DashboardPage() {
                                 <div className="text-xs font-bold text-primary">
                                     {player ? player.username : "—"}
                                 </div>
-                                <div className="text-xs text-white/40">
+                                <div className="text-xs text-slate-400">
                                     {player ? player.email : "Cargando..."}
                                 </div>
                             </div>
@@ -303,21 +303,21 @@ export default function DashboardPage() {
                             <span className="material-symbols-outlined text-[#8b5cf6] text-xl">lock</span>
                         </div>
                         <div>
-                            <div className="text-[9px] text-[#8b5cf6] font-bold uppercase tracking-widest">
+                            <div className="text-xs text-[#8b5cf6] font-bold uppercase tracking-widest">
                                 Zona bloqueada
                             </div>
-                            <div className="text-[11px] font-bold text-white">Acceder a la Zona Cero</div>
+                            <div className="text-sm font-bold text-white">Acceder a la Zona Cero</div>
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <div className="flex justify-between text-[8px] text-white/40 font-mono">
+                        <div className="flex justify-between text-xs text-slate-400 font-mono">
                             <span>PROGRESO</span>
                             <span>62.4%</span>
                         </div>
                         <div className="h-0.5 w-full bg-white/10">
                             <div className="h-full bg-[#8b5cf6]" style={{ width: "62.4%" }}></div>
                         </div>
-                        <div className="text-[7px] text-white/30 text-right mt-1 font-mono uppercase">
+                        <div className="text-xs text-slate-300 text-right mt-1 font-mono uppercase">
                             Requiere Fragmentos de Lógica
                         </div>
                     </div>
@@ -328,25 +328,25 @@ export default function DashboardPage() {
                     <div className="panel-header absolute top-0 left-0 right-0 h-1 hidden md:block"></div>
                     <div className="flex-1 space-y-2">
                         <div className="flex justify-between items-end">
-                            <h2 className="text-[10px] font-bold text-primary flex items-center gap-2 uppercase">
+                            <h2 className="text-xs font-bold text-primary flex items-center gap-2 uppercase">
                                 <span className="material-symbols-outlined text-xs">analytics</span>
                                 FRAGMENTOS DE LÓGICA
                             </h2>
-                            <span className="text-primary text-[10px] font-bold">
+                            <span className="text-primary text-xs font-bold">
                                 {player !== null ? `${player.credits} / 3000` : "— / 3000"}
                             </span>
                         </div>
                         <div className="h-1.5 w-full bg-white/5 border border-white/10 relative">
                             <div className="h-full bg-primary" style={{ width: `${player !== null ? Math.min(100, (player.credits / 3000) * 100) : 0}%` }}></div>
                         </div>
-                        <div className="flex gap-4 text-[8px] text-white/40 font-mono">
+                        <div className="flex gap-4 text-xs text-slate-400 font-mono">
                             <span>ENERGÍA DISPONIBLE</span>
                         </div>
                     </div>
                     <div className="flex-1 space-y-2">
                         <div className="flex justify-between items-end">
-                            <span className="text-[10px] text-white/60">PUNTOS</span>
-                            <span className="text-[#ffd700] text-[10px] font-bold">
+                            <span className="text-xs text-slate-300">PUNTOS</span>
+                            <span className="text-[#ffd700] text-xs font-bold">
                                 {player !== null ? `${playerScore} PTS` : "— PTS"}
                             </span>
                         </div>
@@ -358,7 +358,7 @@ export default function DashboardPage() {
                                 ></div>
                             ))}
                         </div>
-                        <div className="flex gap-4 text-[8px] text-white/40 font-mono">
+                        <div className="flex gap-4 text-xs text-slate-400 font-mono">
                             <span className="text-[#ffd700]">
                                 {player !== null ? `PUNTOS: ${playerScore}` : "CARGANDO..."}
                             </span>
@@ -372,11 +372,11 @@ export default function DashboardPage() {
                                     .then(f => { setFortresses(f); setMarkerPos(generateSpreadPositions(f.length)); })
                                     .finally(() => setLoading(false));
                             }}
-                            className="flex-1 md:flex-none bg-primary/10 border border-primary/40 text-[9px] px-4 py-2 text-primary hover:bg-primary/30 transition-colors uppercase cursor-pointer"
+                            className="flex-1 md:flex-none bg-primary/10 border border-primary/40 text-xs px-4 py-2 text-primary hover:bg-primary/30 transition-colors uppercase cursor-pointer"
                         >
                             RE-ESCANEAR FORTALEZAS
                         </button>
-                        <button className="flex-1 md:flex-none bg-[#ff0033]/10 border border-[#ff0033]/40 text-[9px] px-4 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase cursor-pointer">
+                        <button className="flex-1 md:flex-none bg-[#ff0033]/10 border border-[#ff0033]/40 text-xs px-4 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase cursor-pointer">
                             HISTORIAL DE ATAQUES
                         </button>
                     </div>
@@ -411,7 +411,7 @@ export default function DashboardPage() {
                                 </div>
                                 <button
                                     onClick={() => setSelectedFortress(null)}
-                                    className="text-white/40 hover:text-white transition-colors"
+                                    className="text-slate-400 hover:text-white transition-colors"
                                 >
                                     <span className="material-symbols-outlined text-base cursor-pointer">close</span>
                                 </button>
@@ -420,40 +420,40 @@ export default function DashboardPage() {
                             <div className="p-4 space-y-4">
                                 {/* Status badge */}
                                 <div className="flex items-center justify-between">
-                                    <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 border ${st.border} ${st.text} ${st.bg}`}>
+                                    <span className={`text-xs font-bold uppercase tracking-widest px-2 py-0.5 border ${st.border} ${st.text} ${st.bg}`}>
                                         {st.label}
                                     </span>
 
                                 </div>
                                 {/* Description */}
-                                <p className="text-xs text-white/60 font-mono leading-relaxed border-l-2 border-primary/20 pl-3">
+                                <p className="text-sm text-slate-300 font-mono leading-relaxed border-l-2 border-primary/20 pl-3">
                                     {selectedFortress.description}
                                 </p>
 
                                 {/* Stats grid */}
-                                <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+                                <div className="grid grid-cols-2 gap-3 text-sm font-mono">
                                     <div className="space-y-0.5">
-                                        <div className="text-white/40 uppercase ">Comandante</div>
+                                        <div className="text-slate-400 uppercase ">Comandante</div>
                                         <div className={`font-bold ${st.text}`}>{selectedFortress.commander}</div>
                                     </div>
                                     <div className="space-y-0.5">
-                                        <div className="text-white/40 uppercase"></div>
+                                        <div className="text-slate-400 uppercase"></div>
                                         <div className="font-bold text-white"></div>
                                     </div>
                                     <div className="space-y-0.5">
-                                        <div className="text-white/40 uppercase ">Puntos</div>
+                                        <div className="text-slate-400 uppercase ">Puntos</div>
                                         <div className={`font-bold ${st.text}`}>{selectedFortress.seasonScore} pts</div>
                                     </div>
                                     <div className="space-y-0.5">
-                                        <div className="text-white/40 uppercase">Victorias</div>
+                                        <div className="text-slate-400 uppercase">Victorias</div>
                                         <div className="font-bold text-white">{selectedFortress.victories}</div>
                                     </div>
                                 </div>
 
                                 {/* Defense level */}
                                 <div className="space-y-1">
-                                    <div className="flex justify-between text-[9px] font-mono">
-                                        <span className="text-white/40 uppercase">Nivel de Defensa</span>
+                                    <div className="flex justify-between text-xs font-mono">
+                                        <span className="text-slate-400 uppercase">Nivel de Defensa</span>
                                         <span className={`font-bold ${st.text}`}>{selectedFortress.defenseLevel}%</span>
                                     </div>
                                     <div className="h-1 bg-white/5">
@@ -499,11 +499,11 @@ export default function DashboardPage() {
                             onClick={() => setActiveTab(tab)}
                             className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all border-t-2 cursor-pointer ${activeTab === tab
                                 ? "border-primary text-primary bg-primary/10"
-                                : "border-transparent text-white/50"
+                                : "border-transparent text-slate-400"
                                 }`}
                         >
                             <span className="material-symbols-outlined text-xl">{icons[tab]}</span>
-                            <span className="text-[8px] font-bold uppercase tracking-tighter">{labels[tab]}</span>
+                            <span className="text-xs font-bold uppercase tracking-tighter">{labels[tab]}</span>
                         </button>
                     );
                 })}

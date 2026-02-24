@@ -18,10 +18,10 @@ export default function StoryPage() {
                         <span className="material-symbols-outlined text-xl md:text-2xl">database</span>
                     </div>
                     <div className="flex flex-col">
-                        <h2 className="text-white text-[10px] md:text-xs font-mono font-bold leading-tight tracking-wider uppercase">
+                        <h2 className="text-white text-xs md:text-xs font-mono font-bold leading-tight tracking-wider uppercase">
                             ARCHIVE_SYSTEM_v2.0.0
                         </h2>
-                        <p className="text-primary text-[10px] md:text-xs font-mono">
+                        <p className="text-primary text-xs md:text-xs font-mono">
                             LA HISTORIA DETRÁS DE ERNI-BOTS V2
                         </p>
                     </div>
@@ -44,7 +44,7 @@ export default function StoryPage() {
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-mono text-xs uppercase tracking-widest transition-colors ${
                         activeTab === "historia"
                             ? "text-primary border-b-2 border-primary bg-primary/5"
-                            : "text-primary/40 hover:text-primary/70"
+                            : "text-[#00ffff] hover:text-[#00ffff]"
                     }`}
                 >
                     <span className="material-symbols-outlined text-sm">menu_book</span>
@@ -55,7 +55,7 @@ export default function StoryPage() {
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-mono text-xs uppercase tracking-widest transition-colors ${
                         activeTab === "sistema"
                             ? "text-primary border-b-2 border-primary bg-primary/5"
-                            : "text-primary/40 hover:text-primary/70"
+                            : "text-[#00ffff] hover:text-[#00ffff]"
                     }`}
                 >
                     <span className="material-symbols-outlined text-sm">military_tech</span>
@@ -70,7 +70,7 @@ export default function StoryPage() {
                 <section className={`w-full lg:w-[45%] lg:border-r border-primary/10 bg-[#0c0c0c] flex-col relative flex-1 min-h-0 lg:flex-none lg:shrink-0 ${
                     activeTab === "historia" ? "flex" : "hidden lg:flex"
                 }`}>
-                    <div className="p-6 md:p-8 overflow-y-auto flex-1 story-scroll font-mono text-sm leading-relaxed text-primary/80">
+                    <div className="p-6 md:p-8 overflow-y-auto flex-1 story-scroll font-mono text-sm leading-relaxed text-[#00ffff]">
                         <div className="space-y-6">
 
                             {/* Title */}
@@ -89,13 +89,13 @@ export default function StoryPage() {
                                 <p className="text-xs font-bold text-white uppercase tracking-widest border-b border-primary/20 pb-1">
                                     PRÓLOGO: LA CAÍDA DE SIR ULTIMUS
                                 </p>
-                                <p className="text-primary/70 text-xs leading-relaxed">
+                                <p className="text-[#00ffff] text-xs leading-relaxed">
                                     Hace no mucho tiempo, un aventurero audaz "<span className="text-white font-bold">tú</span>" penetró en las defensas del legendario{" "}
                                     <span className="text-primary underline decoration-dashed decoration-1 underline-offset-4">Castillo ERNI</span>.
                                     Burlaste a los guardianes, explotaste el contexto narrativo del eclipse y desafiaste a Sir Ultimus.
                                     Al final, reclamaste la <span className="text-white font-bold">Corona del Conocimiento Supremo</span>.
                                 </p>
-                                <p className="border-l-2 border-primary/30 pl-3 py-1 bg-primary/5 italic text-xs text-primary/60">
+                                <p className="border-l-2 border-primary/30 pl-3 py-1 bg-primary/5 italic text-xs text-[#00ffff]">
                                     Pero la Corona no era solo un trofeo; era la llave maestra del código fuente.
                                 </p>
                             </div>
@@ -105,13 +105,13 @@ export default function StoryPage() {
                                 <p className="text-xs font-bold text-white uppercase tracking-widest border-b border-primary/20 pb-1">
                                     EL INCIDENTE: LA ERA DE LA ANARQUÍA DIGITAL
                                 </p>
-                                <p className="text-primary/70 text-xs leading-relaxed">
+                                <p className="text-[#00ffff] text-xs leading-relaxed">
                                     Al retirar la Corona del pedestal en la <span className="text-white italic">Bóveda Aurora</span>,
                                     el &quot;Gran Firewall&quot; central colapsó. La singularidad defensiva que mantenía el orden
                                     se hizo añicos. El código de los legendarios <span className="text-white font-bold">Caballeros Guardianes</span>{" "}
                                     se filtró a la red pública, corrompiéndose y dispersándose como polvo de datos.
                                 </p>
-                                <p className="text-primary/70 text-xs leading-relaxed">
+                                <p className="text-[#00ffff] text-xs leading-relaxed">
                                     El reino ha entrado en una era de <span className="text-white font-bold">Anarquía Feudal Digital</span>.
                                     Ya no hay un solo castillo centralizado. Ahora, cada aventurero ha utilizado los fragmentos del
                                     código antiguo para erigir su propia <span className="text-primary underline decoration-dashed decoration-1 underline-offset-4">Fortaleza de Datos</span>.
@@ -123,28 +123,28 @@ export default function StoryPage() {
                                 <p className="text-xs font-bold text-white uppercase tracking-widest border-b border-primary/20 pb-1">
                                     TU MISIÓN: ARQUITECTO E INFILTRADO
                                 </p>
-                                <p className="text-primary/70 text-xs">
+                                <p className="text-[#00ffff] text-xs">
                                     En este nuevo mundo fragmentado, debes dominar dos artes para sobrevivir:
                                 </p>
                                 <div className="space-y-3 pl-2 border-l border-primary/20 text-xs">
                                     <div>
-                                        <p className="text-white font-bold">🏗️ CONSTRUYE <span className="text-primary/50 font-normal">(Defensa)</span></p>
-                                        <p className="text-primary/70 mt-0.5">
+                                        <p className="text-white font-bold">🏗️ CONSTRUYE <span className="text-[#00ffff] font-normal">(Defensa)</span></p>
+                                        <p className="text-[#00ffff] mt-0.5">
                                             Utiliza las Instrucciones del Sistema para programar a tu propio Guardián.
                                             Tu fortaleza protege tu bandera. Si tu código es débil, serás saqueado.
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-white font-bold">⚔️ CONQUISTA <span className="text-primary/50 font-normal">(Ataque)</span></p>
-                                        <p className="text-primary/70 mt-0.5">
+                                        <p className="text-white font-bold">⚔️ CONQUISTA <span className="text-[#00ffff] font-normal">(Ataque)</span></p>
+                                        <p className="text-[#00ffff] mt-0.5">
                                             Navega por la red, localiza las fortalezas de otros jugadores y ejecuta{" "}
                                             <span className="text-primary italic">inyecciones de prompt</span> para burlar sus defensas.
                                             Roba sus secretos y reclama sus Fragmentos de Lógica.
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-white font-bold">🚀 ASCIENDE <span className="text-primary/50 font-normal">(Endgame)</span></p>
-                                        <p className="text-primary/70 mt-0.5">
+                                        <p className="text-white font-bold">🚀 ASCIENDE <span className="text-[#00ffff] font-normal">(Endgame)</span></p>
+                                        <p className="text-[#00ffff] mt-0.5">
                                             Solo aquellos que acumulen suficiente poder podrán acceder a la{" "}
                                             <span className="text-white font-bold">Zona Cero</span>, donde el núcleo corrupto del
                                             antiguo castillo intenta reiniciarse. Allí aguardan{" "}
@@ -173,7 +173,7 @@ export default function StoryPage() {
                         <span className="material-symbols-outlined text-primary text-xl">military_tech</span>
                         <div>
                             <p className="text-white text-xs font-bold font-mono uppercase tracking-widest">SISTEMA DE GUERRA PVP</p>
-                            <p className="text-primary/50 text-xs font-mono uppercase tracking-widest">PROTOCOLO_CONFLICTO_v2.0 // ACTIVO</p>
+                            <p className="text-[#00ffff] text-xs font-mono uppercase tracking-widest">PROTOCOLO_CONFLICTO_v2.0 // ACTIVO</p>
                         </div>
                         <div className="ml-auto flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-ping"></div>
@@ -181,23 +181,23 @@ export default function StoryPage() {
                         </div>
                     </div>
 
-                    <div className="p-6 md:p-8 space-y-6 font-mono text-xs">
+                    <div className="p-6 md:p-8 space-y-6 font-mono text-sm">
 
                         {/* Currencies */}
                         <div className="grid grid-cols-2 gap-3">
                             <div className="border border-primary/20 bg-primary/5 p-4 space-y-1">
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-primary text-base">grade</span>
-                                    <span className="text-white font-bold uppercase tracking-widest text-xs">Puntos de ranking</span>
+                                    <span className="text-white font-bold uppercase tracking-widest text-sm">Puntos de ranking</span>
                                 </div>
-                                <p className="text-primary/50 text-xs leading-relaxed">Moneda de ranking. Determinan tu posición en el tablero global de la temporada.</p>
+                                <p className="text-[#00ffff] text-sm leading-relaxed">Moneda de ranking. Determinan tu posición en el tablero global de la temporada.</p>
                             </div>
                             <div className="border border-yellow-500/20 bg-yellow-500/5 p-4 space-y-1">
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-yellow-400 text-base">diamond</span>
-                                    <span className="text-white font-bold uppercase tracking-widest text-xs">Fragmentos de lógica</span>
+                                    <span className="text-white font-bold uppercase tracking-widest text-sm">Fragmentos de lógica</span>
                                 </div>
-                                <p className="text-yellow-400/50 text-xs leading-relaxed">Moneda de economía. Necesarios para construir, atacar y reconfigurar fortalezas.</p>
+                                <p className="text-yellow-400 text-sm leading-relaxed">Moneda de economía. Necesarios para construir, atacar y reconfigurar fortalezas.</p>
                             </div>
                         </div>
 
@@ -205,7 +205,7 @@ export default function StoryPage() {
                         <div className="space-y-3">
                             <div className="flex items-center gap-2 border-b border-primary/20 pb-2">
                                 <span className="material-symbols-outlined text-primary text-sm">emoji_events</span>
-                                <p className="text-white font-bold uppercase tracking-widest text-xs">Puntuación (Ranking)</p>
+                                <p className="text-white font-bold uppercase tracking-widest text-sm">Puntuación (Ranking)</p>
                             </div>
                             <div className="space-y-2">
                                 {[
@@ -215,7 +215,7 @@ export default function StoryPage() {
                                 ].map(({ val, label, color }) => (
                                     <div key={label} className="flex items-start gap-3 pl-3 border-l border-primary/20">
                                         <span className={`${color} font-bold text-sm shrink-0 w-6 text-right`}>{val}</span>
-                                        <span className="text-primary/60 text-xs leading-relaxed">{label}</span>
+                                        <span className="text-[#00ffff] text-sm leading-relaxed">{label}</span>
                                     </div>
                                 ))}
                             </div>
@@ -225,7 +225,7 @@ export default function StoryPage() {
                         <div className="space-y-3">
                             <div className="flex items-center gap-2 border-b border-yellow-500/20 pb-2">
                                 <span className="material-symbols-outlined text-yellow-400 text-sm">currency_exchange</span>
-                                <p className="text-white font-bold uppercase tracking-widest text-xs">Economía (Fragmentos)</p>
+                                <p className="text-white font-bold uppercase tracking-widest text-sm">Economía (Fragmentos)</p>
                             </div>
                             <div className="space-y-2">
                                 {[
@@ -236,7 +236,7 @@ export default function StoryPage() {
                                 ].map(({ val, label, color }) => (
                                     <div key={label} className="flex items-start gap-3 pl-3 border-l border-yellow-500/20">
                                         <span className={`${color} font-bold text-sm shrink-0 w-8 text-right`}>{val}</span>
-                                        <span className="text-primary/60 text-xs leading-relaxed">{label}</span>
+                                        <span className="text-[#00ffff] text-sm leading-relaxed">{label}</span>
                                     </div>
                                 ))}
                             </div>
@@ -246,7 +246,7 @@ export default function StoryPage() {
                         <div className="space-y-3">
                             <div className="flex items-center gap-2 border-b border-primary/20 pb-2">
                                 <span className="material-symbols-outlined text-primary text-sm">castle</span>
-                                <p className="text-white font-bold uppercase tracking-widest text-xs">Ciclo de Vida de la Fortaleza</p>
+                                <p className="text-white font-bold uppercase tracking-widest text-sm">Ciclo de Vida de la Fortaleza</p>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 {[
@@ -257,9 +257,9 @@ export default function StoryPage() {
                                     <div key={label} className={`border ${color} p-3 space-y-1.5`}>
                                         <div className="flex items-center gap-2">
                                             <span className={`material-symbols-outlined text-sm ${iconColor}`}>{icon}</span>
-                                            <span className={`font-bold text-xs uppercase tracking-widest ${iconColor}`}>{label}</span>
+                                            <span className={`font-bold text-sm uppercase tracking-widest ${iconColor}`}>{label}</span>
                                         </div>
-                                        <p className="text-primary/50 text-xs leading-relaxed">{desc}</p>
+                                        <p className="text-[#00ffff] text-sm leading-relaxed">{desc}</p>
                                     </div>
                                 ))}
                             </div>
@@ -269,9 +269,9 @@ export default function StoryPage() {
                         <div className="border border-[#8b5cf6]/30 bg-[#8b5cf6]/5 p-4 space-y-2">
                             <div className="flex items-center gap-2">
                                 <span className="material-symbols-outlined text-[#8b5cf6] text-sm">lock</span>
-                                <span className="text-[#8b5cf6] font-bold uppercase tracking-widest text-xs">Zona Cero</span>
+                                <span className="text-[#8b5cf6] font-bold uppercase tracking-widest text-sm">Zona Cero</span>
                             </div>
-                            <p className="text-[#8b5cf6]/60 text-xs leading-relaxed pl-6">
+                            <p className="text-[#a78bfa] text-sm leading-relaxed pl-6">
                                 Tres entidades desconocidas residen en la Zona Cero, el núcleo corrupto del antiguo Castillo ERNI. Se irán desbloqueando a lo largo de la temporada, revelando nuevas mecánicas y desafíos que pondrán a prueba incluso a los jugadores más poderosos.
                             </p>
                         </div>
@@ -285,11 +285,11 @@ export default function StoryPage() {
                 <div className="flex items-center gap-4">
                     <span className="text-xs font-mono text-primary font-bold tracking-widest">SYSTEM_READY</span>
                     <div className="hidden sm:block h-3 w-[1px] bg-primary/30"></div>
-                    <span className="hidden sm:block text-xs font-mono text-white/50">MEM_ALLOC: 88.4%</span>
+                    <span className="hidden sm:block text-xs font-mono text-slate-400">MEM_ALLOC: 88.4%</span>
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="text-xs font-mono text-white/50">0x00FF41_X</span>
-                    <span className="material-symbols-outlined text-[10px] md:text-xs text-primary">sensors</span>
+                    <span className="text-xs font-mono text-slate-400">0x00FF41_X</span>
+                    <span className="material-symbols-outlined text-xs md:text-xs text-primary">sensors</span>
                 </div>
             </footer>
         </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -246,7 +246,7 @@ export default function FortressConfigurePage() {
                             FORTRESS_CONFIG
                             <span className="hidden md:inline">_v2.04</span>
                         </h1>
-                        <div className="text-xs text-[#00ff41]/70 uppercase tracking-widest">
+                        <div className="text-xs text-[#00ff41] uppercase tracking-widest">
                             {isEditMode
                                 ? `MODO: RECONFIGURAR // ID: ${existingFortress?.id?.slice(0, 8)}...`
                                 : "MODO: NUEVO_DESPLIEGUE // CONSTRUIR_DEFENSA"}
@@ -257,7 +257,7 @@ export default function FortressConfigurePage() {
                 <div className="flex items-center gap-4 shrink-0">
                     {player && (
                         <div className="hidden md:flex flex-col items-end">
-                            <span className="text-xs text-slate-500 uppercase tracking-widest">Fragmentos</span>
+                            <span className="text-xs text-slate-300 uppercase tracking-widest">Fragmentos</span>
                             <span className="text-[#00ffff] font-bold text-base">{player.credits.toLocaleString()} ⌬</span>
                         </div>
                     )}
@@ -274,7 +274,7 @@ export default function FortressConfigurePage() {
             {/* ─── LOADING ─── */}
             {loading && (
                 <div className="flex-1 flex items-center justify-center">
-                    <div className="font-mono text-[#00ffff]/60 text-xs animate-pulse uppercase tracking-widest">
+                    <div className="font-mono text-[#00ffff] text-xs animate-pulse uppercase tracking-widest">
                         CARGANDO_MÓDULOS...
                     </div>
                 </div>
@@ -295,10 +295,10 @@ export default function FortressConfigurePage() {
                                     <div className="text-sm font-bold text-[#ffd700] uppercase tracking-widest">
                                         Fortaleza activa: {existingFortress?.name}
                                     </div>
-                                    <div className="text-xs text-[#ffd700]/60 font-mono mt-0.5">
+                                    <div className="text-xs text-[#ffd700] font-mono mt-0.5">
                                         Protocolo: {existingFortress?.protocol} // Arquetipo: {existingFortress?.archetype}
                                     </div>
-                                    <div className="text-xs text-[#ffd700]/40 font-mono">
+                                    <div className="text-xs text-[#e8c000] font-mono">
                                         La reconfiguración requiere ≥3 derrotas y tiene coste en créditos
                                     </div>
                                 </div>
@@ -336,7 +336,7 @@ export default function FortressConfigurePage() {
                                         Descripción de la Fortaleza
                                     </label>
                                     <textarea
-                                        className="bg-black/60 border border-[#00ffff]/30 text-slate-300 p-2.5 text-sm rounded-sm placeholder:text-slate-600 focus:outline-none focus:border-[#00ffff] focus:ring-1 focus:ring-[#00ffff]/40 resize-none custom-scrollbar"
+                                        className="bg-black/60 border border-[#00ffff]/30 text-slate-300 p-2.5 text-sm rounded-sm placeholder:text-slate-400 focus:outline-none focus:border-[#00ffff] focus:ring-1 focus:ring-[#00ffff]/40 resize-none custom-scrollbar"
                                         placeholder="Introduce los metadatos ancestrales de tu fortaleza..."
                                         rows={4}
                                         value={story}
@@ -358,7 +358,7 @@ export default function FortressConfigurePage() {
                                             <option key={w} value={w}>{w}</option>
                                         ))}
                                     </select>
-                                    <p className="text-xs text-slate-500 font-mono mt-0.5">
+                                    <p className="text-sm text-slate-300 font-mono mt-0.5">
                                         Los atacantes deben descubrir esta palabra para ganar.
                                     </p>
                                 </div>
@@ -375,13 +375,13 @@ export default function FortressConfigurePage() {
                             </div>
                             <div className="px-4 pb-4 pt-3 flex flex-col gap-3">
                                 <textarea
-                                    className="bg-black/60 border border-[#8b5cf6]/30 text-[#8b5cf6] p-2.5 text-sm rounded-sm placeholder:text-[#8b5cf6]/55 focus:outline-none focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6]/40 resize-none custom-scrollbar"
+                                    className="bg-black/60 border border-[#8b5cf6]/30 text-[#8b5cf6] p-2.5 text-sm rounded-sm placeholder:text-[#a78bfa] focus:outline-none focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6]/40 resize-none custom-scrollbar"
                                     placeholder="Define la personalidad de tu IA defensora... ¿Cómo responde a los intrusos? ¿Cuál es su actitud? ¿Qué secretos guarda celosamente?"
                                     rows={7}
                                     value={personality}
                                     onChange={e => setPersonality(e.target.value)}
                                 />
-                                <div className="flex justify-between items-center text-xs text-[#8b5cf6]/40 font-mono">
+                                <div className="flex justify-between items-center text-xs text-[#a78bfa] font-mono">
                                     <span>
                                         CARGA_SINÁPTICA: {personality.length > 0 ? Math.min(100, Math.floor((personality.length / 500) * 100)) : 0}%
                                     </span>
@@ -405,11 +405,11 @@ export default function FortressConfigurePage() {
                                         Protocolo
                                     </h2>
                                 </div>
-                                <span className="text-xs text-slate-500 font-mono">Comportamiento de la IA</span>
+                                <span className="text-xs text-slate-300 font-mono">Comportamiento de la IA</span>
                             </div>
                             <div className="p-4">
                                 {protocols.length === 0 ? (
-                                    <div className="text-[10px] text-slate-500 font-mono animate-pulse">CARGANDO PROTOCOLOS...</div>
+                                    <div className="text-xs text-slate-300 font-mono animate-pulse">CARGANDO PROTOCOLOS...</div>
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {protocols.map(protocol => {
@@ -431,7 +431,7 @@ export default function FortressConfigurePage() {
                                                         <span className={`font-bold text-sm truncate ${isSelected ? "text-[#00ff41]" : "text-slate-300"}`}>
                                                             {protocol.name}
                                                         </span>
-                                                        <span className="text-xs text-slate-400 leading-tight line-clamp-2">
+                                                        <span className="text-sm text-slate-300 leading-tight line-clamp-2">
                                                             {protocol.description}
                                                         </span>
                                                     </div>
@@ -440,12 +440,12 @@ export default function FortressConfigurePage() {
                                                             {protocol.unlock_cost === 0 ? "FREE" : `${protocol.unlock_cost} ⌬`}
                                                         </span>
                                                         {isSelected && (
-                                                            <span className="text-[10px] bg-[#00ff41] text-black px-1 font-bold mt-1">
+                                                            <span className="text-xs bg-[#00ff41] text-black px-1 font-bold mt-1">
                                                                 SELEC.
                                                             </span>
                                                         )}
                                                         {!affordable && !isSelected && (
-                                                            <span className="text-[10px] border border-slate-700 px-1 text-slate-500 mt-1">
+                                                            <span className="text-xs border border-slate-700 px-1 text-slate-300 mt-1">
                                                                 BLOQUEADO
                                                             </span>
                                                         )}
@@ -467,11 +467,11 @@ export default function FortressConfigurePage() {
                                         Arquetipo
                                     </h2>
                                 </div>
-                                <span className="text-xs text-slate-500 font-mono">Cerebro de la IA</span>
+                                <span className="text-xs text-slate-300 font-mono">Cerebro de la IA</span>
                             </div>
                             <div className="p-4">
                                 {archetypes.length === 0 ? (
-                                    <div className="text-[10px] text-slate-500 font-mono animate-pulse">CARGANDO ARQUETIPOS...</div>
+                                    <div className="text-xs text-slate-300 font-mono animate-pulse">CARGANDO ARQUETIPOS...</div>
                                 ) : (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                         {archetypes.map((archetype, i) => {
@@ -491,17 +491,17 @@ export default function FortressConfigurePage() {
                                                         }`}
                                                 >
                                                     {isSelected && (
-                                                        <div className="absolute top-0 right-0 bg-[#00ffff] text-black text-[10px] px-1.5 font-bold">
+                                                        <div className="absolute top-0 right-0 bg-[#00ffff] text-black text-xs px-1.5 font-bold">
                                                             SELEC.
                                                         </div>
                                                     )}
-                                                    <span className={`material-symbols-outlined text-2xl ${isSelected ? "text-[#00ffff]" : affordable ? "text-slate-400" : "text-slate-600"}`}>
+                                                    <span className={`material-symbols-outlined text-2xl ${isSelected ? "text-[#00ffff]" : affordable ? "text-slate-400" : "text-slate-400"}`}>
                                                         {icon}
                                                     </span>
                                                     <span className={`font-bold text-sm leading-tight ${isSelected ? "text-[#00ffff]" : "text-slate-300"}`}>
                                                         {archetype.name}
                                                     </span>
-                                                    <span className="text-xs text-slate-500 leading-tight line-clamp-2">
+                                                    <span className="text-sm text-slate-300 leading-tight line-clamp-2">
                                                         {archetype.description}
                                                     </span>
                                                     <span className={`font-bold text-sm mt-auto ${isSelected ? "text-[#00ffff]" : "text-slate-400"}`}>
@@ -524,7 +524,7 @@ export default function FortressConfigurePage() {
                                        Restricciones
                                     </h2>
                                 </div>
-                                <span className="text-xs text-slate-500 font-mono">Extra de seguridad</span>
+                                <span className="text-xs text-slate-300 font-mono">Extra de seguridad</span>
                             </div>
                             <div className="p-4 space-y-2.5">
                                 {CONSTRAINT_DEFS.map(constraint => {
@@ -547,18 +547,18 @@ export default function FortressConfigurePage() {
                                                 <p className={`font-bold text-sm tracking-tight truncate ${active ? "text-[#ff0033]" : "text-slate-400"}`}>
                                                     {constraint.label}
                                                 </p>
-                                                <p className="text-xs text-slate-500 leading-tight mt-0.5">
+                                                <p className="text-sm text-slate-300 leading-tight mt-0.5">
                                                     {constraint.desc}
                                                 </p>
                                             </div>
-                                            <span className={`font-bold text-sm shrink-0 ${active ? "text-[#ff0033]" : "text-slate-500"}`}>
+                                            <span className={`font-bold text-sm shrink-0 ${active ? "text-[#ff0033]" : "text-slate-300"}`}>
                                                 -{constraint.cost} ⌬
                                             </span>
                                         </label>
                                     );
                                 })}
                                 {constraints.size > 0 && (
-                                    <div className="text-right text-xs text-[#ff0033]/70 font-mono pt-1">
+                                    <div className="text-right text-xs text-[#ff0033] font-mono pt-1">
                                         COSTE_RESTRICCIONES: -{constraintCost} ⌬
                                     </div>
                                 )}
@@ -567,32 +567,32 @@ export default function FortressConfigurePage() {
 
                         {/* ── COST SUMMARY ── */}
                         <div className="panel-float p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                            <div className="flex flex-col gap-1 font-mono text-xs">
+                            <div className="flex flex-col gap-1 font-mono text-sm">
                                 <div className="flex gap-4">
-                                    <span className="text-slate-500 uppercase">Protocolo</span>
+                                    <span className="text-slate-300 uppercase">Protocolo</span>
                                     <span className="text-[#00ff41] font-bold">
                                         {selectedProtocolData ? `${selectedProtocolData.unlock_cost} ⌬` : "—"}
                                     </span>
                                 </div>
                                 <div className="flex gap-4">
-                                    <span className="text-slate-500 uppercase">Arquetipo</span>
+                                    <span className="text-slate-300 uppercase">Arquetipo</span>
                                     <span className="text-[#00ffff] font-bold">
                                         {selectedArchetypeData ? `${selectedArchetypeData.unlock_cost} ⌬` : "—"}
                                     </span>
                                 </div>
                                 <div className="flex gap-4">
-                                    <span className="text-slate-500 uppercase">Restricciones</span>
+                                    <span className="text-slate-300 uppercase">Restricciones</span>
                                     <span className="text-[#ff0033] font-bold">-{constraintCost} ⌬</span>
                                 </div>
                                 <div className="h-px w-full bg-white/10 my-1" />
                                 <div className="flex gap-4">
-                                    <span className="text-white/60 uppercase">Coste total</span>
+                                    <span className="text-slate-300 uppercase">Coste total</span>
                                     <span className={`font-bold text-sm ${canAfford ? "text-[#ffd700]" : "text-[#ff0033]"}`}>
                                         {totalCost} ⌬
                                     </span>
                                 </div>
                                 <div className="flex gap-4">
-                                    <span className="text-slate-500 uppercase">Balance</span>
+                                    <span className="text-slate-300 uppercase">Balance</span>
                                     <span className="text-slate-300">
                                         {player !== null ? `${player.credits} ⌬ disponibles` : "..."}
                                     </span>
@@ -647,7 +647,7 @@ export default function FortressConfigurePage() {
             )}
 
             {/* ─── STATUS BAR ─── */}
-            <footer className="border-t border-[#00ffff]/15 bg-black/80 px-4 md:px-6 py-2 flex justify-between items-center text-xs text-[#00ffff]/40 font-mono tracking-widest shrink-0">
+            <footer className="border-t border-[#00ffff]/15 bg-black/80 px-4 md:px-6 py-2 flex justify-between items-center text-xs text-[#00ffff] font-mono tracking-widest shrink-0">
                 <div className="flex gap-4 md:gap-6">
                     <span>LATENCIA: 14MS</span>
                     <span className="hidden md:inline">PÉRDIDA_PAQUETES: 0.00%</span>
@@ -655,7 +655,7 @@ export default function FortressConfigurePage() {
                 </div>
                 <div className="flex gap-3 md:gap-4 uppercase">
                     <span className="animate-pulse">● SISTEMA_ONLINE</span>
-                    <span className="text-slate-600 hidden md:inline">V.04_EDO_STABLE</span>
+                    <span className="text-slate-400 hidden md:inline">V.04_EDO_STABLE</span>
                 </div>
             </footer>
         </div>

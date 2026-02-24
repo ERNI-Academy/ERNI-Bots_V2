@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -42,7 +42,7 @@ export default function AboutPage() {
     }, [router]);
 
     return (
-        <div className="bg-background-dark font-[var(--font-display)] text-white/80 selection:bg-primary selection:text-background-dark overflow-x-hidden min-h-screen">
+        <div className="bg-background-dark font-[var(--font-display)] text-white selection:bg-primary selection:text-background-dark overflow-x-hidden min-h-screen">
             {/* CRT overlay */}
             <div className="crt-overlay fixed inset-0 pointer-events-none z-50 mix-blend-overlay" />
 
@@ -60,16 +60,16 @@ export default function AboutPage() {
                 {/* ── Session header ── */}
                 <div className="mb-8 border-b border-primary/20 pb-4 flex items-start justify-between gap-4">
                     <div>
-                        <p className="text-[#00ff41] text-[10px] mb-1 uppercase tracking-widest font-mono">
+                        <p className="text-[#00ff41] text-xs mb-1 uppercase tracking-widest font-mono">
                             [ SESSION_STARTED: 2026-02-18T00:00:00Z ]
                         </p>
-                        <p className="text-[10px] text-primary/40 font-mono">
+                        <p className="text-xs text-[#00ffff] font-mono">
                             IP: 192.168.1.0 // LOC: UNDISCLOSED // ENC: AES-256-GCM
                         </p>
                     </div>
                     <Link
                         href="/"
-                        className="shrink-0 flex items-center gap-1 text-[9px] uppercase tracking-widest text-primary/50 hover:text-primary font-mono border border-primary/20 hover:border-primary/50 px-2 py-1 transition-colors"
+                        className="shrink-0 flex items-center gap-1 text-xs uppercase tracking-widest text-[#00ffff] hover:text-primary font-mono border border-primary/20 hover:border-primary/50 px-2 py-1 transition-colors"
                     >
                         <span className="material-symbols-outlined text-xs">arrow_back</span>
                         VOLVER
@@ -125,14 +125,14 @@ export default function AboutPage() {
                                                 {member.job}
                                             </p>
                                         </div>
-                                        <p className="text-sm leading-relaxed text-white/70 italic font-mono">
+                                        <p className="text-sm leading-relaxed text-slate-300 italic font-mono">
                                             Bio: {member.bio}
                                         </p>
                                         <div>
-                                            <p className="text-[10px] text-[#00ff41] mb-1 uppercase tracking-tighter font-mono">
+                                            <p className="text-xs text-[#00ff41] mb-1 uppercase tracking-tighter font-mono">
                                                 SYSTEM_SKILLS:
                                             </p>
-                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#00ff41]/80 font-mono">
+                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#00ff41] font-mono">
                                                 {member.skills.map((s) => (
                                                     <span key={s}>[ {s} ]</span>
                                                 ))}
@@ -159,8 +159,8 @@ export default function AboutPage() {
                     </p>
                     <div className="border-l-2 border-primary/20 pl-4 py-2 my-4 grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center text-[10px] uppercase font-mono">
-                                <span className="text-white/40">Uptime:</span>
+                            <div className="flex justify-between items-center text-xs uppercase font-mono">
+                                <span className="text-slate-400">Uptime:</span>
                                 <span className="text-primary">1,442:12:08</span>
                             </div>
                             <div className="w-full bg-white/5 h-1">
@@ -169,13 +169,13 @@ export default function AboutPage() {
                                     style={{ width: "66%" }}
                                 />
                             </div>
-                            <div className="flex justify-between items-center text-[10px] uppercase font-mono">
-                                <span className="text-white/40">Descifrado:</span>
+                            <div className="flex justify-between items-center text-xs uppercase font-mono">
+                                <span className="text-slate-400">Descifrado:</span>
                                 <span className="text-[#00ff41]">64%</span>
                             </div>
                         </div>
                         <div className="flex flex-col justify-end items-start md:items-end gap-4">
-                            <div className="flex gap-4 text-white/20">
+                            <div className="flex gap-4 text-slate-500">
                                 <span className="material-symbols-outlined text-sm hover:text-primary cursor-pointer transition-colors">
                                     share
                                 </span>
@@ -186,7 +186,7 @@ export default function AboutPage() {
                                     lock
                                 </span>
                             </div>
-                            <div className="text-[10px] text-white/20 uppercase tracking-widest text-left md:text-right font-mono">
+                            <div className="text-xs text-slate-500 uppercase tracking-widest text-left md:text-right font-mono">
                                 © 2026 ERNI-BOTS V2 // EL PROTOCOLO FRAGMENTADO
                                 <br />
                                 ALL RIGHTS REDACTED.
@@ -194,7 +194,7 @@ export default function AboutPage() {
                         </div>
                     </div>
                     <div className="mt-8">
-                        <p className="text-xs text-primary/40 text-center font-mono">
+                        <p className="text-xs text-[#00ffff] text-center font-mono">
                             [ EOF — SESSION TERMINATED ]
                         </p>
                     </div>

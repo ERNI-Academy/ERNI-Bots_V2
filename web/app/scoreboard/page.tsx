@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -125,10 +125,10 @@ export default function ScoreboardPage() {
             <span className="material-symbols-outlined text-xl md:text-2xl">leaderboard</span>
           </div>
           <div className="flex flex-col">
-            <h1 className="text-white text-[10px] md:text-xs font-mono font-bold leading-tight tracking-wider uppercase">
+            <h1 className="text-white text-xs md:text-xs font-mono font-bold leading-tight tracking-wider uppercase">
               RANKING_GLOBAL_v2.0.0
             </h1>
-            <p className="text-primary text-[8px] md:text-[10px] font-mono">
+            <p className="text-primary text-xs md:text-xs font-mono">
              ¿QUIÉN DOMINARÁ EL RANKING GLOBAL?
             </p>
           </div>
@@ -136,7 +136,7 @@ export default function ScoreboardPage() {
         <div className="flex items-center gap-2 md:gap-4">
           <Link
             href="/dashboard"
-            className="flex items-center gap-1 px-3 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary transition-colors font-mono text-[10px] uppercase tracking-widest"
+            className="flex items-center gap-1 px-3 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary transition-colors font-mono text-xs uppercase tracking-widest"
           >
             <span className="material-symbols-outlined text-sm">arrow_back</span>
             <span className="hidden sm:inline">DASHBOARD</span>
@@ -147,29 +147,29 @@ export default function ScoreboardPage() {
       {/* ─── LEADERBOARD TABLE ─── */}
       <main className="w-full flex-1 scoreboard-stream overflow-hidden min-h-0 px-4 md:px-8 flex flex-col">
         {/* Column headers */}
-        <div className="grid grid-cols-12 gap-4 md:gap-6 px-2 md:px-4 py-3 text-[9px] md:text-[10px] tracking-[0.2em] md:tracking-[0.4em] uppercase  mb-2 md:mb-4 border-b border-primary/20">
+        <div className="grid grid-cols-12 gap-4 md:gap-6 px-2 md:px-4 py-3 text-xs md:text-xs tracking-[0.2em] md:tracking-[0.4em] uppercase  mb-2 md:mb-4 border-b border-primary/20">
           <div className="col-span-2">Pos.</div>
           <div className="col-span-7">Usuario</div>
           <div className="col-span-3 text-right">Puntuación</div>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-40 text-primary/50 text-xs animate-pulse uppercase tracking-widest">
+          <div className="flex items-center justify-center h-40 text-[#00ffff] text-xs animate-pulse uppercase tracking-widest">
             SINCRONIZANDO DATOS...
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center h-40 gap-2">
             <span className="text-red-400/70 text-xs uppercase tracking-widest">ERROR_DE_CONEXION</span>
-            <span className="text-primary/30 text-[10px]">{error}</span>
+            <span className="text-slate-400 text-xs">{error}</span>
             <button
               onClick={() => setRetryKey((k) => k + 1)}
-              className="mt-2 px-4 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary text-[10px] uppercase tracking-widest transition-colors cursor-pointer"
+              className="mt-2 px-4 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary text-xs uppercase tracking-widest transition-colors cursor-pointer"
             >
               REINTENTAR
             </button>
           </div>
         ) : entries.length === 0 ? (
-          <div className="flex items-center justify-center h-40 text-primary/30 text-xs uppercase tracking-widest">
+          <div className="flex items-center justify-center h-40 text-slate-400 text-xs uppercase tracking-widest">
             NO_DATA_FOUND
           </div>
         ) : (
@@ -207,7 +207,7 @@ export default function ScoreboardPage() {
       <footer className="w-full px-4 md:px-8 py-3 md:py-4 flex flex-row justify-between items-center gap-4 border-t border-primary/30 shrink-0">
         {/* Stat: total players */}
         <div className="flex flex-col">
-          <span className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase opacity-50">Jugadores totales</span>
+          <span className="text-xs md:text-xs tracking-[0.2em] uppercase text-slate-300">Jugadores totales</span>
           <span className="text-base md:text-xl font-bold">{loading ? "—" : (total ?? entries.length).toLocaleString()}</span>
         </div>
 
@@ -221,7 +221,7 @@ export default function ScoreboardPage() {
           >
             <span className="material-symbols-outlined text-sm">chevron_left</span>
           </button>
-          <span className="text-[10px] md:text-xs font-mono tracking-widest text-primary/70 min-w-[5rem] text-center">
+          <span className="text-xs md:text-xs font-mono tracking-widest text-[#00ffff] min-w-[5rem] text-center">
             {loading ? "…" : totalPages !== null ? `${page + 1} / ${totalPages}` : `PÁG. ${page + 1}`}
           </span>
           <button
@@ -237,7 +237,7 @@ export default function ScoreboardPage() {
         {/* Stat: player rank */}
         <div className="flex items-center gap-3 md:gap-4">
           <div className="flex flex-col text-right">
-            <span className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase opacity-50">Mi posición</span>
+            <span className="text-xs md:text-xs tracking-[0.2em] uppercase text-slate-300">Mi posición</span>
             <span className="text-base md:text-xl font-bold">
               {player ? `#${player.rank.toLocaleString()}` : "—"}
             </span>

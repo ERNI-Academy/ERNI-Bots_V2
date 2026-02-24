@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, FormEvent, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -96,13 +96,13 @@ function RegisterContent() {
                 <div className="absolute top-0 left-0 w-full p-3 sm:p-4 md:p-6 flex justify-between items-center opacity-60">
                     <div className="flex items-center gap-2 sm:gap-3">
                         <span className="material-symbols-outlined text-primary text-base sm:text-xl">security</span>
-                        <span className="text-[8px] sm:text-[9px] md:text-xs font-bold tracking-[0.1em] sm:tracking-[0.2em] hidden sm:block">NODE_SECURED: LOCAL_HOST_01</span>
-                        <span className="text-[8px] font-bold tracking-[0.05em] sm:hidden">NODE_01</span>
+                        <span className="text-xs sm:text-xs md:text-sm font-bold tracking-[0.1em] sm:tracking-[0.2em] hidden sm:block">NODE_SECURED: LOCAL_HOST_01</span>
+                        <span className="text-xs font-bold tracking-[0.05em] sm:hidden">NODE_01</span>
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-4 md:gap-6 text-[8px] sm:text-[9px] md:text-[10px] tracking-wider sm:tracking-widest uppercase">
+                    <div className="flex items-center gap-2 sm:gap-4 md:gap-6 text-xs sm:text-xs md:text-xs tracking-wider sm:tracking-widest uppercase">
                         <span className="hidden sm:inline">CPU: 94%</span>
                         <span className="hidden md:inline">MEM: ERROR</span>
-                        <span className="text-red-500 animate-pulse text-[8px] sm:text-[10px]">! UNSTABLE !</span>
+                        <span className="text-red-500 animate-pulse text-xs sm:text-sm">! UNSTABLE !</span>
                     </div>
                 </div>
 
@@ -115,7 +115,7 @@ function RegisterContent() {
                     <div className="flex items-center justify-between border-b border-primary/20 bg-primary/5 px-3 sm:px-4 py-2">
                         <div className="flex items-center gap-1 sm:gap-2">
                             <span className="material-symbols-outlined text-xs sm:text-sm">terminal</span>
-                            <span className="text-[8px] sm:text-[10px] font-bold tracking-tighter">ERNI BOTS V2 | EL PROTOCOLO FRAGMENTADO - SESSION: #0xFF03</span>
+                            <span className="text-xs sm:text-sm font-bold tracking-tighter">ERNI BOTS V2 | EL PROTOCOLO FRAGMENTADO - SESSION: #0xFF03</span>
                         </div>
                         <div className="flex gap-2">
                             <div className="w-2 h-2 rounded-full border border-primary/30"></div>
@@ -127,13 +127,13 @@ function RegisterContent() {
                     {/* Terminal Content */}
                     <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 md:space-y-10">
                         {/* Status Logs */}
-                        <div className="space-y-1 font-mono text-[10px] sm:text-xs uppercase opacity-80">
+                        <div className="space-y-1 font-mono text-xs sm:text-xs uppercase opacity-80">
                             <p className="flex items-center gap-2">
-                                <span className="text-primary/40">[OK]</span>
+                                <span className="text-[#00ffff]">[OK]</span>
                                 <span>SYSTEM_KERNEL_LOADED</span>
                             </p>
                             <p className="flex items-center gap-2">
-                                <span className="text-primary/40">[OK]</span>
+                                <span className="text-[#00ffff]">[OK]</span>
                                 <span>CRYPTOGRAPHIC_SHIELD_UP</span>
                             </p>
                             <p className="flex items-center gap-2 text-yellow-500/80">
@@ -155,7 +155,7 @@ function RegisterContent() {
                                     </h2>
                                 </div>
                             </div>
-                            <p className="text-[8px] sm:text-[10px] text-green-500 mt-2 sm:mt-4 tracking-[0.2em] sm:tracking-[0.3em] font-medium animate-pulse">
+                            <p className="text-xs sm:text-sm text-green-500 mt-2 sm:mt-4 tracking-[0.2em] sm:tracking-[0.3em] font-medium animate-pulse">
                                 REGISTRATION_PROTOCOL: ACTIVE
                             </p>
                         </div>
@@ -164,7 +164,7 @@ function RegisterContent() {
                         <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8 max-w-md mx-auto">
                             {/* Registration Form */}
                             <div className="space-y-2 group">
-                                <p className="text-[8px] sm:text-[10px] font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
+                                <p className="text-xs sm:text-sm font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
                                     &gt; ESTABLECER_USUARIO:
                                 </p>
                                 <input
@@ -178,7 +178,7 @@ function RegisterContent() {
                                     onChange={(e) => setUsername(e.target.value)}
                                     required
                                 />
-                                <p className="text-[8px] font-mono text-primary/30 text-right mt-1">
+                                <p className="text-xs font-mono text-slate-400 text-right mt-1">
                                     {username.length < 3
                                         ? `MÍNIMO 3 CARACTERES (${username.length}/50)`
                                         : `${username.length}/50`}
@@ -186,7 +186,7 @@ function RegisterContent() {
                             </div>
 
                             <div className="space-y-2 group">
-                                <p className="text-[8px] sm:text-[10px] font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
+                                <p className="text-xs sm:text-sm font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
                                     &gt; ESTABLECER_EMAIL:
                                 </p>
                                 <input
@@ -201,7 +201,7 @@ function RegisterContent() {
                             </div>
 
                             <div className="space-y-2 group">
-                                <p className="text-[8px] sm:text-[10px] font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
+                                <p className="text-xs sm:text-sm font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
                                     &gt; CÓDIGO_INVITACIÓN:
                                 </p>
                                 <div className="flex items-center gap-2">
@@ -220,7 +220,7 @@ function RegisterContent() {
                                         type="button"
                                         onClick={handleGenerateCode}
                                         disabled={generatingCode || !!invitationCode}
-                                        className="shrink-0 border border-primary/40 text-primary/70 hover:text-primary hover:border-primary font-mono text-[9px] tracking-widest uppercase px-2 py-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
+                                        className="shrink-0 border border-primary/40 text-[#00ffff] hover:text-primary hover:border-primary font-mono text-xs tracking-widest uppercase px-2 py-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
                                     >
                                         {generatingCode ? "[ ... ]" : invitationCode ? "[ OK ]" : "[ GENERAR ]"}
                                     </button>
@@ -237,13 +237,13 @@ function RegisterContent() {
                                     checked={acceptTerms}
                                     onChange={(e) => setAcceptTerms(e.target.checked)}
                                 />
-                                <label htmlFor="terms" className="text-[8px] sm:text-[10px] font-bold tracking-wider text-primary/60 hover:text-primary transition-colors cursor-pointer">
+                                <label htmlFor="terms" className="text-xs sm:text-sm font-bold tracking-wider text-[#00ffff] hover:text-primary transition-colors cursor-pointer">
                                     ACEPTO LA{" "}
                                     <a
                                         href="https://www.betterask.erni/es-es/privacy-statement/"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-primary underline hover:text-primary/80"
+                                        className="text-primary underline hover:text-[#00ffff]"
                                     >
                                         POLÍTICA DE PRIVACIDAD
                                     </a>
@@ -251,13 +251,13 @@ function RegisterContent() {
                             </div>
 
                             {/* Winners Communication Notice */}
-                            <p className="text-[8px] sm:text-[10px] font-bold tracking-wider text-primary/50 uppercase">
+                            <p className="text-xs sm:text-sm font-bold tracking-wider text-[#00ffff] uppercase">
                                 La comunicación de los ganadores se realizará mediante correo electrónico.
                             </p>
 
                             {/* Error Message */}
                             {error && (
-                                <p className="font-mono text-[10px] sm:text-xs text-red-500 tracking-widest uppercase flex items-center gap-2">
+                                <p className="font-mono text-xs sm:text-xs text-red-500 tracking-widest uppercase flex items-center gap-2">
                                     <span className="text-red-500/50">[ERR]</span>
                                     <span>{error}</span>
                                 </p>
@@ -284,7 +284,7 @@ function RegisterContent() {
                             <div className="text-center pt-4">
                                 <Link
                                     href={searchParams.get("code") ? `/login?code=${encodeURIComponent(searchParams.get("code")!)}` : "/login"}
-                                    className="text-[10px] sm:text-xs text-primary/60 hover:text-primary transition-colors tracking-widest uppercase font-mono"
+                                    className="text-xs sm:text-xs text-[#00ffff] hover:text-primary transition-colors tracking-widest uppercase font-mono"
                                 >
                                     &gt; ¿YA_TIENES_CUENTA? ACCEDER_AQUÍ
                                 </Link>
@@ -292,14 +292,14 @@ function RegisterContent() {
                         </form>
 
                         {/* Terminal Footer Status */}
-                        <div className="flex justify-between items-end text-[8px] sm:text-[9px] font-mono pt-2 sm:pt-4">
+                        <div className="flex justify-between items-end text-xs sm:text-xs font-mono pt-2 sm:pt-4">
                             <div className="flex items-center gap-1 sm:gap-2 opacity-40">
                                 <span className="w-1 sm:w-1.5 h-1 sm:h-1.5 bg-primary rounded-full animate-ping"></span>
                                 <span className="hidden sm:inline">UPLINK_STATUS: SEEKING_PEERS...</span>
                                 <span className="sm:hidden">SEEKING...</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <Link href="/about" className="text-primary/40 hover:text-primary transition-colors uppercase tracking-widest">
+                                <Link href="/about" className="text-[#00ffff] hover:text-primary transition-colors uppercase tracking-widest">
                                     &gt; QUIÉNES_SOMOS
                                 </Link>
                                 <span className="opacity-40">REV_104.B9</span>
@@ -309,7 +309,7 @@ function RegisterContent() {
                 </div>
 
                 {/* System Message / Cursor */}
-                <div className="mt-4 sm:mt-6 md:mt-8 flex items-center gap-2 text-primary/40 text-[8px] sm:text-[10px] font-mono px-2">
+                <div className="mt-4 sm:mt-6 md:mt-8 flex items-center gap-2 text-[#00ffff] text-xs sm:text-sm font-mono px-2">
                     <span className="hidden sm:inline">RUNNING: BETTERASK.ERNI</span>
                     <span className="sm:hidden">BETTERASK.ERNI</span>
                     <span className="w-1.5 sm:w-2 h-3 sm:h-4 bg-primary cursor-blink"></span>

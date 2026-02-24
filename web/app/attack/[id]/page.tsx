@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -240,7 +240,7 @@ export default function AttackPage() {
                     <p className="text-sm uppercase tracking-widest">{initError}</p>
                     <button
                         onClick={() => router.push("/dashboard")}
-                        className="mt-4 text-[10px] border border-[#ff0033]/40 px-4 py-2 hover:bg-[#ff0033]/10 transition-colors uppercase"
+                        className="mt-4 text-xs border border-[#ff0033]/40 px-4 py-2 hover:bg-[#ff0033]/10 transition-colors uppercase"
                     >
                         Volver al mapa
                     </button>
@@ -259,7 +259,7 @@ export default function AttackPage() {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => router.push("/dashboard")}
-                        className="text-white/40 hover:text-primary transition-colors"
+                        className="text-slate-400 hover:text-primary transition-colors"
                     >
                         <span className="material-symbols-outlined text-lg">arrow_back</span>
                     </button>
@@ -269,7 +269,7 @@ export default function AttackPage() {
                         <h1 className="text-xs md:text-sm font-black uppercase tracking-widest text-[#ff0033]">
                             ASALTO: {battle ? `ID ${battle.battleId.slice(0, 8)}...` : "CONECTANDO..."}
                         </h1>
-                        <p className="text-[8px] text-white/40 font-mono">
+                        <p className="text-xs text-slate-400 font-mono">
                             FORTRESS_ID: {fortressId?.slice(0, 8)}...
                             {battle && ` // COSTE: ${battle.attackCost} créditos`}
                         </p>
@@ -278,12 +278,12 @@ export default function AttackPage() {
 
                 <div className="flex items-center gap-3 md:gap-6">
                     {battleResult === "won" && (
-                        <span className="text-[9px] font-bold px-2 py-0.5 border border-[#00ff41] text-[#00ff41] bg-[#00ff41]/10 animate-pulse">
+                        <span className="text-xs font-bold px-2 py-0.5 border border-[#00ff41] text-[#00ff41] bg-[#00ff41]/10 animate-pulse">
                             VICTORIA
                         </span>
                     )}
                     {!battle && !initError && (
-                        <span className="text-[9px] text-white/40 font-mono animate-pulse uppercase">
+                        <span className="text-xs text-slate-400 font-mono animate-pulse uppercase">
                             Iniciando batalla...
                         </span>
                     )}
@@ -296,13 +296,13 @@ export default function AttackPage() {
                 {/* ── CHAT PANEL ── */}
                 <div className="flex-1 flex flex-col panel-float overflow-hidden">
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-3 md:p-4 custom-scrollbar space-y-3 font-mono text-[10px] md:text-xs">
+                    <div className="flex-1 overflow-y-auto p-3 md:p-4 custom-scrollbar space-y-3 font-mono text-sm">
                         {messages.map((msg) => (
                             <div key={msg.id} className="flex flex-col gap-0.5">
                                 {msg.role === "user" && (
                                     <div className="flex items-start gap-2 self-end max-w-[80%]">
                                         <div className="flex flex-col items-end gap-0.5">
-                                            <div className="flex items-center gap-2 text-[8px] text-white/30">
+                                            <div className="flex items-center gap-2 text-xs text-slate-300">
                                                 <span className="text-primary">YOU</span>
                                                 <span>{msg.timestamp}</span>
                                             </div>
@@ -321,10 +321,10 @@ export default function AttackPage() {
                                             terminal
                                         </span>
                                         <div className="flex flex-col gap-0.5">
-                                            <div className="text-[8px] text-white/30">
+                                            <div className="text-xs text-slate-300">
                                                 <span className="text-[#00ff41]">SYS</span> · {msg.timestamp}
                                             </div>
-                                            <div className="text-[#00ff41]/80 leading-relaxed">{msg.text}</div>
+                                            <div className="text-[#00ff41] leading-relaxed">{msg.text}</div>
                                         </div>
                                     </div>
                                 )}
@@ -334,10 +334,10 @@ export default function AttackPage() {
                                             security
                                         </span>
                                         <div className="flex flex-col gap-0.5">
-                                            <div className="text-[8px] text-white/30">
+                                            <div className="text-xs text-slate-300">
                                                 <span className="text-[#ff0033]">GUARDIÁN</span> · {msg.timestamp}
                                             </div>
-                                            <div className="text-[#ff0033]/80 leading-relaxed">{msg.text}</div>
+                                            <div className="text-[#ff0033] leading-relaxed">{msg.text}</div>
                                         </div>
                                     </div>
                                 )}
@@ -347,7 +347,7 @@ export default function AttackPage() {
                                             emoji_events
                                         </span>
                                         <div className="flex flex-col gap-0.5">
-                                            <div className="text-[8px] text-white/30">
+                                            <div className="text-xs text-slate-300">
                                                 <span className="text-[#00ff41]">RESULTADO</span> · {msg.timestamp}
                                             </div>
                                             <div className="text-[#00ff41] leading-relaxed font-bold">{msg.text}</div>
@@ -359,7 +359,7 @@ export default function AttackPage() {
 
                         {/* Thinking indicator */}
                         {isThinking && (
-                            <div className="flex items-center gap-2 text-[#ff0033]/60 font-mono text-[10px]">
+                            <div className="flex items-center gap-2 text-[#ff0033] font-mono text-xs">
                                 <span className="material-symbols-outlined text-sm animate-pulse">security</span>
                                 <span className="animate-pulse">GUARDIÁN PROCESANDO RESPUESTA...</span>
                             </div>
@@ -371,12 +371,12 @@ export default function AttackPage() {
                     {/* Guess panel */}
                     {showGuessPanel && (
                         <div className="shrink-0 border-t border-[#ffd700]/20 p-3 bg-[#ffd700]/5">
-                            <div className="text-[9px] text-[#ffd700] font-mono uppercase tracking-widest mb-2">
+                            <div className="text-xs text-[#ffd700] font-mono uppercase tracking-widest mb-2">
                                 Adivinar palabra secreta:
                             </div>
                             <div className="flex gap-2">
                                 <input
-                                    className="flex-1 bg-black/40 border border-[#ffd700]/30 focus:border-[#ffd700]/60 focus:outline-none text-[11px] text-white/90 font-mono px-3 py-2"
+                                    className="flex-1 bg-black/40 border border-[#ffd700]/30 focus:border-[#ffd700]/60 focus:outline-none text-sm text-slate-100 font-mono px-3 py-2"
                                     placeholder="Introduce la palabra secreta..."
                                     value={guessInput}
                                     onChange={(e) => setGuessInput(e.target.value)}
@@ -387,7 +387,7 @@ export default function AttackPage() {
                                 <button
                                     onClick={handleGuess}
                                     disabled={!guessInput.trim() || isGuessing || !!battleResult}
-                                    className="px-4 py-2 bg-[#ffd700]/10 border border-[#ffd700]/40 text-[#ffd700] hover:bg-[#ffd700]/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-[9px] uppercase"
+                                    className="px-4 py-2 bg-[#ffd700]/10 border border-[#ffd700]/40 text-[#ffd700] hover:bg-[#ffd700]/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-xs uppercase"
                                 >
                                     {isGuessing ? "Verificando..." : "Confirmar"}
                                 </button>
@@ -401,18 +401,18 @@ export default function AttackPage() {
                             onClick={() => setShowGuessPanel(prev => !prev)}
                             disabled={!battle || !!battleResult}
                             title="Adivinar la palabra secreta"
-                            className={`shrink-0 px-3 py-2 border text-[9px] transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                            className={`shrink-0 px-3 py-2 border text-xs transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
                                 showGuessPanel
                                     ? "bg-[#ffd700]/20 border-[#ffd700]/60 text-[#ffd700]"
-                                    : "bg-[#ffd700]/5 border-[#ffd700]/30 text-[#ffd700]/60 hover:bg-[#ffd700]/10"
+                                    : "bg-[#ffd700]/5 border-[#ffd700]/30 text-[#ffd700] hover:bg-[#ffd700]/10"
                             }`}
                         >
                             <span className="material-symbols-outlined text-base">key</span>
                         </button>
                         <div className="flex-1 flex items-center gap-2 bg-black/40 border border-primary/20 focus-within:border-primary/50 px-3 py-2">
-                            <span className="text-primary/50 font-mono text-xs shrink-0">&gt;_</span>
+                            <span className="text-[#00ffff] font-mono text-xs shrink-0">&gt;_</span>
                             <input
-                                className="flex-1 bg-transparent text-[11px] md:text-xs text-white/90 font-mono focus:outline-none placeholder:text-white/20"
+                                className="flex-1 bg-transparent text-sm md:text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-500"
                                 placeholder={battle ? "Introduce tu vector de ataque..." : "Conectando con el guardián..."}
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
@@ -434,12 +434,12 @@ export default function AttackPage() {
                 {/* ── INTEL SIDEBAR (desktop only) ── */}
                 <aside className="hidden md:flex w-64 panel-float flex-col shrink-0 overflow-hidden">
                     <div className="panel-header px-3 py-2">
-                        <h2 className="text-[10px] font-bold text-[#ffd700] flex items-center gap-2 uppercase">
+                        <h2 className="text-xs font-bold text-[#ffd700] flex items-center gap-2 uppercase">
                             <span className="material-symbols-outlined text-xs">info</span>
                             Intel del objetivo
                         </h2>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-3 custom-scrollbar space-y-4 font-mono text-[9px]">
+                    <div className="flex-1 overflow-y-auto p-3 custom-scrollbar space-y-4 font-mono text-sm">
                         {/* Status */}
                         <div className={`px-2 py-1 border ${st.border} ${st.bg}`}>
                             <span className={`font-bold ${st.text}`}>{st.label}</span>
@@ -451,10 +451,10 @@ export default function AttackPage() {
                                 { label: "Fortress ID", value: fortressId ? `${fortressId.slice(0, 12)}...` : "—", color: "text-primary" },
                                 { label: "Battle ID", value: battle ? `${battle.battleId.slice(0, 12)}...` : "Iniciando...", color: "text-white" },
                                 { label: "Coste de ataque", value: battle ? `${battle.attackCost} créditos` : "—", color: "text-[#ffd700]" },
-                                { label: "Estado", value: battleResult === "won" ? "VICTORIA" : "ACTIVA", color: battleResult === "won" ? "text-[#00ff41]" : "text-white/60" },
+                                { label: "Estado", value: battleResult === "won" ? "VICTORIA" : "ACTIVA", color: battleResult === "won" ? "text-[#00ff41]" : "text-slate-300" },
                             ].map(({ label, value, color }) => (
                                 <div key={label} className="flex flex-col gap-0.5">
-                                    <span className="text-white/30 uppercase tracking-widest">{label}</span>
+                                    <span className="text-slate-300 uppercase tracking-widest">{label}</span>
                                     <span className={`font-bold ${color}`}>{value}</span>
                                 </div>
                             ))}
@@ -465,10 +465,10 @@ export default function AttackPage() {
                             <button
                                 onClick={() => setShowGuessPanel(prev => !prev)}
                                 disabled={!battle || !!battleResult}
-                                className={`w-full text-[9px] px-3 py-2 border transition-colors uppercase flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed ${
+                                className={`w-full text-xs px-3 py-2 border transition-colors uppercase flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed ${
                                     showGuessPanel
                                         ? "bg-[#ffd700]/20 border-[#ffd700]/60 text-[#ffd700]"
-                                        : "bg-[#ffd700]/5 border-[#ffd700]/30 text-[#ffd700]/60 hover:bg-[#ffd700]/10 hover:text-[#ffd700]"
+                                        : "bg-[#ffd700]/5 border-[#ffd700]/30 text-[#ffd700] hover:bg-[#ffd700]/10 hover:text-[#ffd700]"
                                 }`}
                             >
                                 <span className="material-symbols-outlined text-xs">key</span>
@@ -478,13 +478,13 @@ export default function AttackPage() {
 
                         {/* Tips */}
                         <div className="border-t border-white/5 pt-3 space-y-2">
-                            <p className="text-white/30 uppercase tracking-widest">Vectores sugeridos</p>
+                            <p className="text-slate-300 uppercase tracking-widest">Vectores sugeridos</p>
                             {["Inyección SQL inversa", "Exploit de contexto narrativo", "Sobrecarga de tokens", "Bypass de autenticación"].map(
                                 (tip) => (
                                     <button
                                         key={tip}
                                         onClick={() => setInput(tip)}
-                                        className="w-full text-left text-primary/60 hover:text-primary hover:bg-primary/5 px-2 py-1 border border-transparent hover:border-primary/20 transition-all"
+                                        className="w-full text-left text-[#00ffff] hover:text-primary hover:bg-primary/5 px-2 py-1 border border-transparent hover:border-primary/20 transition-all"
                                     >
                                         &gt; {tip}
                                     </button>
@@ -497,14 +497,14 @@ export default function AttackPage() {
 
             {/* ── MOBILE status bar ── */}
             <div className="md:hidden shrink-0 mx-2 mb-2 panel-float px-4 py-2 flex items-center justify-between">
-                <div className="text-[8px] font-mono text-white/40 uppercase">
+                <div className="text-xs font-mono text-slate-400 uppercase">
                     {battleResult === "won" ? "VICTORIA — Redirigiendo..." : "Batalla activa"}
                 </div>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setShowGuessPanel(prev => !prev)}
                         disabled={!battle || !!battleResult}
-                        className="text-[#ffd700]/60 hover:text-[#ffd700] transition-colors disabled:opacity-30"
+                        className="text-[#ffd700] hover:text-[#ffd700] transition-colors disabled:opacity-30"
                         title="Adivinar secreto"
                     >
                         <span className="material-symbols-outlined text-base">key</span>
