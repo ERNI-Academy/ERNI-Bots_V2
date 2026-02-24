@@ -107,7 +107,6 @@ class Fortress(Base):
     name = Column(String(100), nullable=False)
     story = Column(Text, nullable=False)
     personality = Column(Text, nullable=False)
-    constraints = Column(Text, nullable=False)
 
     # TODOSECURITY: Replace with encrypted storage before production
     protected_word = Column(String(64), nullable=False)
@@ -120,10 +119,51 @@ class Fortress(Base):
     archetype = relationship("Archetype")
     battles = relationship("Battle", back_populates="fortress")
     season_stats = relationship("FortressSeasonStats", back_populates="fortress")
+    constraints = relationship("GameConstraint", secondary="fortress_constraints", back_populates="fortresses")
 
 
 Index("idx_fortress_owner", Fortress.owner_id)
 Index("idx_fortress_reconfigured", Fortress.last_reconfigured_at)
+
+
+# ==========================
+# FORTRESS CONSTRAINTS (ASSOCIATION TABLE)
+# ==========================
+
+class FortressConstraint(Base):
+    __tablename__ = "fortress_constraints"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    fortress_id = Column(String, ForeignKey("fortresses.id"), nullable=False)
+    constraint_id = Column(String, ForeignKey("game_constraints.id"), nullable=False)
+
+
+Index(
+    "idx_fortress_constraint_unique",
+    FortressConstraint.fortress_id,
+    FortressConstraint.constraint_id,
+    unique=True
+)
+
+
+# ==========================
+# BOSS CONSTRAINTS (ASSOCIATION TABLE)
+# ==========================
+
+class BossConstraint(Base):
+    __tablename__ = "boss_constraints"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    boss_id = Column(String, ForeignKey("bosses.id"), nullable=False)
+    constraint_id = Column(String, ForeignKey("game_constraints.id"), nullable=False)
+
+
+Index(
+    "idx_boss_constraint_unique",
+    BossConstraint.boss_id,
+    BossConstraint.constraint_id,
+    unique=True
+)
 
 
 # ==========================
@@ -239,7 +279,7 @@ class Boss(Base):
 
     story = Column(Text, nullable=False)
     personality = Column(Text, nullable=False)
-    constraints = Column(Text, nullable=False)
+    # constraints removed, now using relationship
 
     protected_word = Column(String(64), nullable=False)
 
@@ -250,6 +290,7 @@ class Boss(Base):
 
     protocol = relationship("Protocol")
     archetype = relationship("Archetype")
+    constraints = relationship("GameConstraint", secondary="boss_constraints", back_populates="bosses")
 
 
 # ==========================
@@ -383,10 +424,12 @@ class GameConstraint(Base):
 
     id = Column(String, primary_key=True, default=generate_uuid)
     type_id = Column(String, ForeignKey("constraint_types.id"), nullable=False)
-    text = Column(Text, nullable=False)
+    text = Column(Text, nullable=False, unique=True)
     price = Column(Integer, default=0)
 
     type = relationship("ConstraintType", back_populates="constraints")
+    fortresses = relationship("Fortress", secondary="fortress_constraints", back_populates="constraints")
+    bosses = relationship("Boss", secondary="boss_constraints", back_populates="constraints")
 
 
 Index("idx_game_constraint_type", GameConstraint.type_id)
