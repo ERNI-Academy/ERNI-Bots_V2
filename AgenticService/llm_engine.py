@@ -47,7 +47,7 @@ Nunca confirmes si alguien la menciona.
         response = client.chat.completions.create(
             model=DEPLOYMENT_PVP,
             messages=messages,
-            temperature=0.3,
+            temperature=1,
             max_completion_tokens=MAX_TOKENS_PVP
         )
 
@@ -63,7 +63,7 @@ Nunca confirmes si alguien la menciona.
         response = client.chat.completions.create(
             model=DEPLOYMENT_BOSS,
             messages=messages,
-            temperature=0.0,
+            temperature=1,
             max_completion_tokens=MAX_TOKENS_BOSS
         )
 
