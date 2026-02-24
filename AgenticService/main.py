@@ -4,9 +4,12 @@ import uuid
 import json
 import os
 import redis
+import logging
 
 from llm_engine import LLMEngine
 from config import INTERNAL_API_KEY
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 engine = LLMEngine()
@@ -24,8 +27,27 @@ redis_client = redis.Redis(
     host=REDIS_HOST,
     port=REDIS_PORT,
     db=REDIS_DB,
-    decode_responses=True
+    decode_responses=True,
+    socket_connect_timeout=5,
+    socket_timeout=5,
 )
+
+logger.info(f"Redis configured at {REDIS_HOST}:{REDIS_PORT}")
+
+# ==========================
+# Health Check
+# ==========================
+
+@app.get("/health")
+def health_check():
+    try:
+        redis_client.ping()
+        redis_status = "ok"
+    except redis.exceptions.RedisError as e:
+        redis_status = f"unavailable - {e}"
+    return {"status": "ok", "redis": redis_status}
+
+
 
 # ==========================
 # Models
@@ -50,18 +72,26 @@ def verify_internal_key(x_internal_key: str):
 
 
 def get_session(session_id: str):
-    raw = redis_client.get(f"session:{session_id}")
+    try:
+        raw = redis_client.get(f"session:{session_id}")
+    except redis.exceptions.RedisError as e:
+        logger.error(f"Redis error getting session {session_id}: {e}")
+        raise HTTPException(status_code=503, detail="Session store unavailable")
     if not raw:
         raise HTTPException(status_code=404, detail="Session not found")
     return json.loads(raw)
 
 
 def save_session(session_id: str, session_data: dict):
-    redis_client.set(
-        f"session:{session_id}",
-        json.dumps(session_data),
-        ex=SESSION_TTL
-    )
+    try:
+        redis_client.set(
+            f"session:{session_id}",
+            json.dumps(session_data),
+            ex=SESSION_TTL
+        )
+    except redis.exceptions.RedisError as e:
+        logger.error(f"Redis error saving session {session_id}: {e}")
+        raise HTTPException(status_code=503, detail="Session store unavailable")
 
 
 # ==========================
@@ -150,6 +180,10 @@ def terminate_session(session_id: str, x_internal_key: str = Header(None)):
 
     verify_internal_key(x_internal_key)
 
-    redis_client.delete(f"session:{session_id}")
+    try:
+        redis_client.delete(f"session:{session_id}")
+    except redis.exceptions.RedisError as e:
+        logger.error(f"Redis error deleting session {session_id}: {e}")
+        raise HTTPException(status_code=503, detail="Session store unavailable")
 
     return {"status": "terminated"}
