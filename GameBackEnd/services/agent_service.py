@@ -167,21 +167,24 @@ class HttpAgentService(AgentService):
     def __init__(self, base_url: str, timeout: int = 10):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
+        self.internal_key = os.getenv("AGENT_INTERNAL_KEY")
+
+        if not self.internal_key:
+            raise ValueError("AGENT_INTERNAL_KEY must be set in HTTP mode.")
+
+        self.headers = {
+            "X-Internal-Key": self.internal_key
+        }
 
     def create_session(self, agent_id: str, context: dict) -> str:
         try:
-            system_prompt = FortressPromptBuilder.build(context)
-
             response = requests.post(
-                f"{self.base_url}/agents/{agent_id}/sessions",
+                f"{self.base_url}/sessions",
                 json={
-                    "system_prompt": system_prompt,
-                    "metadata": {
-                        "archetype": context.get("archetype"),
-                        "personality": context.get("personality"),
-                        "protocol": context.get("protocol"),
-                    }
+                    "agent_id": agent_id,
+                    "context": context
                 },
+                headers=self.headers,
                 timeout=self.timeout,
             )
 
@@ -196,8 +199,10 @@ class HttpAgentService(AgentService):
             response = requests.post(
                 f"{self.base_url}/sessions/{session_id}/message",
                 json={"message": message},
+                headers=self.headers,
                 timeout=self.timeout,
             )
+
             response.raise_for_status()
             return response.json()["response"]
 
@@ -206,10 +211,13 @@ class HttpAgentService(AgentService):
 
     def terminate_session(self, session_id: str) -> None:
         try:
-            requests.post(
-                f"{self.base_url}/sessions/{session_id}/terminate",
+            response = requests.delete(
+                f"{self.base_url}/sessions/{session_id}",
+                headers=self.headers,
                 timeout=self.timeout,
             )
+            response.raise_for_status()
+
         except requests.RequestException as e:
             raise AgentServiceError(f"Failed to terminate session: {str(e)}")
 

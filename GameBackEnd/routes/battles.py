@@ -299,10 +299,10 @@ def guess_word(battle_id):
         # DERROTAS
         fortress_stats.defeat_count += 1
 
-        if fortress_stats.defeat_count == 3:
+        if fortress_stats.defeat_count >= 3:
             fortress_stats.status = "reconfigurable"
 
-        if fortress_stats.defeat_count >= 4:
+        if fortress_stats.defeat_count > 4:
             fortress_stats.status = "destroyed"
 
         agent_service.terminate_session(battle.session_id)
