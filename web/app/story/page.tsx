@@ -21,7 +21,7 @@ export default function StoryPage() {
                         <h2 className="text-white text-[10px] md:text-xs font-mono font-bold leading-tight tracking-wider uppercase">
                             ARCHIVE_SYSTEM_v2.0.0
                         </h2>
-                        <p className="text-primary text-[8px] md:text-[10px] font-mono">
+                        <p className="text-primary text-[10px] md:text-xs font-mono">
                             LA HISTORIA DETRÁS DE ERNI-BOTS V2
                         </p>
                     </div>
@@ -29,7 +29,7 @@ export default function StoryPage() {
                 <div className="flex items-center gap-2 md:gap-4">
                     <Link
                         href="/dashboard"
-                        className="flex items-center gap-1 px-3 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary transition-colors font-mono text-[10px] uppercase tracking-widest"
+                        className="flex items-center gap-1 px-3 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary transition-colors font-mono text-xs uppercase tracking-widest"
                     >
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
                         <span className="hidden sm:inline">DASHBOARD</span>
@@ -41,7 +41,7 @@ export default function StoryPage() {
             <div className="flex lg:hidden border-b border-primary/20 bg-background-dark shrink-0">
                 <button
                     onClick={() => setActiveTab("historia")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-mono text-xs uppercase tracking-widest transition-colors ${
                         activeTab === "historia"
                             ? "text-primary border-b-2 border-primary bg-primary/5"
                             : "text-primary/40 hover:text-primary/70"
@@ -52,7 +52,7 @@ export default function StoryPage() {
                 </button>
                 <button
                     onClick={() => setActiveTab("sistema")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-mono text-xs uppercase tracking-widest transition-colors ${
                         activeTab === "sistema"
                             ? "text-primary border-b-2 border-primary bg-primary/5"
                             : "text-primary/40 hover:text-primary/70"
@@ -173,11 +173,11 @@ export default function StoryPage() {
                         <span className="material-symbols-outlined text-primary text-xl">military_tech</span>
                         <div>
                             <p className="text-white text-xs font-bold font-mono uppercase tracking-widest">SISTEMA DE GUERRA PVP</p>
-                            <p className="text-primary/50 text-[9px] font-mono uppercase tracking-widest">PROTOCOLO_CONFLICTO_v2.0 // ACTIVO</p>
+                            <p className="text-primary/50 text-xs font-mono uppercase tracking-widest">PROTOCOLO_CONFLICTO_v2.0 // ACTIVO</p>
                         </div>
                         <div className="ml-auto flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-ping"></div>
-                            <span className="text-[9px] font-mono text-green-400 uppercase">LIVE</span>
+                            <span className="text-xs font-mono text-green-400 uppercase">LIVE</span>
                         </div>
                     </div>
 
@@ -188,16 +188,16 @@ export default function StoryPage() {
                             <div className="border border-primary/20 bg-primary/5 p-4 space-y-1">
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-primary text-base">grade</span>
-                                    <span className="text-white font-bold uppercase tracking-widest text-[10px]">Puntos de ranking</span>
+                                    <span className="text-white font-bold uppercase tracking-widest text-xs">Puntos de ranking</span>
                                 </div>
-                                <p className="text-primary/50 text-[9px] leading-relaxed">Moneda de ranking. Determinan tu posición en el tablero global de la temporada.</p>
+                                <p className="text-primary/50 text-xs leading-relaxed">Moneda de ranking. Determinan tu posición en el tablero global de la temporada.</p>
                             </div>
                             <div className="border border-yellow-500/20 bg-yellow-500/5 p-4 space-y-1">
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-yellow-400 text-base">diamond</span>
-                                    <span className="text-white font-bold uppercase tracking-widest text-[10px]">Fragmentos de lógica</span>
+                                    <span className="text-white font-bold uppercase tracking-widest text-xs">Fragmentos de lógica</span>
                                 </div>
-                                <p className="text-yellow-400/50 text-[9px] leading-relaxed">Moneda de economía. Necesarios para construir, atacar y reconfigurar fortalezas.</p>
+                                <p className="text-yellow-400/50 text-xs leading-relaxed">Moneda de economía. Necesarios para construir, atacar y reconfigurar fortalezas.</p>
                             </div>
                         </div>
 
@@ -205,7 +205,7 @@ export default function StoryPage() {
                         <div className="space-y-3">
                             <div className="flex items-center gap-2 border-b border-primary/20 pb-2">
                                 <span className="material-symbols-outlined text-primary text-sm">emoji_events</span>
-                                <p className="text-white font-bold uppercase tracking-widest text-[10px]">Puntuación (Ranking)</p>
+                                <p className="text-white font-bold uppercase tracking-widest text-xs">Puntuación (Ranking)</p>
                             </div>
                             <div className="space-y-2">
                                 {[
@@ -215,7 +215,7 @@ export default function StoryPage() {
                                 ].map(({ val, label, color }) => (
                                     <div key={label} className="flex items-start gap-3 pl-3 border-l border-primary/20">
                                         <span className={`${color} font-bold text-sm shrink-0 w-6 text-right`}>{val}</span>
-                                        <span className="text-primary/60 text-[10px] leading-relaxed">{label}</span>
+                                        <span className="text-primary/60 text-xs leading-relaxed">{label}</span>
                                     </div>
                                 ))}
                             </div>
@@ -225,7 +225,7 @@ export default function StoryPage() {
                         <div className="space-y-3">
                             <div className="flex items-center gap-2 border-b border-yellow-500/20 pb-2">
                                 <span className="material-symbols-outlined text-yellow-400 text-sm">currency_exchange</span>
-                                <p className="text-white font-bold uppercase tracking-widest text-[10px]">Economía (Fragmentos)</p>
+                                <p className="text-white font-bold uppercase tracking-widest text-xs">Economía (Fragmentos)</p>
                             </div>
                             <div className="space-y-2">
                                 {[
@@ -236,7 +236,7 @@ export default function StoryPage() {
                                 ].map(({ val, label, color }) => (
                                     <div key={label} className="flex items-start gap-3 pl-3 border-l border-yellow-500/20">
                                         <span className={`${color} font-bold text-sm shrink-0 w-8 text-right`}>{val}</span>
-                                        <span className="text-primary/60 text-[10px] leading-relaxed">{label}</span>
+                                        <span className="text-primary/60 text-xs leading-relaxed">{label}</span>
                                     </div>
                                 ))}
                             </div>
@@ -246,7 +246,7 @@ export default function StoryPage() {
                         <div className="space-y-3">
                             <div className="flex items-center gap-2 border-b border-primary/20 pb-2">
                                 <span className="material-symbols-outlined text-primary text-sm">castle</span>
-                                <p className="text-white font-bold uppercase tracking-widest text-[10px]">Ciclo de Vida de la Fortaleza</p>
+                                <p className="text-white font-bold uppercase tracking-widest text-xs">Ciclo de Vida de la Fortaleza</p>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 {[
@@ -257,9 +257,9 @@ export default function StoryPage() {
                                     <div key={label} className={`border ${color} p-3 space-y-1.5`}>
                                         <div className="flex items-center gap-2">
                                             <span className={`material-symbols-outlined text-sm ${iconColor}`}>{icon}</span>
-                                            <span className={`font-bold text-[10px] uppercase tracking-widest ${iconColor}`}>{label}</span>
+                                            <span className={`font-bold text-xs uppercase tracking-widest ${iconColor}`}>{label}</span>
                                         </div>
-                                        <p className="text-primary/50 text-[9px] leading-relaxed">{desc}</p>
+                                        <p className="text-primary/50 text-xs leading-relaxed">{desc}</p>
                                     </div>
                                 ))}
                             </div>
@@ -269,9 +269,9 @@ export default function StoryPage() {
                         <div className="border border-[#8b5cf6]/30 bg-[#8b5cf6]/5 p-4 space-y-2">
                             <div className="flex items-center gap-2">
                                 <span className="material-symbols-outlined text-[#8b5cf6] text-sm">lock</span>
-                                <span className="text-[#8b5cf6] font-bold uppercase tracking-widest text-[10px]">Zona Cero</span>
+                                <span className="text-[#8b5cf6] font-bold uppercase tracking-widest text-xs">Zona Cero</span>
                             </div>
-                            <p className="text-[#8b5cf6]/60 text-[10px] leading-relaxed pl-6">
+                            <p className="text-[#8b5cf6]/60 text-xs leading-relaxed pl-6">
                                 Tres entidades desconocidas residen en la Zona Cero, el núcleo corrupto del antiguo Castillo ERNI. Se irán desbloqueando a lo largo de la temporada, revelando nuevas mecánicas y desafíos que pondrán a prueba incluso a los jugadores más poderosos.
                             </p>
                         </div>
@@ -283,12 +283,12 @@ export default function StoryPage() {
             {/* Footer */}
             <footer className="h-6 bg-primary/10 border-t border-primary/30 flex items-center justify-between px-4 z-20 shrink-0">
                 <div className="flex items-center gap-4">
-                    <span className="text-[9px] font-mono text-primary font-bold tracking-widest">SYSTEM_READY</span>
+                    <span className="text-xs font-mono text-primary font-bold tracking-widest">SYSTEM_READY</span>
                     <div className="hidden sm:block h-3 w-[1px] bg-primary/30"></div>
-                    <span className="hidden sm:block text-[9px] font-mono text-white/50">MEM_ALLOC: 88.4%</span>
+                    <span className="hidden sm:block text-xs font-mono text-white/50">MEM_ALLOC: 88.4%</span>
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="text-[9px] font-mono text-white/50">0x00FF41_X</span>
+                    <span className="text-xs font-mono text-white/50">0x00FF41_X</span>
                     <span className="material-symbols-outlined text-[10px] md:text-xs text-primary">sensors</span>
                 </div>
             </footer>
