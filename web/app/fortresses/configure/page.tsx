@@ -306,7 +306,7 @@ export default function FortressConfigurePage() {
                         )}
 
                         {/* ── IDENTITY PANEL ── */}
-                        <section className="panel-float flex flex-col gap-4 overflow-hidden">
+                        <section className="panel-float flex flex-col gap-4">
                             <div className="panel-header px-4 py-2.5 flex items-center gap-2">
                                 <span className="material-symbols-outlined text-[#ff0033] text-lg">fingerprint</span>
                                 <h2 className="text-sm font-bold text-[#ff0033] uppercase tracking-widest">
@@ -366,7 +366,7 @@ export default function FortressConfigurePage() {
                         </section>
 
                         {/* ── PERSONALITY PANEL ── */}
-                        <section className="panel-float flex flex-col overflow-hidden">
+                        <section className="panel-float flex flex-col">
                             <div className="panel-header px-4 py-2.5 flex items-center gap-2">
                                 <span className="material-symbols-outlined text-[#8b5cf6] text-lg">theater_comedy</span>
                                 <h2 className="text-sm font-bold text-[#8b5cf6] uppercase tracking-widest">
@@ -397,7 +397,7 @@ export default function FortressConfigurePage() {
                     <div className="flex flex-col gap-4 md:gap-6 w-full md:w-2/3">
 
                         {/* ── PROTOCOLO BASE ── */}
-                        <section className="panel-float overflow-hidden">
+                        <section className="panel-float">
                             <div className="panel-header px-4 py-2.5 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-[#00ff41] text-lg">extension</span>
@@ -459,7 +459,7 @@ export default function FortressConfigurePage() {
                         </section>
 
                         {/* ── ARQUETIPO ── */}
-                        <section className="panel-float overflow-hidden">
+                        <section className="panel-float">
                             <div className="panel-header px-4 py-2.5 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-[#00ffff] text-lg">psychology</span>
@@ -516,7 +516,7 @@ export default function FortressConfigurePage() {
                         </section>
 
                         {/* ── RESTRICCIONES ── */}
-                        <section className="panel-float overflow-hidden">
+                        <section className="panel-float">
                             <div className="panel-header px-4 py-2.5 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-[#ff0033] text-lg">settings</span>
