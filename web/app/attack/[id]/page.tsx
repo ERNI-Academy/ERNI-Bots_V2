@@ -69,8 +69,12 @@ export default function AttackPage() {
     const [battleResult, setBattleResult] = useState<"won" | "lost" | null>(null);
     const [turnCount, setTurnCount] = useState(0);
     const MAX_TURNS = 10;
+    const [sentMessages, setSentMessages] = useState<string[]>([]);
+    const [showMobileHistory, setShowMobileHistory] = useState(false);
     const bottomRef = useRef<HTMLDivElement>(null);
     const battleInitialized = useRef(false);
+    const historyIndex = useRef(-1);
+    const draftInput = useRef("");
 
     // Auto-scroll on new messages
     useEffect(() => {
@@ -141,6 +145,9 @@ export default function AttackPage() {
         };
 
         setMessages(prev => [...prev, userMsg]);
+        setSentMessages(prev => [userText, ...prev].slice(0, 20));
+        historyIndex.current = -1;
+        draftInput.current = "";
         setInput("");
         setIsThinking(true);
 
@@ -389,7 +396,7 @@ export default function AttackPage() {
                                             <div className="text-xs text-slate-400 tracking-widest uppercase">
                                                 <span className="text-[#ff0033]">GUARDIÁN DE &quot;{battle?.fortressName ?? "?"}&quot;</span> · {msg.timestamp}
                                             </div>
-                                            <div className="bg-[#ff0033]/10 border border-[#ff0033]/30 px-3 py-2 text-[#ff0033] leading-relaxed">
+                                            <div className="bg-[#ff0033]/15 border border-[#ff0033]/50 px-3 py-2 text-[#ff8080] leading-relaxed">
                                                 {msg.text}
                                             </div>
                                         </div>
@@ -498,7 +505,26 @@ export default function AttackPage() {
                                 placeholder={battle ? "Introduce tu vector de ataque..." : "Conectando con el guardián..."}
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && !e.shiftKey) { handleSend(); return; }
+                                    if (e.key === "ArrowUp" && sentMessages.length > 0) {
+                                        e.preventDefault();
+                                        if (historyIndex.current === -1) draftInput.current = input;
+                                        const next = Math.min(historyIndex.current + 1, sentMessages.length - 1);
+                                        historyIndex.current = next;
+                                        setInput(sentMessages[next]);
+                                    }
+                                    if (e.key === "ArrowDown") {
+                                        e.preventDefault();
+                                        if (historyIndex.current <= 0) {
+                                            historyIndex.current = -1;
+                                            setInput(draftInput.current);
+                                        } else {
+                                            historyIndex.current -= 1;
+                                            setInput(sentMessages[historyIndex.current]);
+                                        }
+                                    }
+                                }}
                                 disabled={isThinking || !battle || !!battleResult}
                                 autoFocus
                             />
@@ -565,24 +591,99 @@ export default function AttackPage() {
                             Adivinar secreto
                         </button>
 
+                        {/* Recent sent messages */}
+                        {sentMessages.length > 0 && (
+                            <div className="space-y-2 border-b border-primary/10 pb-4">
+                                <p className="text-slate-400 uppercase tracking-[0.2em]">Vectores recientes</p>
+                                <div className="space-y-1">
+                                    {sentMessages.slice(0, 8).map((msg, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => { setInput(msg); historyIndex.current = -1; draftInput.current = msg; }}
+                                            disabled={!!battleResult}
+                                            className="w-full text-left text-slate-300 hover:text-white hover:bg-primary/10 border border-transparent hover:border-primary/20 px-2 py-1 transition-colors truncate disabled:opacity-30 disabled:cursor-not-allowed"
+                                            title={msg}
+                                        >
+                                            <span className="text-primary mr-1">›</span>{msg}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
 
                     </div>
                 </aside>
             </div>
+
+            {/* ── MOBILE history slide-up panel ── */}
+            {showMobileHistory && (
+                <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setShowMobileHistory(false)}>
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                    <div
+                        className="relative bg-[#0a0a0a] border-t border-primary/30 p-4 space-y-3 max-h-[55vh] overflow-y-auto custom-scrollbar"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+                                <span className="material-symbols-outlined text-xs">history</span>
+                                Vectores recientes
+                            </span>
+                            <button onClick={() => setShowMobileHistory(false)} className="text-slate-400 hover:text-white">
+                                <span className="material-symbols-outlined text-base">close</span>
+                            </button>
+                        </div>
+                        {sentMessages.length === 0 ? (
+                            <p className="text-slate-500 text-xs uppercase tracking-widest text-center py-4">Sin historial</p>
+                        ) : (
+                            sentMessages.slice(0, 10).map((msg, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => {
+                                        setInput(msg);
+                                        historyIndex.current = -1;
+                                        draftInput.current = msg;
+                                        setShowMobileHistory(false);
+                                    }}
+                                    disabled={!!battleResult}
+                                    className="w-full text-left text-slate-300 hover:text-white bg-white/5 hover:bg-primary/10 border border-transparent hover:border-primary/20 px-3 py-2 text-xs font-mono transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                    <span className="text-primary mr-1">›</span>{msg}
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* ── MOBILE status / key bar ── */}
             <footer className="md:hidden shrink-0 border-t border-primary/20 bg-[#050505]/80 px-4 py-3 flex items-center justify-between">
                 <span className="text-xs font-mono text-slate-400 uppercase tracking-widest">
                     {battleResult === "won" ? "VICTORIA — Redirigiendo..." : "Batalla activa"}
                 </span>
-                <button
-                    onClick={() => setShowGuessPanel(prev => !prev)}
-                    disabled={!battle || !!battleResult}
-                    className="text-[#ffd700] transition-colors disabled:opacity-30"
-                    title="Adivinar secreto"
-                >
-                    <span className="material-symbols-outlined text-base">key</span>
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowMobileHistory(prev => !prev)}
+                        disabled={sentMessages.length === 0}
+                        className="relative text-primary transition-colors disabled:opacity-30"
+                        title="Historial de vectores"
+                    >
+                        <span className="material-symbols-outlined text-base">history</span>
+                        {sentMessages.length > 0 && (
+                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary text-[#050505] text-[8px] font-bold rounded-full flex items-center justify-center">
+                                {sentMessages.length > 9 ? "9+" : sentMessages.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setShowGuessPanel(prev => !prev)}
+                        disabled={!battle || !!battleResult}
+                        className="text-[#ffd700] transition-colors disabled:opacity-30"
+                        title="Adivinar secreto"
+                    >
+                        <span className="material-symbols-outlined text-base">key</span>
+                    </button>
+                </div>
             </footer>
         </div>
     );
