@@ -33,6 +33,7 @@ jobs:
           path: |
             ./AgenticService/*
             !./AgenticService/antenv/
+          retention-days: 1
 
   deploy:
     runs-on: ubuntu-latest
