@@ -359,7 +359,7 @@ def me():
             "email":       player.email,
             "credits":     player.credits,
             "energy":      player.energy,
-            "created_at":  player.created_at.isoformat() if player.created_at else None,
+            "created_at":  (player.created_at.isoformat() + "Z") if player.created_at else None,
             "has_fortress": player.fortress is not None,
         }), 200
     finally:

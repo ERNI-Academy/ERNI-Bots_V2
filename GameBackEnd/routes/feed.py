@@ -22,7 +22,7 @@ def get_feed():
         result.append({
             "type": log.type,
             "message": log.message,
-            "timestamp": log.created_at.isoformat()
+            "timestamp": log.created_at.isoformat() + "Z"
         })
 
     db.close()

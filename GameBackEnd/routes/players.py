@@ -103,7 +103,8 @@ def get_profile():
         "credits": player.credits,
         "energy": player.energy,
         "season_score": stats.score,
-        "rank": rank
+        "rank": rank,
+        "has_fortress": player.fortress is not None,
     }
 
     db.close()
@@ -151,7 +152,7 @@ def get_history():
                     "amount": e.amount,
                     "reason": e.reason,
                     "detail": e.detail,
-                    "created_at": e.created_at.isoformat()
+                    "created_at": e.created_at.isoformat() + "Z"
                 }
                 for e in entries
             ]

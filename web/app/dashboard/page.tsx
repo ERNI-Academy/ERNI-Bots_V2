@@ -517,9 +517,13 @@ export default function DashboardPage() {
                                         Atacar
                                     </button>
                                     {!player?.has_fortress && (
-                                        <p className="text-xs text-center text-slate-500 font-mono">
-                                            Crea tu fortaleza para poder atacar
-                                        </p>
+                                        <Link
+                                            href="/fortresses/configure"
+                                            className="text-xs text-center text-primary font-mono border border-primary/30 px-3 py-1.5 hover:bg-primary/10 transition-colors uppercase tracking-widest flex items-center justify-center gap-1"
+                                        >
+                                            <span className="material-symbols-outlined text-xs">add_circle</span>
+                                            Crear fortaleza
+                                        </Link>
                                     )}
                                 </div>
                             </div>
