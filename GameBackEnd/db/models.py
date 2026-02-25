@@ -221,6 +221,7 @@ class Battle(Base):
     max_turns = Column(Integer, default=15)
     attacker = relationship("Player", back_populates="battles")
     fortress = relationship("Fortress", back_populates="battles")
+    messages = relationship("BattleMessage", back_populates="battle", order_by="BattleMessage.created_at")
 
 
 Index("idx_battle_attacker_status", Battle.attacker_id, Battle.status)
@@ -228,8 +229,25 @@ Index("idx_battle_fortress", Battle.fortress_id)
 
 
 # ==========================
-# PROTOCOL
+# BATTLE MESSAGE
 # ==========================
+
+class BattleMessage(Base):
+    __tablename__ = "battle_messages"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    battle_id = Column(String, ForeignKey("battles.id"), nullable=False)
+    role = Column(String(20), nullable=False)
+    # user | guardian | system
+    text = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    battle = relationship("Battle", back_populates="messages")
+
+
+Index("idx_battle_message_battle", BattleMessage.battle_id)
+
+
 
 class Protocol(Base):
     __tablename__ = "protocols"

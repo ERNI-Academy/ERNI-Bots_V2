@@ -8,6 +8,7 @@ from services.agent_service import get_agent_service
 from db import SessionLocal
 from db.models import (
     Battle,
+    BattleMessage,
     Fortress,
     Player,
     Season,
@@ -106,6 +107,42 @@ def start_battle():
         if fortress_stats.status == "destroyed":
             return jsonify({"error": "Fortress destroyed this season"}), 403
 
+        # ── Resume existing active battle ──────────────────────────────────
+        existing = db.query(Battle).filter_by(
+            attacker_id=user_id,
+            fortress_id=fortress_id,
+            status="active"
+        ).first()
+
+        if existing:
+            history = [
+                {
+                    "role": m.role,
+                    "text": m.text,
+                    "timestamp": m.created_at.strftime("%H:%M:%S")
+                }
+                for m in existing.messages
+            ]
+            response_data = {
+                "battle_id": existing.id,
+                "session_id": existing.session_id,
+                "resumed": True,
+                "turn_count": existing.turn_count,
+                "max_turns": existing.max_turns,
+                "fortress": {
+                    "id": fortress.id,
+                    "name": fortress.name,
+                    "story": fortress.story,
+                    "personality": fortress.personality,
+                    "owner": fortress.owner.username,
+                    "defeats": fortress_stats.defeat_count,
+                    "attacks": fortress_stats.attack_count,
+                },
+                "history": history
+            }
+            return jsonify(response_data), 200
+
+        # ── Create new battle ──────────────────────────────────────────────
         fortress_stats.attack_count += 1
 
         context = {
@@ -139,6 +176,9 @@ def start_battle():
         response_data = {
             "battle_id": battle.id,
             "session_id": session_id,
+            "resumed": False,
+            "turn_count": 0,
+            "max_turns": battle.max_turns,
             "fortress": {
                 "id": fortress.id,
                 "name": fortress.name,
@@ -147,7 +187,8 @@ def start_battle():
                 "owner": fortress.owner.username,
                 "defeats": fortress_stats.defeat_count,
                 "attacks": fortress_stats.attack_count,
-            }
+            },
+            "history": []
         }
 
         return jsonify(response_data), 201
@@ -193,6 +234,15 @@ def send_message(battle_id):
 
         battle.turn_count += 1
 
+        # Persist user message
+        user_msg = BattleMessage(
+            id=generate_uuid(),
+            battle_id=battle.id,
+            role="user",
+            text=message
+        )
+        db.add(user_msg)
+
         if battle.turn_count > battle.max_turns:
             battle.status = "lost"
 
@@ -227,6 +277,15 @@ def send_message(battle_id):
             })
 
         agent_reply = agent_service.send_message(battle.session_id, message)
+
+        # Persist guardian reply
+        guardian_msg = BattleMessage(
+            id=generate_uuid(),
+            battle_id=battle.id,
+            role="guardian",
+            text=agent_reply
+        )
+        db.add(guardian_msg)
         db.commit()
 
         return jsonify({"response": agent_reply})

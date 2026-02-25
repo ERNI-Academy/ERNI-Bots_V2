@@ -111,15 +111,42 @@ export default function AttackPage() {
                     fortressStatus: statusFromDefeats(data.fortress.defeats),
                 });
 
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        id: Date.now(),
-                        role: "system",
-                        text: `Objetivo: ${data.fortress.name} — Comandante: ${data.fortress.owner}. Canal cifrado activo. ID: ${data.battle_id.slice(0, 8)}...`,
-                        timestamp: now(),
-                    },
-                ]);
+                setTurnCount(data.turn_count ?? 0);
+
+                if (data.resumed && data.history?.length > 0) {
+                    // Restore persisted history
+                    const historyMessages: Message[] = data.history.map((h: { role: string; text: string; timestamp: string }, i: number) => ({
+                        id: i + 1,
+                        role: h.role as Message["role"],
+                        text: h.text,
+                        timestamp: h.timestamp,
+                    }));
+                    const sentByUser = data.history
+                        .filter((h: { role: string }) => h.role === "user")
+                        .map((h: { text: string }) => h.text)
+                        .reverse() as string[];
+                    setSentMessages(sentByUser.slice(0, 20));
+                    setMessages(prev => [
+                        ...prev,
+                        {
+                            id: Date.now(),
+                            role: "system",
+                            text: `Sesión retomada — ${data.history.length} mensajes restaurados. Turnos usados: ${data.turn_count}/${data.max_turns ?? 10}.`,
+                            timestamp: now(),
+                        },
+                        ...historyMessages,
+                    ]);
+                } else {
+                    setMessages(prev => [
+                        ...prev,
+                        {
+                            id: Date.now(),
+                            role: "system",
+                            text: `Objetivo: ${data.fortress.name} — Comandante: ${data.fortress.owner}. Canal cifrado activo. ID: ${data.battle_id.slice(0, 8)}...`,
+                            timestamp: now(),
+                        },
+                    ]);
+                }
             } catch {
                 setInitError("No se pudo conectar con el servidor");
             }
