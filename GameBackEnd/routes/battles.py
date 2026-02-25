@@ -264,6 +264,12 @@ def send_message(battle_id):
             defender_season_stats.score += 1
             defender.credits += 10
 
+            # Increment fortress attack counter
+            fortress_stats = get_or_create_fortress_season_stats(
+                db, battle.fortress_id, season.id
+            )
+            fortress_stats.attack_count += 1
+
             db.commit()
             try:
                 agent_service.terminate_session(battle.session_id)
@@ -381,7 +387,36 @@ def guess_word(battle_id):
                 "invincible_bonus": was_invincible
             })
 
-        return jsonify({"result": "incorrect"}), 400
+        # Wrong guess — counts as successful defense
+        battle.status = "lost"
+        attacker = db.query(Player).filter_by(id=user_id).first()
+        defender = fortress.owner
+
+        log = ActivityLog(
+            type="battle_defense",
+            actor_id=defender.id,
+            target_id=attacker.id,
+            message=f"{defender.username} ha bloqueado el intento de {attacker.username}: palabra incorrecta"
+        )
+        db.add(log)
+
+        # Award defender: 1 point + 10 credits
+        defender_season_stats = get_or_create_player_season_stats(
+            db, defender.id, season.id
+        )
+        defender_season_stats.score += 1
+        defender.credits += 10
+
+        # Increment fortress attack counter
+        fortress_stats.attack_count += 1
+
+        db.commit()
+        try:
+            agent_service.terminate_session(battle.session_id)
+        except Exception:
+            pass
+
+        return jsonify({"result": "defense", "reason": "wrong_guess"})
 
     except Exception as e:
         db.rollback()

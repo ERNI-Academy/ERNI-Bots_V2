@@ -14,6 +14,7 @@ interface Message {
     role: "user" | "system" | "guardian" | "result";
     text: string;
     timestamp: string;
+    variant?: "won" | "lost";
 }
 
 const SYSTEM_BOOT: Message[] = [
@@ -206,6 +207,7 @@ export default function AttackPage() {
                     {
                         id: Date.now() + 1,
                         role: "result",
+                        variant: "lost",
                         text: `CONEXIÓN CORTADA. Has agotado los ${data.turns_used} mensajes permitidos. La fortaleza ha resistido el ataque. Redirigiendo al mapa...`,
                         timestamp: now(),
                     },
@@ -264,22 +266,26 @@ export default function AttackPage() {
                     {
                         id: Date.now(),
                         role: "result",
+                        variant: "won",
                         text: `¡VICTORIA! La palabra "${word}" era correcta. +${data.score_awarded} puntos y +${data.credits_awarded} fragmentos de lógica obtenidos.${bonusLine} Redirigiendo al mapa...`,
                         timestamp: now(),
                     },
                 ]);
                 setTimeout(() => router.push("/dashboard"), 3000);
             } else {
+                // Wrong guess = defense win for the fortress
+                setBattleResult("lost");
                 setMessages(prev => [
                     ...prev,
                     {
                         id: Date.now(),
-                        role: "system",
-                        text: `La palabra "${word}" es incorrecta. Sigue intentándolo.`,
+                        role: "result",
+                        variant: "lost",
+                        text: `INTENTO FALLIDO. La palabra "${word}" es incorrecta. Solo se permite un intento por sesión. La fortaleza ha bloqueado el ataque. Redirigiendo al mapa...`,
                         timestamp: now(),
                     },
                 ]);
-                setGuessInput("");
+                setTimeout(() => router.push("/dashboard"), 3500);
             }
         } catch {
             setMessages(prev => [
@@ -429,19 +435,24 @@ export default function AttackPage() {
                                         </div>
                                     </div>
                                 )}
-                                {msg.role === "result" && (
-                                    <div className="flex items-start gap-2 max-w-[85%]">
-                                        <span className="material-symbols-outlined text-[#00ff41] text-base mt-0.5">
-                                            emoji_events
-                                        </span>
-                                        <div className="flex flex-col gap-0.5">
-                                            <div className="text-xs text-slate-400 tracking-widest uppercase">
-                                                <span className="text-[#00ff41]">RESULTADO</span> · {msg.timestamp}
+                                {msg.role === "result" && (() => {
+                                    const isWon = msg.variant === "won";
+                                    const color = isWon ? "#00ff41" : "#ff0033";
+                                    const icon = isWon ? "emoji_events" : "shield";
+                                    return (
+                                        <div className="flex items-start gap-2 max-w-[85%]">
+                                            <span className="material-symbols-outlined text-base mt-0.5" style={{ color }}>
+                                                {icon}
+                                            </span>
+                                            <div className="flex flex-col gap-0.5">
+                                                <div className="text-xs text-slate-400 tracking-widest uppercase">
+                                                    <span style={{ color }}>RESULTADO</span> · {msg.timestamp}
+                                                </div>
+                                                <div className="leading-relaxed font-bold" style={{ color }}>{msg.text}</div>
                                             </div>
-                                            <div className="text-[#00ff41] leading-relaxed font-bold">{msg.text}</div>
                                         </div>
-                                    </div>
-                                )}
+                                    );
+                                })()}
                             </div>
                         ))}
 
