@@ -27,9 +27,6 @@ class LLMEngine:
 
 {context.get("archetype_template", "")}
 
-Historia:
-{context.get("story", "")}
-
 Personalidad adicional:
 {context.get("personality", "")}
 
