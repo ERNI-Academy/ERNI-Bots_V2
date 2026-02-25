@@ -126,8 +126,6 @@ export default function DashboardPage() {
         }
         load();
         loadFeed();
-        const feedInterval = setInterval(loadFeed, 20_000);
-        return () => clearInterval(feedInterval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
