@@ -413,9 +413,12 @@ export default function DashboardPage() {
                         >
                             RE-ESCANEAR FORTALEZAS
                         </button>
-                        <button className="flex-1 md:flex-none bg-[#ff0033]/10 border border-[#ff0033]/40 text-xs px-4 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase cursor-pointer">
-                            HISTORIAL DE ATAQUES
-                        </button>
+                        <Link
+                            href="/history"
+                            className="flex-1 md:flex-none bg-[#ff0033]/10 border border-[#ff0033]/40 text-xs px-4 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase text-center"
+                        >
+                            HISTORIAL DE PUNTOS
+                        </Link>
                     </div>
                 </aside>
             </div>

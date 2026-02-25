@@ -488,3 +488,36 @@ Index(
     unique=True,
 )
 Index("idx_player_word_player", PlayerWord.player_id)
+
+
+# ==========================
+# PLAYER HISTORY ENTRY
+# ==========================
+
+class PlayerHistoryEntry(Base):
+    """
+    Tracks every points (score) and fragments (credits) change for a player.
+    - type: "points" | "fragments"
+    - amount: signed integer (positive = gain, negative = loss)
+    - reason: short event key (e.g. "battle_win", "battle_defense", "boss_defeated")
+    - detail: optional free-text (e.g. "vs Player_X fortress")
+    """
+    __tablename__ = "player_history_entries"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    player_id = Column(String, ForeignKey("players.id"), nullable=False)
+
+    type = Column(String(20), nullable=False)
+    # "points" | "fragments"
+
+    amount = Column(Integer, nullable=False)
+    reason = Column(String(100), nullable=False)
+    detail = Column(Text, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    player = relationship("Player")
+
+
+Index("idx_player_history_player", PlayerHistoryEntry.player_id)
+Index("idx_player_history_created", PlayerHistoryEntry.created_at.desc())

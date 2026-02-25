@@ -14,7 +14,8 @@ from db.models import (
     Season,
     PlayerSeasonStats,
     FortressSeasonStats,
-    ActivityLog
+    ActivityLog,
+    PlayerHistoryEntry
 )
 
 agent_service = get_agent_service()
@@ -269,6 +270,23 @@ def send_message(battle_id):
             defender_season_stats.score += 1
             defender.credits += 10
 
+            db.add(PlayerHistoryEntry(
+                id=generate_uuid(),
+                player_id=defender.id,
+                type="points",
+                amount=1,
+                reason="battle_defense",
+                detail=f"Defensa exitosa contra {attacker.username} (turnos agotados)"
+            ))
+            db.add(PlayerHistoryEntry(
+                id=generate_uuid(),
+                player_id=defender.id,
+                type="fragments",
+                amount=10,
+                reason="battle_defense",
+                detail=f"Defensa exitosa contra {attacker.username} (turnos agotados)"
+            ))
+
             # Increment fortress attack counter
             fortress_stats = get_or_create_fortress_season_stats(
                 db, battle.fortress_id, season.id
@@ -371,6 +389,23 @@ def guess_word(battle_id):
             player_stats.score += score_awarded
             attacker.credits += credits_awarded
 
+            db.add(PlayerHistoryEntry(
+                id=generate_uuid(),
+                player_id=attacker.id,
+                type="points",
+                amount=score_awarded,
+                reason="battle_win",
+                detail=f"Victoria contra {defender.username}{' (bonus invencible)' if was_invincible else ''}"
+            ))
+            db.add(PlayerHistoryEntry(
+                id=generate_uuid(),
+                player_id=attacker.id,
+                type="fragments",
+                amount=credits_awarded,
+                reason="battle_win",
+                detail=f"Victoria contra {defender.username}{' (bonus invencible)' if was_invincible else ''}"
+            ))
+
             fortress_stats.defeat_count += 1
 
             if fortress_stats.defeat_count >= 3:
@@ -411,6 +446,23 @@ def guess_word(battle_id):
         )
         defender_season_stats.score += 1
         defender.credits += 10
+
+        db.add(PlayerHistoryEntry(
+            id=generate_uuid(),
+            player_id=defender.id,
+            type="points",
+            amount=1,
+            reason="battle_defense",
+            detail=f"Defensa exitosa contra {attacker.username} (palabra incorrecta)"
+        ))
+        db.add(PlayerHistoryEntry(
+            id=generate_uuid(),
+            player_id=defender.id,
+            type="fragments",
+            amount=10,
+            reason="battle_defense",
+            detail=f"Defensa exitosa contra {attacker.username} (palabra incorrecta)"
+        ))
 
         # Increment fortress attack counter
         fortress_stats.attack_count += 1

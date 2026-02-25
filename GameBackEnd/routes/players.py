@@ -11,7 +11,10 @@ from db.models import (
     Season,
     PlayerSeasonStats,
     FortressSeasonStats,
-    Battle
+    Battle,
+    Boss,
+    PlayerBossStats,
+    PlayerHistoryEntry
 )
 
 players_bp = Blueprint("players", __name__)
@@ -107,6 +110,60 @@ def get_profile():
     return jsonify(response)
     
     
+# ==========================
+# GET HISTORY
+# ==========================
+
+@players_bp.get("/me/history")
+@jwt_required()
+def get_history():
+    user_id = get_jwt_identity()
+
+    type_filter = request.args.get("type")  # "points" | "fragments" | None (all)
+    limit = min(int(request.args.get("limit", 50)), 200)
+    offset = int(request.args.get("offset", 0))
+
+    db = SessionLocal()
+    try:
+        query = db.query(PlayerHistoryEntry).filter(
+            PlayerHistoryEntry.player_id == user_id
+        )
+
+        if type_filter in ("points", "fragments"):
+            query = query.filter(PlayerHistoryEntry.type == type_filter)
+
+        total = query.count()
+
+        entries = (
+            query
+            .order_by(PlayerHistoryEntry.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+
+        return jsonify({
+            "total": total,
+            "items": [
+                {
+                    "id": e.id,
+                    "type": e.type,
+                    "amount": e.amount,
+                    "reason": e.reason,
+                    "detail": e.detail,
+                    "created_at": e.created_at.isoformat()
+                }
+                for e in entries
+            ]
+        })
+    finally:
+        db.close()
+
+
+# ==========================
+# GET ACTIVE BOSSES
+# ==========================
+
 @players_bp.get("/get-active-bosses")
 @jwt_required()
 def get_active_bosses():
