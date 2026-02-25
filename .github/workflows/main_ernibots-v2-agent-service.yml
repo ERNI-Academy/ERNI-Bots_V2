@@ -9,8 +9,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -26,25 +27,6 @@ jobs:
           source antenv/bin/activate
           pip install -r requirements.txt
 
-      - name: Upload artifact for deployment jobs
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-app
-          path: |
-            ./AgenticService/*
-            !./AgenticService/antenv/
-          retention-days: 1
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: python-app
-
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
@@ -52,3 +34,4 @@ jobs:
           app-name: 'ernibots-v2-agent-service'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CBDFACA0BF29449C97871C870EBC0FB5 }}
+          package: ./AgenticService
