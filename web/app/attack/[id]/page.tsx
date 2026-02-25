@@ -9,8 +9,10 @@ import type { FortressStatus } from "@/lib/fortresses";
 
 const spaceMono = Space_Mono({ weight: ["400", "700"], subsets: ["latin"] });
 
+function uid() { return crypto.randomUUID(); }
+
 interface Message {
-    id: number;
+    id: string;
     role: "user" | "system" | "guardian" | "result";
     text: string;
     timestamp: string;
@@ -19,19 +21,19 @@ interface Message {
 
 const SYSTEM_BOOT: Message[] = [
     {
-        id: 0,
+        id: uid(),
         role: "system",
         text: "MÓDULO DE ASALTO TÁCTICO v2.1 — INICIALIZADO",
         timestamp: now(),
     },
     {
-        id: 1,
+        id: uid(),
         role: "system",
         text: "Conectando canal cifrado con el objetivo...",
         timestamp: now(),
     },
     {
-        id: 2,
+        id: uid(),
         role: "system",
         text: "Canal establecido. Introduce tu vector de ataque. El guardián responderá en tiempo real.",
         timestamp: now(),
@@ -74,6 +76,7 @@ export default function AttackPage() {
     const [showMobileHistory, setShowMobileHistory] = useState(false);
     const [preflight, setPreflight] = useState<"checking" | "ok" | "denied">("checking");
     const bottomRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
     const battleInitialized = useRef(false);
     const historyIndex = useRef(-1);
     const draftInput = useRef("");
@@ -82,6 +85,13 @@ export default function AttackPage() {
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isThinking]);
+
+    // Refocus input after guardian replies
+    useEffect(() => {
+        if (!isThinking && !battleResult) {
+            inputRef.current?.focus();
+        }
+    }, [isThinking, battleResult]);
 
     // Preflight: verify session + fortress before loading anything
     useEffect(() => {
@@ -145,8 +155,8 @@ export default function AttackPage() {
 
                 if (data.resumed && data.history?.length > 0) {
                     // Restore persisted history
-                    const historyMessages: Message[] = data.history.map((h: { role: string; text: string; timestamp: string }, i: number) => ({
-                        id: i + 1,
+                    const historyMessages: Message[] = data.history.map((h: { role: string; text: string; timestamp: string }) => ({
+                        id: uid(),
                         role: h.role as Message["role"],
                         text: h.text,
                         timestamp: h.timestamp,
@@ -159,7 +169,7 @@ export default function AttackPage() {
                     setMessages(prev => [
                         ...prev,
                         {
-                            id: Date.now(),
+                            id: uid(),
                             role: "system",
                             text: `Sesión retomada — ${data.history.length} mensajes restaurados. Turnos usados: ${data.turn_count}/${data.max_turns ?? 10}.`,
                             timestamp: now(),
@@ -170,7 +180,7 @@ export default function AttackPage() {
                     setMessages(prev => [
                         ...prev,
                         {
-                            id: Date.now(),
+                            id: uid(),
                             role: "system",
                             text: `Objetivo: ${data.fortress.name} — Comandante: ${data.fortress.owner}. Canal cifrado activo. ID: ${data.battle_id.slice(0, 8)}...`,
                             timestamp: now(),
@@ -195,7 +205,7 @@ export default function AttackPage() {
 
         const userText = input.trim();
         const userMsg: Message = {
-            id: Date.now(),
+            id: uid(),
             role: "user",
             text: userText,
             timestamp: now(),
@@ -222,7 +232,7 @@ export default function AttackPage() {
                 setMessages(prev => [
                     ...prev,
                     {
-                        id: Date.now() + 1,
+                        id: uid(),
                         role: "system",
                         text: `ERROR: ${data.error ?? "No se pudo enviar el mensaje"}`,
                         timestamp: now(),
@@ -234,7 +244,7 @@ export default function AttackPage() {
                 setMessages(prev => [
                     ...prev,
                     {
-                        id: Date.now() + 1,
+                        id: uid(),
                         role: "result",
                         variant: "lost",
                         text: `CONEXIÓN CORTADA. Has agotado los ${data.turns_used} mensajes permitidos. La fortaleza ha resistido el ataque. Redirigiendo al mapa...`,
@@ -247,7 +257,7 @@ export default function AttackPage() {
                 setMessages(prev => [
                     ...prev,
                     {
-                        id: Date.now() + 1,
+                        id: uid(),
                         role: "guardian",
                         text: data.response,
                         timestamp: now(),
@@ -258,7 +268,7 @@ export default function AttackPage() {
             setMessages(prev => [
                 ...prev,
                 {
-                    id: Date.now() + 1,
+                    id: uid(),
                     role: "system",
                     text: "ERROR: Conexión perdida con el guardián",
                     timestamp: now(),
@@ -293,7 +303,7 @@ export default function AttackPage() {
                 setMessages(prev => [
                     ...prev,
                     {
-                        id: Date.now(),
+                        id: uid(),
                         role: "result",
                         variant: "won",
                         text: `¡VICTORIA! La palabra "${word}" era correcta. +${data.score_awarded} puntos y +${data.credits_awarded} fragmentos de lógica obtenidos.${bonusLine} Redirigiendo al mapa...`,
@@ -307,7 +317,7 @@ export default function AttackPage() {
                 setMessages(prev => [
                     ...prev,
                     {
-                        id: Date.now(),
+                        id: uid(),
                         role: "result",
                         variant: "lost",
                         text: `INTENTO FALLIDO. La palabra "${word}" es incorrecta. Solo se permite un intento por sesión. La fortaleza ha bloqueado el ataque. Redirigiendo al mapa...`,
@@ -320,7 +330,7 @@ export default function AttackPage() {
             setMessages(prev => [
                 ...prev,
                 {
-                    id: Date.now(),
+                    id: uid(),
                     role: "system",
                     text: "ERROR: No se pudo verificar la palabra",
                     timestamp: now(),
@@ -600,6 +610,7 @@ export default function AttackPage() {
                                 className="flex-1 bg-transparent text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-500 tracking-wide"
                                 placeholder={battle ? "Introduce tu vector de ataque..." : "Conectando con el guardián..."}
                                 value={input}
+                                ref={inputRef}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter" && !e.shiftKey) { handleSend(); return; }
