@@ -72,6 +72,7 @@ export default function AttackPage() {
     const MAX_TURNS = 10;
     const [sentMessages, setSentMessages] = useState<string[]>([]);
     const [showMobileHistory, setShowMobileHistory] = useState(false);
+    const [preflight, setPreflight] = useState<"checking" | "ok" | "denied">("checking");
     const bottomRef = useRef<HTMLDivElement>(null);
     const battleInitialized = useRef(false);
     const historyIndex = useRef(-1);
@@ -82,8 +83,36 @@ export default function AttackPage() {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isThinking]);
 
-    // Initialize battle on mount
+    // Preflight: verify session + fortress before loading anything
     useEffect(() => {
+        async function runPreflight() {
+            try {
+                const res = await fetch("/api/auth/me", { credentials: "include" });
+                if (res.status === 401 || res.status === 403) {
+                    router.replace("/login");
+                    return;
+                }
+                if (!res.ok) {
+                    setPreflight("denied");
+                    return;
+                }
+                const profile = await res.json();
+                if (!profile.has_fortress) {
+                    router.replace("/fortresses/configure?reason=no_fortress");
+                    return;
+                }
+                setPreflight("ok");
+            } catch {
+                router.replace("/login");
+            }
+        }
+        runPreflight();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Initialize battle on mount — only after preflight passes
+    useEffect(() => {
+        if (preflight !== "ok") return;
         async function initBattle() {
             try {
                 const res = await fetch("/api/battles", {
@@ -157,7 +186,7 @@ export default function AttackPage() {
             initBattle();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [fortressId]);
+    }, [fortressId, preflight]);
 
     const st = STATUS_STYLES[battle?.fortressStatus ?? "HOSTIL"];
 
@@ -300,6 +329,35 @@ export default function AttackPage() {
         } finally {
             setIsGuessing(false);
         }
+    }
+
+    // Preflight loading / denied screen
+    if (preflight === "checking") {
+        return (
+            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-primary`}>
+                <div className="scanlines" />
+                <div className="text-center space-y-3">
+                    <span className="material-symbols-outlined text-4xl animate-pulse">lock</span>
+                    <p className="text-xs uppercase tracking-[0.3em] animate-pulse">Verificando acceso...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (preflight === "denied") {
+        return (
+            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-[#ff0033]`}>
+                <div className="scanlines" />
+                <div className="text-center space-y-3">
+                    <span className="material-symbols-outlined text-4xl">block</span>
+                    <p className="text-xs uppercase tracking-[0.3em]">Acceso denegado</p>
+                    <Link href="/dashboard" className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-[#ff0033]/40 hover:bg-[#ff0033]/10 transition-colors text-xs uppercase tracking-widest">
+                        <span className="material-symbols-outlined text-sm">arrow_back</span>
+                        Volver al mapa
+                    </Link>
+                </div>
+            </div>
+        );
     }
 
     // Error screen

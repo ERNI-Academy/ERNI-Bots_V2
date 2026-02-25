@@ -100,6 +100,11 @@ def start_battle():
         if fortress.owner_id == user_id:
             return jsonify({"error": "Cannot attack your own fortress"}), 403
 
+        # Attacker must have their own fortress
+        attacker_fortress = db.query(Fortress).filter_by(owner_id=user_id).first()
+        if not attacker_fortress:
+            return jsonify({"error": "You must create your own fortress before attacking"}), 403
+
         fortress_stats = get_or_create_fortress_season_stats(
             db, fortress.id, season.id
         )

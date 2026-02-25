@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -70,8 +70,10 @@ const ARCHETYPE_ICONS = [
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function FortressConfigurePage() {
+function FortressConfigurePage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const noFortressBanner = searchParams.get("reason") === "no_fortress";
 
     // Remote data
     const [protocols, setProtocols] = useState<Protocol[]>([]);
@@ -241,6 +243,16 @@ export default function FortressConfigurePage() {
         <div className="relative bg-[#0a0a0a] text-white font-[var(--font-display)] min-h-screen flex flex-col">
             {/* CRT overlay */}
             <div className="scanlines" />
+
+            {/* ─── NO FORTRESS BANNER ─── */}
+            {noFortressBanner && (
+                <div className="w-full bg-yellow-500/10 border-b border-yellow-400/40 px-4 py-3 flex items-center gap-3">
+                    <span className="material-symbols-outlined text-yellow-400 text-xl shrink-0">warning</span>
+                    <p className="text-yellow-300 text-xs uppercase tracking-wider font-bold">
+                        Debes crear tu fortaleza antes de poder atacar a otras fortalezas.
+                    </p>
+                </div>
+            )}
 
             {/* ─── HEADER ─── */}
             <header className="sticky top-0 z-40 panel-float border-b border-[#00ffff]/20 px-4 md:px-6 py-3 flex items-center justify-between gap-4">
@@ -713,5 +725,13 @@ export default function FortressConfigurePage() {
                 </div>
             </footer>
         </div>
+    );
+}
+
+export default function FortressConfigurePageWrapper() {
+    return (
+        <Suspense>
+            <FortressConfigurePage />
+        </Suspense>
     );
 }

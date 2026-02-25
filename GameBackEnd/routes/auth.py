@@ -354,12 +354,13 @@ def me():
             return jsonify({"error": "Player not found"}), 404
 
         return jsonify({
-            "id":         player.id,
-            "username":   player.username,
-            "email":      player.email,
-            "credits":    player.credits,
-            "energy":     player.energy,
-            "created_at": player.created_at.isoformat() if player.created_at else None,
+            "id":          player.id,
+            "username":    player.username,
+            "email":       player.email,
+            "credits":     player.credits,
+            "energy":      player.energy,
+            "created_at":  player.created_at.isoformat() if player.created_at else None,
+            "has_fortress": player.fortress is not None,
         }), 200
     finally:
         db.close()

@@ -49,6 +49,7 @@ interface PlayerProfile {
     credits: number;
     energy: number;
     created_at: string;
+    has_fortress: boolean;
 }
 
 // Safe zone: avoid header (~12% top), sidebars (~24% each side), bottom bars (~32% bottom)
@@ -501,14 +502,21 @@ export default function DashboardPage() {
                                 </div>
 
                                 {/* Actions */}
-                                <div className="flex gap-2 pt-1">
+                                <div className="flex gap-2 pt-1 flex-col">
                                     <button
-                                        onClick={() => router.push(`/attack/${selectedFortress.id}`)}
-                                        className="flex-1 bg-[#ff0033]/10 border border-[#ff0033]/40 text-xs px-3 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase flex items-center justify-center gap-1 cursor-pointer"
+                                        onClick={() => player?.has_fortress ? router.push(`/attack/${selectedFortress.id}`) : undefined}
+                                        disabled={!player?.has_fortress}
+                                        title={player?.has_fortress ? undefined : "Debes crear tu fortaleza antes de atacar"}
+                                        className="flex-1 bg-[#ff0033]/10 border border-[#ff0033]/40 text-xs px-3 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
                                     >
                                         <span className="material-symbols-outlined text-xs">gps_fixed</span>
                                         Atacar
                                     </button>
+                                    {!player?.has_fortress && (
+                                        <p className="text-xs text-center text-slate-500 font-mono">
+                                            Crea tu fortaleza para poder atacar
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
