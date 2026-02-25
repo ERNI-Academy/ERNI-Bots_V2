@@ -50,6 +50,7 @@ interface PlayerProfile {
     energy: number;
     created_at: string;
     has_fortress: boolean;
+    season_score: number;
 }
 
 // Safe zone: avoid header (~12% top), sidebars (~24% each side), bottom bars (~32% bottom)
@@ -112,7 +113,7 @@ export default function DashboardPage() {
             try {
                 const [fortressData, profileRes, lbRes] = await Promise.all([
                     fetchMatchmakingFortresses().catch(() => [] as Fortress[]),
-                    fetch("/api/auth/me", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
+                    fetch("/api/players/me", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
                     fetch("/api/leaderboard?limit=100", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
                 ]);
                 setFortresses(fortressData);
@@ -130,7 +131,7 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const playerScore = leaderboard.find(e => e.username === player?.username)?.score ?? 0;
+    const playerScore = player?.season_score ?? 0;
     const topScore = leaderboard[0]?.score ?? 1;
 
     return (
