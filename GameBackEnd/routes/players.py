@@ -192,10 +192,8 @@ def get_active_bosses():
 
     bosses = (
         db.query(Boss)
-        .filter(
-            Boss.is_active == True,
-            Boss.min_score_required <= current_stats.score
-        )
+        .filter(Boss.enabled == True)
+        .order_by(Boss.active_at.asc().nullsfirst())
         .all()
     )
 
@@ -215,9 +213,11 @@ def get_active_bosses():
             "type": "boss",
             "boss_id": boss.id,
             "name": boss.name,
+            "title": boss.title,
+            "location": boss.location,
             "story": boss.story,
-            "min_score_required": boss.min_score_required,
-            "reward_credits": boss.reward_credits
+            "reward_credits": boss.reward_credits,
+            "active_at": boss.active_at.isoformat() + "Z" if boss.active_at else None,
         })
 
     db.close()

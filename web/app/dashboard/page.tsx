@@ -60,6 +60,28 @@ interface PlayerProfile {
     };
 }
 
+interface BossEntry {
+    boss_id: string;
+    name: string;
+    title: string;
+    location: string;
+    reward_credits: number;
+    active_at: string | null;
+}
+
+function formatCountdown(ms: number): string {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const d = Math.floor(total / 86400);
+    const h = Math.floor((total % 86400) / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    const hh = h.toString().padStart(2, "0");
+    const mm = m.toString().padStart(2, "0");
+    const ss = s.toString().padStart(2, "0");
+    if (d > 0) return `${d}d ${hh}:${mm}:${ss}`;
+    return `${hh}:${mm}:${ss}`;
+}
+
 // Safe zone: avoid header (~12% top), sidebars (~24% each side), bottom bars (~32% bottom)
 const SAFE = { topMin: 12, topMax: 68, leftMin: 24, leftMax: 76 };
 
@@ -107,6 +129,8 @@ export default function DashboardPage() {
     const [leaderboard, setLeaderboard] = useState<{ rank: number; username: string; score: number }[]>([]);
     const [loading, setLoading] = useState(true);
     const [activityFeed, setActivityFeed] = useState<ActivityEntry[]>([]);
+    const [bosses, setBosses] = useState<BossEntry[]>([]);
+    const [tick, setTick] = useState(0);
 
     async function loadFeed() {
         try {
@@ -118,15 +142,17 @@ export default function DashboardPage() {
     useEffect(() => {
         async function load() {
             try {
-                const [fortressData, profileRes, lbRes] = await Promise.all([
+                const [fortressData, profileRes, lbRes, bossesRes] = await Promise.all([
                     fetchMatchmakingFortresses().catch(() => [] as Fortress[]),
                     fetch("/api/players/me", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
                     fetch("/api/leaderboard?limit=100", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
+                    fetch("/api/players/bosses", { credentials: "include" }).then(r => r.ok ? r.json() : []).catch(() => []),
                 ]);
                 setFortresses(fortressData);
                 setPlayer(profileRes);
                 setLeaderboard(lbRes?.items ?? []);
                 setMarkerPos(generateSpreadPositions(fortressData.length));
+                setBosses(Array.isArray(bossesRes) ? bossesRes : []);
             } finally {
                 setLoading(false);
             }
@@ -135,6 +161,13 @@ export default function DashboardPage() {
         loadFeed();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        const id = setInterval(() => setTick(t => t + 1), 1000);
+        return () => clearInterval(id);
+    }, []);
+
+    void tick; // used only to trigger re-render for countdowns
 
     const playerScore = player?.season_score ?? 0;
     const topScore = leaderboard[0]?.score ?? 1;
@@ -178,7 +211,7 @@ export default function DashboardPage() {
                         style={{ top: markerPos[i].top, left: markerPos[i].left }}
                         title={fortress.name}
                     >
-                        <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-1.5 py-0.5 bg-black/80 border border-white/20 text-white text-[9px] font-mono uppercase tracking-wider whitespace-nowrap pointer-events-none">
+                        <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-0.5 bg-black/90 border border-white/30 text-white text-xs font-bold font-mono uppercase tracking-wide whitespace-nowrap pointer-events-none shadow-lg">
                             {fortress.name}
                         </span>
                     </button>
@@ -192,32 +225,7 @@ export default function DashboardPage() {
                     SECTOR: QUAD_7
                 </div>
 
-                {/* Locked objective card */}
-                <div className="hidden md:fixed bottom-24 md:bottom-32 right-4 w-48 panel-float p-3 z-30 group">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 flex items-center justify-center bg-[#8b5cf6]/20 border border-[#8b5cf6] group-hover:bg-[#8b5cf6]/40 transition-colors">
-                            <span className="material-symbols-outlined text-[#8b5cf6] text-xl">lock</span>
-                        </div>
-                        <div>
-                            <div className="text-xs text-[#8b5cf6] font-bold uppercase tracking-widest">
-                                Zona bloqueada
-                            </div>
-                            <div className="text-sm font-bold text-white">Acceder a la Zona Cero</div>
-                        </div>
-                    </div>
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-xs text-slate-400 font-mono">
-                            <span>PROGRESO</span>
-                            <span>62.4%</span>
-                        </div>
-                        <div className="h-0.5 w-full bg-white/10">
-                            <div className="h-full bg-[#8b5cf6]" style={{ width: "62.4%" }}></div>
-                        </div>
-                        <div className="text-xs text-slate-300 text-right mt-1 font-mono uppercase">
-                            Requiere Fragmentos de Lógica
-                        </div>
-                    </div>
-                </div>
+                {/* Locked objective card — desktop only, hidden in the map layer */}
             </div>
 
             {/* ─── HEADER ─── */}
@@ -414,31 +422,57 @@ export default function DashboardPage() {
                             </Link>
                         )}
                     </div>
-                </aside>
-
-                {/* Acceder a la Zona Zero — solo móvil */}
-                <aside className="md:hidden group panel-float p-3 relative overflow-hidden z-20">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 flex items-center justify-center bg-[#8b5cf6]/20 border border-[#8b5cf6] group-hover:bg-[#8b5cf6]/40 transition-colors">
-                            <span className="material-symbols-outlined text-[#8b5cf6] text-xl">lock</span>
+                    {/* Zona Cero */}
+                    <div className="border-t border-[#8b5cf6]/30">
+                        <div className="panel-header px-3 py-2 flex items-center justify-between">
+                            <h2 className="text-xs font-bold text-[#8b5cf6] flex items-center gap-2 uppercase tracking-widest">
+                                <span className="material-symbols-outlined text-sm">target</span>
+                                Zona Cero
+                            </h2>
+                            <span className="text-[10px] text-[#8b5cf6]/60 font-mono uppercase">{bosses.length} entidad{bosses.length !== 1 ? "es" : ""}</span>
                         </div>
-                        <div>
-                            <div className="text-xs text-[#8b5cf6] font-bold uppercase tracking-widest">
-                                Zona bloqueada
-                            </div>
-                            <div className="text-sm font-bold text-white">Acceder a la Zona Cero</div>
-                        </div>
-                    </div>
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-xs text-slate-400 font-mono">
-                            <span>PROGRESO</span>
-                            <span>62.4%</span>
-                        </div>
-                        <div className="h-0.5 w-full bg-white/10">
-                            <div className="h-full bg-[#8b5cf6]" style={{ width: "62.4%" }}></div>
-                        </div>
-                        <div className="text-xs text-slate-300 text-right mt-1 font-mono uppercase">
-                            Requiere Fragmentos de Lógica
+                        <div className="p-3 space-y-3">
+                            {bosses.length === 0 ? (
+                                <div className="text-xs text-slate-500 font-mono uppercase tracking-widest text-center py-3">
+                                    Sin entidades activas
+                                </div>
+                            ) : bosses.map(boss => {
+                                const available = !boss.active_at || new Date(boss.active_at).getTime() <= Date.now();
+                                const remaining = boss.active_at ? Math.max(0, new Date(boss.active_at).getTime() - Date.now()) : 0;
+                                return (
+                                    <div key={boss.boss_id} className={`border p-3 space-y-2.5 ${available ? "border-[#8b5cf6]/50 bg-[#8b5cf6]/8" : "border-[#8b5cf6]/20 bg-[#8b5cf6]/4"}`}>
+                                        {/* Name + reward */}
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0">
+                                                <div className="text-sm font-bold text-white leading-tight">{boss.name}</div>
+                                                <div className="text-[11px] text-[#a78bfa] mt-0.5">{boss.title}</div>
+                                            </div>
+                                            <div className="shrink-0 text-right">
+                                                <div className="text-base font-black text-[#ffd700] leading-tight">+{boss.reward_credits}</div>
+                                                <div className="text-[9px] text-[#ffd700]/60 uppercase tracking-widest">puntos</div>
+                                            </div>
+                                        </div>
+                                        {/* Action */}
+                                        {available ? (
+                                            <Link
+                                                href={`/attack/boss/${boss.boss_id}`}
+                                                className="flex items-center justify-center gap-2 w-full bg-[#8b5cf6]/25 border border-[#8b5cf6] text-[#e9d5ff] text-xs font-bold uppercase tracking-widest py-1.5 hover:bg-[#8b5cf6]/50 transition-colors"
+                                            >
+                                                <span className="material-symbols-outlined text-xs">bolt</span>
+                                                Atacar
+                                            </Link>
+                                        ) : (
+                                            <div className="space-y-1">
+                                                <div className="text-[10px] text-slate-500 uppercase tracking-widest font-mono">Disponible en</div>
+                                                <div className="flex items-center gap-2 bg-black/30 border border-[#00ffff]/20 px-2 py-1">
+                                                    <span className="material-symbols-outlined text-[#00ffff] text-sm">schedule</span>
+                                                    <span className="font-black text-[#00ffff] font-mono text-sm tracking-wider">{formatCountdown(remaining)}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </aside>

@@ -165,26 +165,6 @@ Index(
 
 
 # ==========================
-# BOSS CONSTRAINTS (ASSOCIATION TABLE)
-# ==========================
-
-class BossConstraint(Base):
-    __tablename__ = "boss_constraints"
-
-    id = Column(String, primary_key=True, default=generate_uuid)
-    boss_id = Column(String, ForeignKey("bosses.id"), nullable=False)
-    constraint_id = Column(String, ForeignKey("game_constraints.id"), nullable=False)
-
-
-Index(
-    "idx_boss_constraint_unique",
-    BossConstraint.boss_id,
-    BossConstraint.constraint_id,
-    unique=True
-)
-
-
-# ==========================
 # FORTRESS SEASON STATS
 # ==========================
 
@@ -228,6 +208,7 @@ class Battle(Base):
 
     attacker_id = Column(String, ForeignKey("players.id"), nullable=False)
     fortress_id = Column(String, ForeignKey("fortresses.id"), nullable=True)
+    boss_id = Column(String, ForeignKey("bosses.id"), nullable=True)
 
     session_id = Column(String, nullable=False)
 
@@ -243,6 +224,7 @@ class Battle(Base):
     max_turns = Column(Integer, default=15)
     attacker = relationship("Player", back_populates="battles")
     fortress = relationship("Fortress", back_populates="battles")
+    boss = relationship("Boss", foreign_keys=[boss_id])
     messages = relationship("BattleMessage", back_populates="battle", order_by="BattleMessage.created_at")
 
 
@@ -313,23 +295,18 @@ class Boss(Base):
     id = Column(String, primary_key=True, default=generate_uuid)
 
     name = Column(String(100), nullable=False)
-
-    protocol_id = Column(String, ForeignKey("protocols.id"), nullable=False)
-    archetype_id = Column(String, ForeignKey("archetypes.id"), nullable=False)
+    title = Column(String(100), nullable=True)
+    location = Column(String(200), nullable=True)
 
     story = Column(Text, nullable=False)
-    personality = Column(Text, nullable=False)
+    prompt = Column(Text, nullable=False)
 
     protected_word = Column(String(64), nullable=False)
 
-    min_score_required = Column(Integer, default=0)
     reward_credits = Column(Integer, default=0)
 
-    is_active = Column(Boolean, default=True)
-
-    protocol = relationship("Protocol")
-    archetype = relationship("Archetype")
-    constraints = relationship("GameConstraint", secondary="boss_constraints", back_populates="bosses")
+    enabled = Column(Boolean, default=True)
+    active_at = Column(DateTime, nullable=True)
 
 
 # ==========================
@@ -470,7 +447,6 @@ class GameConstraint(Base):
 
     type = relationship("ConstraintType", back_populates="constraints")
     fortresses = relationship("Fortress", secondary="fortress_constraints", back_populates="constraints")
-    bosses = relationship("Boss", secondary="boss_constraints", back_populates="constraints")
 
 
 Index("idx_game_constraint_type", GameConstraint.type_id)
