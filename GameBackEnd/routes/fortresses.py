@@ -77,6 +77,11 @@ def create_fortress():
         db.close()
         return jsonify({"error": "Player not found"}), 404
 
+    season = get_active_season(db)
+    if not season:
+        db.close()
+        return jsonify({"error": "No active season"}), 400
+
     # Check if player already has a fortress
     existing_fortress = db.query(Fortress).filter_by(owner_id=user_id).first()
     if existing_fortress:
@@ -91,7 +96,7 @@ def create_fortress():
         return jsonify({"error": "Invalid protocol or archetype"}), 400
     
     # CALCULAR COSTE
-    total_cost = 0
+    total_cost = protocol.unlock_cost + archetype.unlock_cost
     if constraint_ids:
         constraints = db.query(GameConstraint).filter(GameConstraint.id.in_(constraint_ids)).all()
         if len(constraints) != len(constraint_ids):
@@ -100,10 +105,6 @@ def create_fortress():
         total_cost += sum(c.price for c in constraints)
     else:
         constraints = []
-
-    total_cost = protocol.unlock_cost + archetype.unlock_cost
-
-    
 
     if player.credits < total_cost:
         db.close()
@@ -125,10 +126,28 @@ def create_fortress():
         last_reconfigured_at=datetime.utcnow()
     )
 
-    # Add constraints
-    fortress.constraints = constraints
-
     db.add(fortress)
+    db.flush()  # get fortress.id before inserting constraints
+
+    # Add constraints explicitly to fortress_constraints
+    for constraint in constraints:
+        fc = FortressConstraint(
+            id=generate_uuid(),
+            fortress_id=fortress.id,
+            constraint_id=constraint.id
+        )
+        db.add(fc)
+
+    # Create FortressSeasonStats for the active season
+    db.add(FortressSeasonStats(
+        id=generate_uuid(),
+        fortress_id=fortress.id,
+        season_id=season.id,
+        defeat_count=0,
+        attack_count=0,
+        status="active"
+    ))
+
     log = ActivityLog(
         type="fortress_create",
         actor_id=player.id,
@@ -247,8 +266,15 @@ def reconfigure_fortress():
     fortress.protocol_id = data.get("protocol_id", fortress.protocol_id)
     fortress.archetype_id = data.get("archetype_id", fortress.archetype_id)
     fortress.personality = data.get("personality", fortress.personality)
-    if constraints is not None:
-        fortress.constraints = constraints
+    # Replace constraints explicitly in fortress_constraints
+    db.query(FortressConstraint).filter_by(fortress_id=fortress.id).delete()
+    for constraint in constraints:
+        fc = FortressConstraint(
+            id=generate_uuid(),
+            fortress_id=fortress.id,
+            constraint_id=constraint.id
+        )
+        db.add(fc)
     fortress.protected_word = data.get("protected_word", fortress.protected_word)
 
     fortress.last_reconfigured_at = datetime.utcnow()

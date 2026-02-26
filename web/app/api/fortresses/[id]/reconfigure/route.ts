@@ -22,7 +22,7 @@ export async function PUT(
 
   let backendRes: Response;
   try {
-    backendRes = await fetch(`${BACKEND}/api/v1/fortresses/${id}/reconfigure`, {
+    backendRes = await fetch(`${BACKEND}/api/v1/fortresses/reconfigure`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,

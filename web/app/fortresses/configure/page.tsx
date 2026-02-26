@@ -31,6 +31,7 @@ interface ExistingFortress {
     archetype: string;
     archetype_id: string;
     created_at: string;
+    constraints: ConstraintItem[];
 }
 
 interface ConstraintItem {
@@ -154,6 +155,9 @@ function FortressConfigurePage() {
                     if (f.protected_word) setProtectedWord(f.protected_word);
                     if (f.protocol_id) setSelectedProtocol(f.protocol_id);
                     if (f.archetype_id) setSelectedArchetype(f.archetype_id);
+                    if (f.constraints?.length) {
+                        setConstraints(new Set(f.constraints.map(c => c.id)));
+                    }
                 }
             } finally {
                 setLoading(false);
@@ -206,7 +210,7 @@ function FortressConfigurePage() {
                 protocol_id: selectedProtocol,
                 archetype_id: selectedArchetype,
                 personality: personality.trim(),
-                constraints: Array.from(constraints).join("|"),
+                constraint_ids: Array.from(constraints),
                 protected_word: protectedWord,
             };
 
