@@ -41,7 +41,9 @@ def get_or_create_fortress_season_stats(db, fortress_id, season_id):
             season_id=season_id,
             defeat_count=0,
             attack_count=0,
-            status="active"
+            status="active",
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
         )
         db.add(stats)
         db.flush()
@@ -145,7 +147,9 @@ def create_fortress():
         season_id=season.id,
         defeat_count=0,
         attack_count=0,
-        status="active"
+        status="active",
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
     ))
 
     log = ActivityLog(
@@ -287,6 +291,7 @@ def reconfigure_fortress():
     db.add(log)
     stats.defeat_count = 0
     stats.status = "active"
+    stats.updated_at = datetime.utcnow()
 
     db.commit()
     db.close()
@@ -344,6 +349,7 @@ def rebuild_fortress():
     stats.defeat_count = 0
     stats.attack_count = 0
     stats.status = "active"
+    stats.updated_at = datetime.utcnow()
     fortress.last_reconfigured_at = datetime.utcnow()
     db.commit()
     db.close()

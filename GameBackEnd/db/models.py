@@ -184,6 +184,9 @@ class FortressSeasonStats(Base):
     status = Column(String(20), default="active")
     # active | reconfigurable | destroyed
 
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
     fortress = relationship("Fortress", back_populates="season_stats")
     season = relationship("Season", back_populates="fortress_stats")
 
@@ -217,6 +220,7 @@ class Battle(Base):
     # active | won | lost | expired
 
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     turn_count = Column(Integer, default=0)
     max_turns = Column(Integer, default=15)
     attacker = relationship("Player", back_populates="battles")
@@ -379,6 +383,8 @@ class PlayerBossStats(Base):
     boss_id = Column(String, ForeignKey("bosses.id"), nullable=False)
 
     defeated = Column(Boolean, default=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
 
     player = relationship("Player")
     boss = relationship("Boss")

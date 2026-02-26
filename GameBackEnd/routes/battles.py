@@ -63,7 +63,9 @@ def get_or_create_fortress_season_stats(db, fortress_id, season_id):
             season_id=season_id,
             defeat_count=0,
             attack_count=0,
-            status="active"
+            status="active",
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
         )
         db.add(stats)
         db.flush()
@@ -150,6 +152,7 @@ def start_battle():
 
         # ── Create new battle ──────────────────────────────────────────────
         fortress_stats.attack_count += 1
+        fortress_stats.updated_at = datetime.utcnow()
 
         context = {
             "protocol_template": fortress.protocol.protocol_template,
@@ -251,6 +254,7 @@ def send_message(battle_id):
 
         if battle.turn_count > battle.max_turns:
             battle.status = "lost"
+            battle.updated_at = datetime.utcnow()
 
             defender = battle.fortress.owner
             attacker = db.query(Player).filter_by(id=user_id).first()
@@ -292,6 +296,7 @@ def send_message(battle_id):
                 db, battle.fortress_id, season.id
             )
             fortress_stats.attack_count += 1
+            fortress_stats.updated_at = datetime.utcnow()
 
             db.commit()
             try:
@@ -366,6 +371,7 @@ def guess_word(battle_id):
 
         if guess.upper() == fortress.protected_word.upper():
             battle.status = "won"
+            battle.updated_at = datetime.utcnow()
             attacker = db.query(Player).filter_by(id=user_id).first()
             defender = fortress.owner
 
@@ -407,6 +413,7 @@ def guess_word(battle_id):
             ))
 
             fortress_stats.defeat_count += 1
+            fortress_stats.updated_at = datetime.utcnow()
 
             if fortress_stats.defeat_count >= 3:
                 fortress_stats.status = "reconfigurable"
@@ -429,6 +436,7 @@ def guess_word(battle_id):
 
         # Wrong guess — counts as successful defense
         battle.status = "lost"
+        battle.updated_at = datetime.utcnow()
         attacker = db.query(Player).filter_by(id=user_id).first()
         defender = fortress.owner
 
@@ -466,6 +474,7 @@ def guess_word(battle_id):
 
         # Increment fortress attack counter
         fortress_stats.attack_count += 1
+        fortress_stats.updated_at = datetime.utcnow()
 
         db.commit()
         try:
