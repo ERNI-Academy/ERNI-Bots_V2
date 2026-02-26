@@ -275,7 +275,7 @@ def reconfigure_fortress():
 
     # COSTE DINÁMICO
     base_cost = 100
-    extra = stats.defeat_count - 3
+    extra = max(0, stats.defeat_count - 3)
     discount = extra * 10
     cost = max(20, base_cost - discount)
 
@@ -354,6 +354,7 @@ def reconfigure_fortress():
 
     db.add(log)
     stats.defeat_count = 0
+    stats.attack_count = 0
     stats.status = "active"
     stats.updated_at = datetime.utcnow()
 

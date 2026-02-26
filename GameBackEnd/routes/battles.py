@@ -108,6 +108,13 @@ def start_battle():
         if not attacker_fortress:
             return jsonify({"error": "You must create your own fortress before attacking"}), 403
 
+        # Attacker's fortress must not be destroyed
+        attacker_fortress_stats = get_or_create_fortress_season_stats(
+            db, attacker_fortress.id, season.id
+        )
+        if attacker_fortress_stats.status == "destroyed":
+            return jsonify({"error": "Tu fortaleza está destruida. Reconstruyela antes de atacar."}), 403
+
         fortress_stats = get_or_create_fortress_season_stats(
             db, fortress.id, season.id
         )
@@ -413,10 +420,7 @@ def guess_word(battle_id):
             fortress_stats.attack_count += 1
             fortress_stats.updated_at = datetime.utcnow()
 
-            if fortress_stats.defeat_count >= 3:
-                fortress_stats.status = "reconfigurable"
-
-            if fortress_stats.defeat_count > 4:
+            if fortress_stats.defeat_count >= 5:
                 fortress_stats.status = "destroyed"
 
             db.commit()

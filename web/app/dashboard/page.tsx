@@ -56,7 +56,7 @@ interface PlayerProfile {
         name: string;
         defeat_count: number;
         attack_count: number;
-        status: "active" | "reconfigurable" | "destroyed";
+        status: "active" | "destroyed";
     };
 }
 
@@ -333,12 +333,14 @@ export default function DashboardPage() {
                         {player?.fortress ? (() => {
                             const f = player.fortress!;
                             const MAX_DEFEATS = 5;
+                            const canReconfigure = f.status === "active" && f.defeat_count >= 3;
+                            const isDestroyed = f.status === "destroyed";
                             const statusCfg = {
-                                active:         { label: "FUERTE",        color: "text-[#00ff41]",  border: "border-[#00ff41]/40",  bg: "bg-[#00ff41]/10"  },
-                                reconfigurable: { label: "RECONFIGURABLE", color: "text-[#ffd700]",  border: "border-[#ffd700]/40",  bg: "bg-[#ffd700]/10"  },
-                                destroyed:      { label: "DESTRUIDA",      color: "text-[#ff0033]",  border: "border-[#ff0033]/40",  bg: "bg-[#ff0033]/10"  },
+                                active: { label: "FUERTE",    color: "text-[#00ff41]", border: "border-[#00ff41]/40", bg: "bg-[#00ff41]/10" },
+                                weak:   { label: "DÉBIL",     color: "text-[#ffd700]", border: "border-[#ffd700]/40", bg: "bg-[#ffd700]/10" },
+                                destroyed: { label: "DESTRUIDA", color: "text-[#ff0033]", border: "border-[#ff0033]/40", bg: "bg-[#ff0033]/10" },
                             };
-                            const st = statusCfg[f.status] ?? statusCfg.active;
+                            const st = isDestroyed ? statusCfg.destroyed : canReconfigure ? statusCfg.weak : statusCfg.active;
                             return (
                                 <>
                                     <div className="flex items-center justify-between gap-2">
@@ -368,6 +370,33 @@ export default function DashboardPage() {
                                             <span className="font-bold text-white">{f.attack_count}</span>
                                         </div>
                                     </div>
+                                    {/* Contextual alerts */}
+                                    {isDestroyed && (
+                                        <div className="border border-[#ff0033]/50 bg-[#ff0033]/10 p-2 text-xs font-mono space-y-1.5">
+                                            <div className="flex items-center gap-1.5 text-[#ff0033] font-bold uppercase tracking-widest">
+                                                <span className="material-symbols-outlined text-sm">crisis_alert</span>
+                                                Fortaleza destruida
+                                            </div>
+                                            <p className="text-slate-300 leading-relaxed">No puedes atacar otras fortalezas. Reconstruye la tuya para volver al combate.</p>
+                                            <Link href="/fortresses/configure" className="flex items-center justify-center gap-1 mt-1 px-2 py-1.5 border border-[#ff0033]/50 hover:bg-[#ff0033]/20 transition-colors text-[#ff0033] uppercase tracking-widest">
+                                                <span className="material-symbols-outlined text-xs">construction</span>
+                                                Reconstruir
+                                            </Link>
+                                        </div>
+                                    )}
+                                    {canReconfigure && (
+                                        <div className="border border-[#ffd700]/50 bg-[#ffd700]/10 p-2 text-xs font-mono space-y-1.5">
+                                            <div className="flex items-center gap-1.5 text-[#ffd700] font-bold uppercase tracking-widest">
+                                                <span className="material-symbols-outlined text-sm">warning</span>
+                                                Reconfiguración disponible
+                                            </div>
+                                            <p className="text-slate-300 leading-relaxed">Tu fortaleza ha acumulado {f.defeat_count} derrotas. Puedes reconfigurarla ahora.</p>
+                                            <Link href="/fortresses/configure" className="flex items-center justify-center gap-1 mt-1 px-2 py-1.5 border border-[#ffd700]/50 hover:bg-[#ffd700]/20 transition-colors text-[#ffd700] uppercase tracking-widest">
+                                                <span className="material-symbols-outlined text-xs">radar</span>
+                                                Reconfigurar
+                                            </Link>
+                                        </div>
+                                    )}
                                 </>
                             );
                         })() : (
@@ -375,13 +404,15 @@ export default function DashboardPage() {
                                 Sin fortaleza activa
                             </div>
                         )}
-                        <Link
-                            href="/fortresses/configure"
-                            className="w-full border border-primary/30 bg-primary/5 p-2 text-xs text-primary hover:bg-primary/20 transition-all uppercase flex items-center justify-center gap-2 cursor-pointer"
-                        >
-                            <span className="material-symbols-outlined text-xs">radar</span>
-                            CONFIGURAR MI FORTALEZA
-                        </Link>
+                        {(!player?.fortress || (!player.fortress.status.includes("destroyed") && player.fortress.defeat_count < 3)) && (
+                            <Link
+                                href="/fortresses/configure"
+                                className="w-full border border-primary/30 bg-primary/5 p-2 text-xs text-primary hover:bg-primary/20 transition-all uppercase flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <span className="material-symbols-outlined text-xs">radar</span>
+                                {player?.fortress ? "CONFIGURAR MI FORTALEZA" : "CREAR FORTALEZA"}
+                            </Link>
+                        )}
                     </div>
                 </aside>
 
@@ -558,24 +589,42 @@ export default function DashboardPage() {
 
                                 {/* Actions */}
                                 <div className="flex gap-2 pt-1 flex-col">
-                                    <button
-                                        onClick={() => player?.has_fortress ? router.push(`/attack/${selectedFortress.id}`) : undefined}
-                                        disabled={!player?.has_fortress}
-                                        title={player?.has_fortress ? undefined : "Debes crear tu fortaleza antes de atacar"}
-                                        className="flex-1 bg-[#ff0033]/10 border border-[#ff0033]/40 text-xs px-3 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
-                                    >
-                                        <span className="material-symbols-outlined text-xs">gps_fixed</span>
-                                        Atacar
-                                    </button>
-                                    {!player?.has_fortress && (
-                                        <Link
-                                            href="/fortresses/configure"
-                                            className="text-xs text-center text-primary font-mono border border-primary/30 px-3 py-1.5 hover:bg-primary/10 transition-colors uppercase tracking-widest flex items-center justify-center gap-1"
-                                        >
-                                            <span className="material-symbols-outlined text-xs">add_circle</span>
-                                            Crear fortaleza
-                                        </Link>
-                                    )}
+                                    {(() => {
+                                        const fortressDestroyed = player?.fortress?.status === "destroyed";
+                                        const noFortress = !player?.has_fortress;
+                                        const canAttack = !noFortress && !fortressDestroyed;
+                                        return (
+                                            <>
+                                                <button
+                                                    onClick={() => canAttack ? router.push(`/attack/${selectedFortress.id}`) : undefined}
+                                                    disabled={!canAttack}
+                                                    title={noFortress ? "Debes crear tu fortaleza antes de atacar" : fortressDestroyed ? "Tu fortaleza está destruida. Reconstruyela primero." : undefined}
+                                                    className="flex-1 bg-[#ff0033]/10 border border-[#ff0033]/40 text-xs px-3 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                                                >
+                                                    <span className="material-symbols-outlined text-xs">gps_fixed</span>
+                                                    Atacar
+                                                </button>
+                                                {noFortress && (
+                                                    <Link
+                                                        href="/fortresses/configure"
+                                                        className="text-xs text-center text-primary font-mono border border-primary/30 px-3 py-1.5 hover:bg-primary/10 transition-colors uppercase tracking-widest flex items-center justify-center gap-1"
+                                                    >
+                                                        <span className="material-symbols-outlined text-xs">add_circle</span>
+                                                        Crear fortaleza
+                                                    </Link>
+                                                )}
+                                                {fortressDestroyed && (
+                                                    <Link
+                                                        href="/fortresses/configure"
+                                                        className="text-xs text-center text-[#ff0033] font-mono border border-[#ff0033]/40 px-3 py-1.5 hover:bg-[#ff0033]/10 transition-colors uppercase tracking-widest flex items-center justify-center gap-1"
+                                                    >
+                                                        <span className="material-symbols-outlined text-xs">construction</span>
+                                                        Reconstruir fortaleza
+                                                    </Link>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         </div>

@@ -74,7 +74,7 @@ export default function AttackPage() {
     const MAX_TURNS = 10;
     const [sentMessages, setSentMessages] = useState<string[]>([]);
     const [showMobileHistory, setShowMobileHistory] = useState(false);
-    const [preflight, setPreflight] = useState<"checking" | "ok" | "denied">("checking");
+    const [preflight, setPreflight] = useState<"checking" | "ok" | "denied" | "fortress_destroyed">("checking");
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const battleInitialized = useRef(false);
@@ -106,10 +106,19 @@ export default function AttackPage() {
                     setPreflight("denied");
                     return;
                 }
-                const profile = await res.json();
-                if (!profile.has_fortress) {
+                const authProfile = await res.json();
+                if (!authProfile.has_fortress) {
                     router.replace("/fortresses/configure?reason=no_fortress");
                     return;
+                }
+                // Fetch full profile to check fortress status
+                const profileRes = await fetch("/api/players/me", { credentials: "include" });
+                if (profileRes.ok) {
+                    const profile = await profileRes.json();
+                    if (profile.fortress?.status === "destroyed") {
+                        setPreflight("fortress_destroyed");
+                        return;
+                    }
                 }
                 setPreflight("ok");
             } catch {
@@ -365,6 +374,37 @@ export default function AttackPage() {
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
                         Volver al mapa
                     </Link>
+                </div>
+            </div>
+        );
+    }
+
+    if (preflight === "fortress_destroyed") {
+        return (
+            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-[#ff0033]`}>
+                <div className="scanlines" />
+                <div className="text-center space-y-4 p-6 max-w-sm">
+                    <span className="material-symbols-outlined text-5xl">crisis_alert</span>
+                    <p className="text-sm font-bold uppercase tracking-[0.2em]">Fortaleza destruida</p>
+                    <p className="text-xs text-slate-400 font-mono leading-relaxed">
+                        Tu fortaleza ha sido destruida. No puedes atacar hasta que la reconstruyas.
+                    </p>
+                    <div className="flex flex-col gap-2 pt-2">
+                        <Link
+                            href="/fortresses/configure"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-[#ff0033] bg-[#ff0033]/10 hover:bg-[#ff0033]/20 transition-colors text-xs uppercase tracking-widest"
+                        >
+                            <span className="material-symbols-outlined text-sm">construction</span>
+                            Reconstruir fortaleza
+                        </Link>
+                        <Link
+                            href="/dashboard"
+                            className="inline-flex items-center justify-center gap-1 px-4 py-2 border border-white/20 hover:bg-white/5 transition-colors text-xs text-slate-400 uppercase tracking-widest"
+                        >
+                            <span className="material-symbols-outlined text-sm">arrow_back</span>
+                            Volver al mapa
+                        </Link>
+                    </div>
                 </div>
             </div>
         );

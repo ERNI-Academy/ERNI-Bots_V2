@@ -114,7 +114,7 @@ def get_profile():
             "name": player.fortress.name,
             "defeat_count": fortress_stats.defeat_count,
             "attack_count": fortress_stats.attack_count,
-            "status": fortress_stats.status,  # active | reconfigurable | destroyed
+            "status": fortress_stats.status,  # active | destroyed
         }
 
     db.close()
