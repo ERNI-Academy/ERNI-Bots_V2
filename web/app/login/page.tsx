@@ -18,8 +18,15 @@ function LoginContent() {
 
   useEffect(() => {
     setMounted(true);
-    const code = searchParams.get("code");
-    if (code) setInvitationCode(code);
+    const codeFromUrl = searchParams.get("code");
+    const storedCode = localStorage.getItem("invitationCode");
+    const storedUsername = localStorage.getItem("username");
+    if (codeFromUrl) {
+      setInvitationCode(codeFromUrl);
+    } else if (storedCode) {
+      setInvitationCode(storedCode);
+    }
+    if (storedUsername) setUsername(storedUsername);
   }, [searchParams]);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -28,6 +35,8 @@ function LoginContent() {
     setLoading(true);
     try {
       await loginApi(username, invitationCode);
+      localStorage.setItem("username", username);
+      localStorage.setItem("invitationCode", invitationCode);
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error de autenticación");

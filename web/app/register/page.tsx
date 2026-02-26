@@ -26,8 +26,8 @@ function RegisterContent() {
 
     useEffect(() => {
         setMounted(true);
-        const code = searchParams.get("code");
-        if (code) setInvitationCode(code);
+        const codeFromUrl = searchParams.get("code");
+        if (codeFromUrl) setInvitationCode(codeFromUrl);
     }, [searchParams]);
 
     const handleGenerateCode = async () => {
@@ -62,6 +62,8 @@ function RegisterContent() {
         setLoading(true);
         try {
             await registerApi(username, email, invitationCode);
+            localStorage.setItem("username", username);
+            localStorage.setItem("invitationCode", invitationCode);
             router.push("/dashboard");
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Error de registro");
