@@ -13,10 +13,18 @@ export function middleware(request: NextRequest) {
   }
 
   // Verificar si hay un token de autenticación en las cookies
-  const authToken = request.cookies.get("auth-token");
+  const authToken    = request.cookies.get("auth-token");
+  const refreshToken = request.cookies.get("refresh-token");
 
-  // Si no hay token, redirigir al login (preservando ?code= si viene en la URL)
   if (!authToken) {
+    // Si hay refresh token, intentar renovar el access token y continuar.
+    if (refreshToken) {
+      const refreshUrl = new URL("/api/auth/refresh", request.url);
+      refreshUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(refreshUrl);
+    }
+
+    // Sin ningún token → login
     const loginUrl = new URL("/login", request.url);
     const code = request.nextUrl.searchParams.get("code");
     if (code) loginUrl.searchParams.set("code", code);

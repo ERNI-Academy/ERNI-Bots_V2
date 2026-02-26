@@ -45,6 +45,13 @@ export async function POST(request: NextRequest) {
     maxAge: 60 * 60, // 1 hora
     path: "/",
   });
+  response.cookies.set("refresh-token", data.refresh_token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 60 * 60 * 24 * 30, // 30 días
+    path: "/",
+  });
 
   return response;
 }

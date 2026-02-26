@@ -1,10 +1,12 @@
 """
 Authentication routes.
 
-POST /auth/register  – create account with invitation code
-POST /auth/login     – authenticate with invitation code → JWT
-POST /auth/logout    – revoke current JWT (adds jti to blocklist)
-GET  /auth/me        – return authenticated player profile
+POST /auth/register        – create account with invitation code
+POST /auth/login           – authenticate with invitation code → access + refresh JWT
+POST /auth/logout          – revoke current access token (adds jti to blocklist)
+POST /auth/revoke-refresh  – revoke current refresh token (adds jti to blocklist)
+POST /auth/refresh         – exchange refresh token for a new access token
+GET  /auth/me              – return authenticated player profile
 
 Auth mechanism
 --------------
@@ -17,8 +19,8 @@ The invitation code IS the authentication credential.
 
 Token strategy
 --------------
-Access JWT (1 h) + per-jti blocklist in DB for true logout.
-No refresh tokens: game sessions are short-lived.
+Access JWT (1 h) + Refresh JWT (30 days).
+Both token jtis are stored in the DB blocklist on logout/revoke.
 """
 
 import logging
@@ -30,6 +32,7 @@ from datetime import datetime
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (
     create_access_token,
+    create_refresh_token,
     get_jwt,
     get_jwt_identity,
     jwt_required,
@@ -188,11 +191,13 @@ def register():
 
         db.commit()
 
-        access_token = create_access_token(identity=player.id)
+        access_token  = create_access_token(identity=player.id)
+        refresh_token = create_refresh_token(identity=player.id)
         logger.info("register: player created id=%.8s", player.id)
 
         return jsonify({
-            "access_token": access_token,
+            "access_token":  access_token,
+            "refresh_token": refresh_token,
             "player": {
                 "id":       player.id,
                 "username": player.username,
@@ -275,11 +280,13 @@ def login():
         inv.last_used_ip = _client_ip()
         db.commit()
 
-        access_token = create_access_token(identity=player.id)
+        access_token  = create_access_token(identity=player.id)
+        refresh_token = create_refresh_token(identity=player.id)
         logger.info("login: success id=%.8s", player.id)
 
         return jsonify({
-            "access_token": access_token,
+            "access_token":  access_token,
+            "refresh_token": refresh_token,
             "player": {
                 "id":       player.id,
                 "username": player.username,
@@ -304,7 +311,6 @@ def login():
 def logout():
     """
     Revoke the current access token by adding its jti to the blocklist.
-    Any subsequent request with this token will receive 401.
 
     Responses:
         200  { "message": "Logged out" }
@@ -326,6 +332,63 @@ def logout():
         return jsonify({"error": "Logout failed"}), 500
     finally:
         db.close()
+
+
+# ─────────────────────────────────────────────
+# POST /auth/revoke-refresh
+# ─────────────────────────────────────────────
+
+@auth_bp.post("/revoke-refresh")
+@limiter.limit("30 per minute")
+@jwt_required(refresh=True)
+def revoke_refresh():
+    """
+    Revoke the current refresh token by adding its jti to the blocklist.
+
+    Responses:
+        200  { "message": "Refresh token revoked" }
+        401  Token missing / invalid / already revoked
+        500  Unexpected error
+    """
+    from db import SessionLocal
+    from db.models import TokenBlocklist
+
+    jti = get_jwt()["jti"]
+    db  = SessionLocal()
+    try:
+        db.add(TokenBlocklist(jti=jti))
+        db.commit()
+        return jsonify({"message": "Refresh token revoked"}), 200
+    except Exception:
+        db.rollback()
+        logger.exception("revoke_refresh: unexpected error")
+        return jsonify({"error": "Revocation failed"}), 500
+    finally:
+        db.close()
+
+
+# ─────────────────────────────────────────────
+# POST /auth/refresh
+# ─────────────────────────────────────────────
+
+@auth_bp.post("/refresh")
+@limiter.limit("60 per minute")
+@jwt_required(refresh=True)
+def refresh():
+    """
+    Issue a new access token using a valid refresh token.
+
+    The refresh token must be passed in the Authorization header:
+        Authorization: Bearer <refresh_token>
+
+    Responses:
+        200  { "access_token": "..." }
+        401  Refresh token missing / invalid / revoked
+    """
+    user_id      = get_jwt_identity()
+    access_token = create_access_token(identity=user_id)
+    logger.info("refresh: new access token issued for id=%.8s", user_id)
+    return jsonify({"access_token": access_token}), 200
 
 
 # ─────────────────────────────────────────────
