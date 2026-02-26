@@ -151,9 +151,6 @@ def start_battle():
             return jsonify(response_data), 200
 
         # ── Create new battle ──────────────────────────────────────────────
-        fortress_stats.attack_count += 1
-        fortress_stats.updated_at = datetime.utcnow()
-
         context = {
             "protocol_template": fortress.protocol.protocol_template,
             "archetype_template": fortress.archetype.archetype_template,
@@ -413,6 +410,7 @@ def guess_word(battle_id):
             ))
 
             fortress_stats.defeat_count += 1
+            fortress_stats.attack_count += 1
             fortress_stats.updated_at = datetime.utcnow()
 
             if fortress_stats.defeat_count >= 3:

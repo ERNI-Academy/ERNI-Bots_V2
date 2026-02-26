@@ -51,6 +51,13 @@ interface PlayerProfile {
     created_at: string;
     has_fortress: boolean;
     season_score: number;
+    fortress?: {
+        id: string;
+        name: string;
+        defeat_count: number;
+        attack_count: number;
+        status: "active" | "reconfigurable" | "destroyed";
+    };
 }
 
 // Safe zone: avoid header (~12% top), sidebars (~24% each side), bottom bars (~32% bottom)
@@ -303,28 +310,71 @@ export default function DashboardPage() {
                     : "md:contents hidden"
                     }`}
             >
-                {/* My Profile */}
+                {/* My Fortress */}
                 <aside className="md:fixed md:top-24 md:right-4 md:w-72 panel-float z-20">
                     <div className="panel-header p-2">
                         <h2 className="text-xs font-bold text-[#ffd700] flex items-center gap-2">
-                            <span className="material-symbols-outlined text-xs">monitoring</span>
-                            MI PERFIL
+                            <span className="material-symbols-outlined text-xs">fort</span>
+                            MI FORTALEZA
                         </h2>
                     </div>
-                    <div className="p-4 space-y-4">
-                        <div className="flex gap-3">
-                            <div className="w-10 h-10 border border-primary bg-primary/10 flex items-center justify-center shrink-0">
-                                <span className="material-symbols-outlined text-primary">person</span>
-                            </div>
-                            <div>
-                                <div className="text-xs font-bold text-primary">
-                                    {player ? player.username : "—"}
+                    <div className="p-4 space-y-3">
+                        {player && (
+                            <div className="flex items-center gap-3 pb-1 border-b border-white/10">
+                                <div className="w-8 h-8 border border-primary bg-primary/10 flex items-center justify-center shrink-0">
+                                    <span className="material-symbols-outlined text-primary text-sm">person</span>
                                 </div>
-                                <div className="text-xs text-slate-400">
-                                    {player ? player.email : "Cargando..."}
+                                <div className="min-w-0">
+                                    <div className="text-xs font-bold text-primary truncate">{player.username}</div>
+                                    <div className="text-xs text-slate-400 truncate">{player.email}</div>
                                 </div>
                             </div>
-                        </div>
+                        )}
+                        {player?.fortress ? (() => {
+                            const f = player.fortress!;
+                            const MAX_DEFEATS = 5;
+                            const statusCfg = {
+                                active:         { label: "FUERTE",        color: "text-[#00ff41]",  border: "border-[#00ff41]/40",  bg: "bg-[#00ff41]/10"  },
+                                reconfigurable: { label: "RECONFIGURABLE", color: "text-[#ffd700]",  border: "border-[#ffd700]/40",  bg: "bg-[#ffd700]/10"  },
+                                destroyed:      { label: "DESTRUIDA",      color: "text-[#ff0033]",  border: "border-[#ff0033]/40",  bg: "bg-[#ff0033]/10"  },
+                            };
+                            const st = statusCfg[f.status] ?? statusCfg.active;
+                            return (
+                                <>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="font-bold text-sm text-white truncate">{f.name}</span>
+                                        <span className={`text-xs font-bold uppercase tracking-widest px-1.5 py-0.5 border ${st.border} ${st.color} ${st.bg} shrink-0`}>
+                                            {st.label}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-1.5 font-mono text-xs">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-slate-400 uppercase">Derrotas</span>
+                                            <span className={`font-bold ${f.defeat_count >= MAX_DEFEATS ? "text-[#ff0033]" : f.defeat_count >= 3 ? "text-[#ffd700]" : "text-[#00ff41]"}`}>
+                                                {f.defeat_count} / {MAX_DEFEATS}
+                                            </span>
+                                        </div>
+                                        <div className="flex gap-1 h-1.5">
+                                            {[...Array(MAX_DEFEATS)].map((_, i) => (
+                                                <div key={i} className={`flex-1 rounded-sm ${
+                                                    i < f.defeat_count
+                                                        ? f.defeat_count >= MAX_DEFEATS ? "bg-[#ff0033]" : f.defeat_count >= 3 ? "bg-[#ffd700]" : "bg-[#00ff41]"
+                                                        : "bg-white/10"
+                                                }`} />
+                                            ))}
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-slate-400 uppercase">Ataques recibidos</span>
+                                            <span className="font-bold text-white">{f.attack_count}</span>
+                                        </div>
+                                    </div>
+                                </>
+                            );
+                        })() : (
+                            <div className="text-xs text-slate-500 font-mono uppercase tracking-widest text-center py-2">
+                                Sin fortaleza activa
+                            </div>
+                        )}
                         <Link
                             href="/fortresses/configure"
                             className="w-full border border-primary/30 bg-primary/5 p-2 text-xs text-primary hover:bg-primary/20 transition-all uppercase flex items-center justify-center gap-2 cursor-pointer"

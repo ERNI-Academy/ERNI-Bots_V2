@@ -107,6 +107,16 @@ def get_profile():
         "has_fortress": player.fortress is not None,
     }
 
+    if player.fortress:
+        fortress_stats = get_or_create_fortress_season_stats(db, player.fortress.id, season.id)
+        response["fortress"] = {
+            "id": player.fortress.id,
+            "name": player.fortress.name,
+            "defeat_count": fortress_stats.defeat_count,
+            "attack_count": fortress_stats.attack_count,
+            "status": fortress_stats.status,  # active | reconfigurable | destroyed
+        }
+
     db.close()
     return jsonify(response)
     
