@@ -20,11 +20,17 @@ interface Archetype {
     unlock_cost: number;
 }
 
+interface Personality {
+    id: string;
+    name: string;
+    description: string;
+}
+
 interface ExistingFortress {
     id: string;
     name: string;
     story: string;
-    personality: string;
+    personality_id: string;
     protected_word: string;
     protocol: string;
     protocol_id: string;
@@ -79,6 +85,7 @@ function FortressConfigurePage() {
     // Remote data
     const [protocols, setProtocols] = useState<Protocol[]>([]);
     const [archetypes, setArchetypes] = useState<Archetype[]>([]);
+    const [personalities, setPersonalities] = useState<Personality[]>([]);
     const [constraintTypes, setConstraintTypes] = useState<ConstraintTypeGroup[]>([]);
     const [words, setWords] = useState<string[]>([]);
     const [player, setPlayer] = useState<PlayerProfile | null>(null);
@@ -88,7 +95,7 @@ function FortressConfigurePage() {
     // Form state
     const [name, setName] = useState("");
     const [story, setStory] = useState("");
-    const [personality, setPersonality] = useState("");
+    const [selectedPersonality, setSelectedPersonality] = useState<string | null>(null);
     const [protectedWord, setProtectedWord] = useState("");
     const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null);
     const [selectedArchetype, setSelectedArchetype] = useState<string | null>(null);
@@ -111,9 +118,10 @@ function FortressConfigurePage() {
     useEffect(() => {
         async function load() {
             try {
-                const [protocolsRes, archetypesRes, constraintsRes, wordsRes, profileRes, fortressRes] = await Promise.all([
+                const [protocolsRes, archetypesRes, personalitiesRes, constraintsRes, wordsRes, profileRes, fortressRes] = await Promise.all([
                     fetch("/api/protocols", { credentials: "include" }),
                     fetch("/api/archetypes", { credentials: "include" }),
+                    fetch("/api/personalities", { credentials: "include" }),
                     fetch("/api/constraints", { credentials: "include" }),
                     fetch("/api/words", { credentials: "include" }),
                     fetch("/api/auth/me", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
@@ -130,6 +138,12 @@ function FortressConfigurePage() {
                     const a: Archetype[] = await archetypesRes.json();
                     setArchetypes(a);
                     if (a.length > 0) setSelectedArchetype(a[0].id);
+                }
+
+                if (personalitiesRes.ok) {
+                    const p: Personality[] = await personalitiesRes.json();
+                    setPersonalities(p);
+                    if (p.length > 0) setSelectedPersonality(p[0].id);
                 }
 
                 if (constraintsRes.ok) {
@@ -151,7 +165,7 @@ function FortressConfigurePage() {
                     setExistingFortress(f);
                     setName(f.name ?? "");
                     setStory(f.story ?? "");
-                    setPersonality(f.personality ?? "");
+                    if (f.personality_id) setSelectedPersonality(f.personality_id);
                     if (f.protected_word) setProtectedWord(f.protected_word);
                     if (f.protocol_id) setSelectedProtocol(f.protocol_id);
                     if (f.archetype_id) setSelectedArchetype(f.archetype_id);
@@ -199,7 +213,7 @@ function FortressConfigurePage() {
 
         if (!name.trim()) { setError("El nombre de la fortaleza es obligatorio."); return; }
         if (!story.trim()) { setError("La historia de la fortaleza es obligatoria."); return; }
-        if (!personality.trim()) { setError("La personalidad es obligatoria."); return; }
+        if (!selectedPersonality) { setError("La personalidad es obligatoria."); return; }
         if (!selectedProtocol || !selectedArchetype) { setError("Debes seleccionar un protocolo y un arquetipo."); return; }
 
         setSaving(true);
@@ -209,7 +223,7 @@ function FortressConfigurePage() {
                 story: story.trim(),
                 protocol_id: selectedProtocol,
                 archetype_id: selectedArchetype,
-                personality: personality.trim(),
+                personality_id: selectedPersonality,
                 constraint_ids: Array.from(constraints),
                 protected_word: protectedWord,
             };
@@ -398,22 +412,41 @@ function FortressConfigurePage() {
                                     Personalidad de la IA Defensora
                                 </h2>
                             </div>
-                            <div className="px-4 pb-4 pt-3 flex flex-col gap-3">
-                                <textarea
-                                    className="bg-black/60 border border-[#8b5cf6]/30 text-[#8b5cf6] p-2.5 text-sm rounded-sm placeholder:text-[#a78bfa] focus:outline-none focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6]/40 resize-none custom-scrollbar"
-                                    placeholder="Define la personalidad de tu IA defensora... ¿Cómo responde a los intrusos? ¿Cuál es su actitud? ¿Qué secretos guarda celosamente?"
-                                    rows={7}
-                                    value={personality}
-                                    onChange={e => setPersonality(e.target.value)}
-                                />
-                                <div className="flex justify-between items-center text-xs text-[#a78bfa] font-mono">
-                                    <span>
-                                        CARGA_SINÁPTICA: {personality.length > 0 ? Math.min(100, Math.floor((personality.length / 500) * 100)) : 0}%
-                                    </span>
-                                    <span>
-                                        CHARS: {personality.length}
-                                    </span>
-                                </div>
+                            <div className="p-4">
+                                {personalities.length === 0 ? (
+                                    <div className="text-xs text-slate-300 font-mono animate-pulse">CARGANDO PERSONALIDADES...</div>
+                                ) : (
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {personalities.map(personality => {
+                                            const isSelected = selectedPersonality === personality.id;
+                                            return (
+                                                <button
+                                                    key={personality.id}
+                                                    onClick={() => setSelectedPersonality(personality.id)}
+                                                    className={`text-left p-3 flex justify-between items-start transition-all border cursor-pointer ${
+                                                        isSelected
+                                                            ? "border-[#8b5cf6] bg-[#8b5cf6]/15 shadow-[0_0_10px_#8b5cf620]"
+                                                            : "border-[#8b5cf6]/20 bg-[#8b5cf6]/5 hover:border-[#8b5cf6]/50 hover:bg-[#8b5cf6]/10"
+                                                    }`}
+                                                >
+                                                    <div className="flex flex-col gap-1 mr-2 flex-1 min-w-0">
+                                                        <span className={`font-bold text-sm ${isSelected ? "text-[#8b5cf6]" : "text-slate-300"}`}>
+                                                            {personality.name}
+                                                        </span>
+                                                        <span className="text-sm text-slate-300 leading-tight">
+                                                            {personality.description}
+                                                        </span>
+                                                    </div>
+                                                    {isSelected && (
+                                                        <span className="text-xs bg-[#8b5cf6] text-white px-1 font-bold shrink-0 ml-2 self-start">
+                                                            SELEC.
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         </section>
                     </div>

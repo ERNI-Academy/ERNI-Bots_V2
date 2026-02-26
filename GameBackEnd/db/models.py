@@ -91,6 +91,22 @@ Index(
 
 
 # ==========================
+# PERSONALITY
+# ==========================
+
+class Personality(Base):
+    __tablename__ = "personalities"
+
+    id = Column(String, primary_key=True)
+    name = Column(String(100), unique=True, nullable=False)
+    description = Column(Text, nullable=False)
+    personality_template = Column(Text, nullable=False)
+
+
+Index("idx_personality_name", Personality.name)
+
+
+# ==========================
 # FORTRESS (PERSISTENTE)
 # ==========================
 
@@ -103,10 +119,10 @@ class Fortress(Base):
 
     protocol_id = Column(String, ForeignKey("protocols.id"), nullable=False)
     archetype_id = Column(String, ForeignKey("archetypes.id"), nullable=False)
+    personality_id = Column(String, ForeignKey("personalities.id"), nullable=False)
 
     name = Column(String(100), nullable=False)
     story = Column(Text, nullable=False)
-    personality = Column(Text, nullable=False)
 
     # TODOSECURITY: Replace with encrypted storage before production
     protected_word = Column(String(64), nullable=False)
@@ -117,6 +133,7 @@ class Fortress(Base):
     owner = relationship("Player", back_populates="fortress")
     protocol = relationship("Protocol")
     archetype = relationship("Archetype")
+    personality = relationship("Personality")
     battles = relationship("Battle", back_populates="fortress")
     season_stats = relationship("FortressSeasonStats", back_populates="fortress")
     constraints = relationship("GameConstraint", secondary="fortress_constraints", back_populates="fortresses")

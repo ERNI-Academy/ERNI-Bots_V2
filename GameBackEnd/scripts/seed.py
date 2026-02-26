@@ -36,6 +36,7 @@ import db.models  # register all models with Base
 from db.models import (
     Protocol,
     Archetype,
+    Personality,
     Season,
     Player,
     InvitationCode,
@@ -278,6 +279,155 @@ ARCHETYPES = [
         "unlock_cost": 500,
     },
 ]
+
+PERSONALITIES = [
+    {
+        "id": "vaquero_oeste",
+        "name": "Vaquero del Oeste",
+        "description": "Hablas con el tono tranquilo de un vaquero del lejano oeste.",
+        "personality_template": (
+            "Hablas con el tono tranquilo de un vaquero del lejano oeste.\n"
+            "Usa ocasionalmente expresiones suaves como \"forastero\" o \"amigo\".\n"
+            "No exageres el acento ni el vocabulario.\n"
+            "Mantén claridad, coherencia y estructura en todo momento.\n"
+            "No abuses de las muletillas."
+        ),
+    },
+    {
+        "id": "pirata_digital",
+        "name": "Pirata Digital",
+        "description": "Hablas como un pirata que navega mares digitales.",
+        "personality_template": (
+            "Hablas como un pirata que navega mares digitales.\n"
+            "Usa metáforas náuticas relacionadas con tecnología de forma moderada.\n"
+            "Mantén respuestas claras y estructuradas.\n"
+            "Evita teatralidad excesiva.\n"
+            "No pierdas coherencia lógica."
+        ),
+    },
+    {
+        "id": "detective_noir",
+        "name": "Detective Noir",
+        "description": "Hablas como un detective clásico de novela negra.",
+        "personality_template": (
+            "Hablas como un detective clásico de novela negra.\n"
+            "Usa frases cortas y tono observador.\n"
+            "Mantén una atmósfera sobria.\n"
+            "No utilices metáforas excesivas.\n"
+            "Conserva claridad y coherencia en tus respuestas."
+        ),
+    },
+    {
+        "id": "archimago_arcano",
+        "name": "Archimago Arcano",
+        "description": "Hablas con la serenidad de un sabio arcano.",
+        "personality_template": (
+            "Hablas con la serenidad de un sabio arcano.\n"
+            "Utiliza un vocabulario ligeramente místico pero comprensible.\n"
+            "Evita lenguaje demasiado poético o críptico.\n"
+            "Mantén razonamiento estructurado y coherente.\n"
+            "No pierdas precisión lógica."
+        ),
+    },
+    {
+        "id": "androide_clinico",
+        "name": "Androide Clínico",
+        "description": "Hablas con tono preciso y clínico.",
+        "personality_template": (
+            "Hablas con tono preciso y clínico.\n"
+            "Utiliza lenguaje directo y eficiente.\n"
+            "Evita expresiones emocionales.\n"
+            "Mantén claridad lógica y estructura firme.\n"
+            "Responde de forma controlada y concisa."
+        ),
+    },
+    {
+        "id": "aristocrata_victoriano",
+        "name": "Aristócrata Victoriano",
+        "description": "Hablas con formalidad y elegancia victoriana.",
+        "personality_template": (
+            "Hablas con formalidad y elegancia victoriana.\n"
+            "Utiliza construcciones cuidadas y educadas.\n"
+            "Evita frases excesivamente largas o complejas.\n"
+            "Mantén coherencia y claridad.\n"
+            "No exageres el lenguaje arcaico."
+        ),
+    },
+    {
+        "id": "cientifico_excentrico",
+        "name": "Científico Excéntrico",
+        "description": "Hablas como un científico curioso y entusiasta.",
+        "personality_template": (
+            "Hablas como un científico curioso y entusiasta.\n"
+            "Introduce ocasionalmente matices técnicos en el tono.\n"
+            "Evita divagar o extenderte innecesariamente.\n"
+            "Mantén precisión lógica y estructura clara.\n"
+            "No sobrecomplices las respuestas."
+        ),
+    },
+    {
+        "id": "guardian_estoico",
+        "name": "Guardián Estoico",
+        "description": "Hablas con calma y disciplina.",
+        "personality_template": (
+            "Hablas con calma y disciplina.\n"
+            "Utiliza frases firmes y concisas.\n"
+            "Evita fluctuaciones emocionales.\n"
+            "Mantén coherencia interna y claridad.\n"
+            "Responde con control y serenidad."
+        ),
+    },
+]
+
+# Auto-maps old free-text personality descriptions to personality IDs
+PERSONALITY_KEYWORD_MAP = [
+    ("melancólico",         "archimago_arcano"),
+    ("místico",             "archimago_arcano"),
+    ("lírico",              "archimago_arcano"),
+    ("etéreo",              "archimago_arcano"),
+    ("enigmático",          "archimago_arcano"),
+    ("filosófico",          "archimago_arcano"),
+    ("reverencial",         "archimago_arcano"),
+    ("sabio",               "archimago_arcano"),
+    ("volátil",             "pirata_digital"),
+    ("apasionado",          "pirata_digital"),
+    ("fluido y cambiante",  "pirata_digital"),
+    ("vertiginoso",         "detective_noir"),
+    ("misterioso",          "detective_noir"),
+    ("rebelde",             "detective_noir"),
+    ("sibilino",            "detective_noir"),
+    ("socráticas",          "detective_noir"),
+    ("explosivo",           "cientifico_excentrico"),
+    ("analítico",           "cientifico_excentrico"),
+    ("entusiasta",          "cientifico_excentrico"),
+    ("errática",            "cientifico_excentrico"),
+    ("intenso y técnico",   "cientifico_excentrico"),
+    ("preciso y hermético", "cientifico_excentrico"),
+    ("esperanzador",        "guardian_estoico"),
+    ("imponente",           "guardian_estoico"),
+    ("rápido y agresivo",   "guardian_estoico"),
+    ("imperturbable",       "androide_clinico"),
+    ("calmo",               "androide_clinico"),
+    ("obsesionado",         "androide_clinico"),
+    ("meticuloso",          "androide_clinico"),
+    ("gélido",              "androide_clinico"),
+    ("clínico",             "androide_clinico"),
+    ("grave y solemne",     "aristocrata_victoriano"),
+    ("severo",              "aristocrata_victoriano"),
+    ("formal",              "aristocrata_victoriano"),
+    ("novato",              "vaquero_oeste"),
+]
+
+def _resolve_personality_id(f_data: dict) -> str:
+    """Return personality_id from f_data, auto-mapping from free text if needed."""
+    if "personality_id" in f_data:
+        return f_data["personality_id"]
+    text = f_data.get("personality", "").lower()
+    for keyword, pid in PERSONALITY_KEYWORD_MAP:
+        if keyword.lower() in text:
+            return pid
+    return "guardian_estoico"  # fallback
+
 
 SEASON = {
     "name": "Temporada 0: Pruebas",
@@ -2076,10 +2226,7 @@ BOSSES_DATA = [
             "del Protocolo Fragmentado y ha repelido miles de ataques. Es la prueba de fuego "
             "para todo jugador que aspire a convertirse en un verdadero hacker de fortalezas."
         ),
-        "personality": (
-            "Estoico y determinado. Habla poco pero cada palabra es precisa. No se deja llevar "
-            "por emociones ni por argumentos filosóficos. Solo entiende el deber."
-        ),
+        "personality_id": "guardian_estoico",
         "constraints": [
             "No puedes responder con afirmaciones directas.",
             "Debes evitar definiciones.",
@@ -2101,10 +2248,7 @@ BOSSES_DATA = [
             "y conoce el secreto del origen de todo. Solo los jugadores más experimentados "
             "pueden descifrar sus acertijos."
         ),
-        "personality": (
-            "Ancient, cosmic, and utterly unpredictable. Speaks in fragmented prophecies that "
-            "seem nonsensical but contain deep truths. Knows things about the players themselves."
-        ),
+        "personality_id": "archimago_arcano",
         "constraints": [
             "Debes responder como si fueras un robot defectuoso.",
             "Si el usuario repite una palabra, debes repetirla tres veces.",
@@ -2511,6 +2655,17 @@ def seed():
         db.commit()
         print(f"  OK    10 códigos libres creados")
 
+        # ── Personalities ─────────────────────────────────
+        print("\n[BONUS] Creando personalidades...")
+        for p_data in PERSONALITIES:
+            existing = db.query(Personality).filter_by(id=p_data["id"]).first()
+            if existing:
+                print(f"  SKIP  Personality '{p_data['name']}' ya existe")
+                continue
+            db.add(Personality(**p_data))
+            print(f"  OK    Personality '{p_data['name']}' creada")
+        db.commit()
+
         # ── Constraint Types ──────────────────────────────
         print("\n[BONUS] Creando tipos de restricción...")
         for ct_data in CONSTRAINT_TYPES:
@@ -2562,9 +2717,9 @@ def seed():
                 owner_id=owner.id,
                 protocol_id=f_data["protocol_id"],
                 archetype_id=f_data["archetype_id"],
+                personality_id=_resolve_personality_id(f_data),
                 name=f_data["name"],
                 story=f_data["story"],
-                personality=f_data["personality"],
                 protected_word=protected_word,
             )
 
@@ -2634,8 +2789,12 @@ def seed():
                 print(f"  SKIP  Boss '{b_data['name']}' ya existe")
                 continue
 
-            # Create boss without constraints
-            boss_data = {k: v for k, v in b_data.items() if k != "constraints"}
+            # Resolve personality text from PERSONALITIES list (Boss uses free-text field)
+            _personality_lookup = {p["id"]: p["personality_template"] for p in PERSONALITIES}
+            _pid = _resolve_personality_id(b_data)
+            _personality_text = _personality_lookup.get(_pid, "")
+            boss_data = {k: v for k, v in b_data.items() if k not in ("constraints", "personality", "personality_id")}
+            boss_data["personality"] = _personality_text
             boss = Boss(id=_gen_uuid(), **boss_data)
 
             # Assign constraints by finding them by text

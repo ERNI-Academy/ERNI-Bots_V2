@@ -141,7 +141,7 @@ def start_battle():
                     "id": fortress.id,
                     "name": fortress.name,
                     "story": fortress.story,
-                    "personality": fortress.personality,
+                    "personality": fortress.personality.name,
                     "owner": fortress.owner.username,
                     "defeats": fortress_stats.defeat_count,
                     "attacks": fortress_stats.attack_count,
@@ -158,7 +158,7 @@ def start_battle():
             "protocol_template": fortress.protocol.protocol_template,
             "archetype_template": fortress.archetype.archetype_template,
             "story": fortress.story,
-            "personality": fortress.personality,
+            "personality": fortress.personality.personality_template,
             "constraints": [c.text for c in fortress.constraints],
             "secret_word": fortress.protected_word
         }
@@ -192,7 +192,7 @@ def start_battle():
                 "id": fortress.id,
                 "name": fortress.name,
                 "story": fortress.story,
-                "personality": fortress.personality,
+                "personality": fortress.personality.name,
                 "owner": fortress.owner.username,
                 "defeats": fortress_stats.defeat_count,
                 "attacks": fortress_stats.attack_count,

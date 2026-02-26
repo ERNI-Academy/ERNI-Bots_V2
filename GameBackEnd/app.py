@@ -18,6 +18,7 @@ from routes.protocols import protocols_bp
 from routes.feed import feed_bp
 from routes.constraints import constraints_bp
 from routes.words import words_bp
+from routes.personalities import personalities_bp
 
 
 def create_app():
@@ -82,7 +83,8 @@ def create_app():
     app.register_blueprint(protocols_bp,   url_prefix="/api/v1/protocols")
     app.register_blueprint(feed_bp,        url_prefix="/api/v1/feed")
     app.register_blueprint(constraints_bp, url_prefix="/api/v1/constraints")
-    app.register_blueprint(words_bp,       url_prefix="/api/v1/words")
+    app.register_blueprint(words_bp,          url_prefix="/api/v1/words")
+    app.register_blueprint(personalities_bp,  url_prefix="/api/v1/personalities")
     return app
 
 

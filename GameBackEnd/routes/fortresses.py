@@ -8,6 +8,7 @@ from db.models import (
     Player,
     Protocol,
     Archetype,
+    Personality,
     Season,
     FortressSeasonStats,
     ActivityLog,
@@ -65,11 +66,11 @@ def create_fortress():
     story = data.get("story")
     protocol_id = data.get("protocol_id")
     archetype_id = data.get("archetype_id")
-    personality = data.get("personality")
+    personality_id = data.get("personality_id")
     constraint_ids = data.get("constraint_ids")
     protected_word = data.get("protected_word")
 
-    if not all([name, story, protocol_id, archetype_id, personality, protected_word]):
+    if not all([name, story, protocol_id, archetype_id, personality_id, protected_word]):
         return jsonify({"error": "Missing required fields"}), 400
 
     db = SessionLocal()
@@ -92,10 +93,11 @@ def create_fortress():
 
     protocol = db.query(Protocol).filter_by(id=protocol_id).first()
     archetype = db.query(Archetype).filter_by(id=archetype_id).first()
+    personality = db.query(Personality).filter_by(id=personality_id).first()
 
-    if not protocol or not archetype:
+    if not protocol or not archetype or not personality:
         db.close()
-        return jsonify({"error": "Invalid protocol or archetype"}), 400
+        return jsonify({"error": "Invalid protocol, archetype or personality"}), 400
     
     # CALCULAR COSTE
     total_cost = protocol.unlock_cost + archetype.unlock_cost
@@ -120,9 +122,9 @@ def create_fortress():
         owner_id=user_id,
         protocol_id=protocol_id,
         archetype_id=archetype_id,
+        personality_id=personality_id,
         name=name,
         story=story,
-        personality=personality,
         protected_word=protected_word,
         created_at=datetime.utcnow(),
         last_reconfigured_at=datetime.utcnow()
@@ -186,7 +188,8 @@ def get_my_fortress():
         "id": fortress.id,
         "name": fortress.name,
         "story": fortress.story,
-        "personality": fortress.personality,
+        "personality": fortress.personality.name,
+        "personality_id": fortress.personality_id,
         "protected_word": fortress.protected_word,
         "constraints": [
             {
@@ -246,6 +249,31 @@ def reconfigure_fortress():
     discount = extra * 10
     cost = max(20, base_cost - discount)
 
+    # Add new protocol/archetype/personality costs if changed
+    new_protocol_id = data.get("protocol_id")
+    new_archetype_id = data.get("archetype_id")
+    new_personality_id = data.get("personality_id")
+
+    if new_protocol_id and new_protocol_id != fortress.protocol_id:
+        new_protocol = db.query(Protocol).filter_by(id=new_protocol_id).first()
+        if not new_protocol:
+            db.close()
+            return jsonify({"error": "Invalid protocol_id"}), 400
+        cost += new_protocol.unlock_cost
+
+    if new_archetype_id and new_archetype_id != fortress.archetype_id:
+        new_archetype = db.query(Archetype).filter_by(id=new_archetype_id).first()
+        if not new_archetype:
+            db.close()
+            return jsonify({"error": "Invalid archetype_id"}), 400
+        cost += new_archetype.unlock_cost
+
+    if new_personality_id and new_personality_id != fortress.personality_id:
+        new_personality = db.query(Personality).filter_by(id=new_personality_id).first()
+        if not new_personality:
+            db.close()
+            return jsonify({"error": "Invalid personality_id"}), 400
+
     # Handle constraint changes
     constraint_ids = data.get("constraint_ids")
     if constraint_ids is not None:
@@ -269,7 +297,7 @@ def reconfigure_fortress():
     # Actualización
     fortress.protocol_id = data.get("protocol_id", fortress.protocol_id)
     fortress.archetype_id = data.get("archetype_id", fortress.archetype_id)
-    fortress.personality = data.get("personality", fortress.personality)
+    fortress.personality_id = data.get("personality_id", fortress.personality_id)
     # Replace constraints explicitly in fortress_constraints
     db.query(FortressConstraint).filter_by(fortress_id=fortress.id).delete()
     for constraint in constraints:
