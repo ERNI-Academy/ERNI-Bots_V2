@@ -171,6 +171,9 @@ export default function DashboardPage() {
                         style={{ top: markerPos[i].top, left: markerPos[i].left }}
                         title={fortress.name}
                     >
+                        <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-1.5 py-0.5 bg-black/80 border border-white/20 text-white text-[9px] font-mono uppercase tracking-wider whitespace-nowrap pointer-events-none">
+                            {fortress.name}
+                        </span>
                     </button>
                 ))}
 
