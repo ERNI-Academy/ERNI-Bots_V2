@@ -48,6 +48,7 @@ from db.models import (
     GameConstraint,
     ProtectedWord,
     PlayerWord,
+    AssetType,
 )
 
 
@@ -2426,6 +2427,12 @@ PROTECTED_WORDS_LIST = [
 # Constraint Types & Constraints
 # ──────────────────────────────────────────────────────────
 
+ASSET_TYPES = [
+    {"id": "at-protocol",   "name": "protocol"},
+    {"id": "at-archetype",  "name": "archetype"},
+    {"id": "at-constraint", "name": "constraint"},
+]
+
 CONSTRAINT_TYPES = [
     {"id": "ct-linguisticas",   "name": "Restricciones Lingüísticas"},
     {"id": "ct-estructurales",  "name": "Restricciones Estructurales"},
@@ -2664,6 +2671,17 @@ def seed():
                 continue
             db.add(Personality(**p_data))
             print(f"  OK    Personality '{p_data['name']}' creada")
+        db.commit()
+
+        # ── Asset Types ───────────────────────────────────
+        print("\n[BONUS] Creando tipos de asset...")
+        for at_data in ASSET_TYPES:
+            existing = db.query(AssetType).filter_by(id=at_data["id"]).first()
+            if existing:
+                print(f"  SKIP  AssetType '{at_data['name']}' ya existe")
+                continue
+            db.add(AssetType(**at_data))
+            print(f"  OK    AssetType '{at_data['name']}' creado")
         db.commit()
 
         # ── Constraint Types ──────────────────────────────

@@ -60,6 +60,12 @@ interface PlayerProfile {
     energy: number;
 }
 
+interface StoreInventory {
+    protocols: { asset_id: string }[];
+    archetypes: { asset_id: string }[];
+    constraints: { asset_id: string }[];
+}
+
 // ─── Static Data ─────────────────────────────────────────────────────────────
 
 const ARCHETYPE_ICONS = [
@@ -106,6 +112,10 @@ function FortressConfigurePage() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+    const [ownedProtocols, setOwnedProtocols] = useState<Set<string>>(new Set());
+    const [ownedArchetypes, setOwnedArchetypes] = useState<Set<string>>(new Set());
+    const [ownedConstraints, setOwnedConstraints] = useState<Set<string>>(new Set());
+    const [buying, setBuying] = useState<string | null>(null);
 
     const toggleGroup = (id: string) => {
         setOpenGroups(prev => {
@@ -118,7 +128,7 @@ function FortressConfigurePage() {
     useEffect(() => {
         async function load() {
             try {
-                const [protocolsRes, archetypesRes, personalitiesRes, constraintsRes, wordsRes, profileRes, fortressRes] = await Promise.all([
+                const [protocolsRes, archetypesRes, personalitiesRes, constraintsRes, wordsRes, profileRes, fortressRes, inventoryData] = await Promise.all([
                     fetch("/api/protocols", { credentials: "include" }),
                     fetch("/api/archetypes", { credentials: "include" }),
                     fetch("/api/personalities", { credentials: "include" }),
@@ -126,6 +136,7 @@ function FortressConfigurePage() {
                     fetch("/api/words", { credentials: "include" }),
                     fetch("/api/auth/me", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
                     fetch("/api/fortresses/me", { credentials: "include" }),
+                    fetch("/api/store/inventory", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
                 ]);
 
                 if (protocolsRes.ok) {
@@ -160,6 +171,13 @@ function FortressConfigurePage() {
 
                 setPlayer(profileRes);
 
+                if (inventoryData) {
+                    const inv = inventoryData as StoreInventory;
+                    setOwnedProtocols(new Set(inv.protocols.map(p => p.asset_id)));
+                    setOwnedArchetypes(new Set(inv.archetypes.map(a => a.asset_id)));
+                    setOwnedConstraints(new Set(inv.constraints.map(c => c.asset_id)));
+                }
+
                 if (fortressRes.ok) {
                     const f: ExistingFortress = await fortressRes.json();
                     setExistingFortress(f);
@@ -184,6 +202,38 @@ function FortressConfigurePage() {
 
     const MAX_CONSTRAINTS = 3;
 
+    const buyAsset = async (asset_type: "protocol" | "archetype" | "constraint", asset_id: string) => {
+        setBuying(asset_id);
+        setError(null);
+        try {
+            const res = await fetch("/api/store/buy", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ asset_type, asset_id }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setError(data.error ?? "Error al comprar el asset");
+                return;
+            }
+            if (asset_type === "protocol") {
+                setOwnedProtocols(prev => new Set([...prev, asset_id]));
+                setSelectedProtocol(asset_id);
+            } else if (asset_type === "archetype") {
+                setOwnedArchetypes(prev => new Set([...prev, asset_id]));
+                setSelectedArchetype(asset_id);
+            } else {
+                setOwnedConstraints(prev => new Set([...prev, asset_id]));
+            }
+            if (player && typeof data.credits_remaining === "number") {
+                setPlayer({ ...player, credits: data.credits_remaining });
+            }
+        } finally {
+            setBuying(null);
+        }
+    };
+
     const toggleConstraint = (key: string) => {
         setConstraints(prev => {
             const next = new Set(prev);
@@ -200,12 +250,6 @@ function FortressConfigurePage() {
     const selectedArchetypeData = archetypes.find(a => a.id === selectedArchetype);
 
     const allConstraintItems = constraintTypes.flatMap(ct => ct.constraints);
-    const constraintCost = allConstraintItems.filter(c => constraints.has(c.id)).reduce((s, c) => s + c.price, 0);
-    const totalCost =
-        (selectedProtocolData?.unlock_cost ?? 0) +
-        (selectedArchetypeData?.unlock_cost ?? 0) +
-        constraintCost;
-    const canAfford = (player?.credits ?? 0) >= totalCost;
 
     const handleSubmit = async () => {
         setError(null);
@@ -472,43 +516,54 @@ function FortressConfigurePage() {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {protocols.map(protocol => {
                                             const isSelected = selectedProtocol === protocol.id;
-                                            const affordable = (player?.credits ?? 0) >= protocol.unlock_cost || protocol.unlock_cost === 0;
+                                            const isOwned = ownedProtocols.has(protocol.id) || protocol.unlock_cost === 0;
+                                            const canAffordBuy = (player?.credits ?? 0) >= protocol.unlock_cost;
+                                            const isBuying = buying === protocol.id;
                                             return (
-                                                <button
+                                                <div
                                                     key={protocol.id}
-                                                    onClick={() => setSelectedProtocol(protocol.id)}
-                                                    disabled={!affordable}
-                                                    className={`text-left p-3 flex justify-between items-start transition-all border cursor-pointer disabled:cursor-not-allowed ${isSelected
-                                                        ? "border-[#00ff41] bg-[#00ff41]/15 shadow-[0_0_10px_#00ff4120]"
-                                                        : affordable
-                                                            ? "border-[#00ff41]/20 bg-[#00ff41]/5 hover:border-[#00ff41]/50 hover:bg-[#00ff41]/10"
-                                                            : "border-slate-700 bg-black/30 opacity-50"
-                                                        }`}
+                                                    onClick={isOwned ? () => setSelectedProtocol(protocol.id) : undefined}
+                                                    className={`p-3 flex flex-col gap-2 transition-all border ${
+                                                        isSelected
+                                                            ? "border-[#00ff41] bg-[#00ff41]/15 shadow-[0_0_10px_#00ff4120] cursor-pointer"
+                                                            : isOwned
+                                                                ? "border-[#00ff41]/30 bg-[#00ff41]/5 hover:border-[#00ff41]/50 hover:bg-[#00ff41]/10 cursor-pointer"
+                                                                : "border-slate-700 bg-black/30"
+                                                    }`}
                                                 >
-                                                    <div className="flex flex-col gap-1 mr-2 flex-1 min-w-0">
-                                                        <span className={`font-bold text-sm ${isSelected ? "text-[#00ff41]" : "text-slate-300"}`}>
-                                                            {protocol.name}
-                                                        </span>
-                                                        <span className="text-sm text-slate-300 leading-tight">
-                                                            {protocol.description}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex flex-col items-end shrink-0">
-                                                        <span className={`font-bold text-sm ${isSelected ? "text-[#00ff41]" : "text-slate-400"}`}>
-                                                            {protocol.unlock_cost === 0 ? "FREE" : `${protocol.unlock_cost} ⌬`}
-                                                        </span>
-                                                        {isSelected && (
-                                                            <span className="text-xs bg-[#00ff41] text-black px-1 font-bold mt-1">
-                                                                SELEC.
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <div className="flex flex-col gap-1 flex-1 min-w-0">
+                                                            <span className={`font-bold text-sm ${isSelected ? "text-[#00ff41]" : "text-slate-300"}`}>
+                                                                {protocol.name}
                                                             </span>
-                                                        )}
-                                                        {!affordable && !isSelected && (
-                                                            <span className="text-xs border border-slate-700 px-1 text-slate-300 mt-1">
-                                                                BLOQUEADO
+                                                            <span className="text-sm text-slate-300 leading-tight">
+                                                                {protocol.description}
                                                             </span>
-                                                        )}
+                                                        </div>
+                                                        <div className="flex flex-col items-end shrink-0">
+                                                            {isSelected && (
+                                                                <span className="text-xs bg-[#00ff41] text-black px-1 font-bold">SELEC.</span>
+                                                            )}
+                                                            {isOwned && !isSelected && (
+                                                                <span className="text-xs bg-[#00ff41]/20 border border-[#00ff41]/40 text-[#00ff41] px-1 font-bold">
+                                                                    {protocol.unlock_cost === 0 ? "FREE" : "COMPRADO"}
+                                                                </span>
+                                                            )}
+                                                            {!isOwned && (
+                                                                <span className="text-xs text-slate-400 font-bold">{protocol.unlock_cost} ⌬</span>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </button>
+                                                    {!isOwned && (
+                                                        <button
+                                                            onClick={() => buyAsset("protocol", protocol.id)}
+                                                            disabled={!canAffordBuy || isBuying}
+                                                            className="w-full py-1.5 text-xs font-bold uppercase tracking-wider border border-[#00ff41]/50 text-[#00ff41] hover:bg-[#00ff41]/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                                        >
+                                                            {isBuying ? "COMPRANDO..." : canAffordBuy ? `COMPRAR · ${protocol.unlock_cost} ⌬` : "FONDOS INSUFICIENTES"}
+                                                        </button>
+                                                    )}
+                                                </div>
                                             );
                                         })}
                                     </div>
@@ -534,38 +589,55 @@ function FortressConfigurePage() {
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                         {archetypes.map((archetype, i) => {
                                             const isSelected = selectedArchetype === archetype.id;
-                                            const affordable = (player?.credits ?? 0) >= archetype.unlock_cost || archetype.unlock_cost === 0;
+                                            const isOwned = ownedArchetypes.has(archetype.id) || archetype.unlock_cost === 0;
+                                            const canAffordBuy = (player?.credits ?? 0) >= archetype.unlock_cost;
+                                            const isBuying = buying === archetype.id;
                                             const icon = ARCHETYPE_ICONS[i % ARCHETYPE_ICONS.length];
                                             return (
-                                                <button
+                                                <div
                                                     key={archetype.id}
-                                                    onClick={() => setSelectedArchetype(archetype.id)}
-                                                    disabled={!affordable}
-                                                    className={`text-left p-3 flex flex-col gap-1.5 transition-all border relative overflow-hidden cursor-pointer disabled:cursor-not-allowed ${isSelected
-                                                        ? "border-2 border-[#00ffff] bg-[#00ffff]/15 shadow-[0_0_12px_#00ffff20]"
-                                                        : affordable
-                                                            ? "border border-[#00ffff]/20 bg-[#00ffff]/5 hover:border-[#00ffff]/50 hover:bg-[#00ffff]/10"
-                                                            : "border border-slate-700 bg-black/30 opacity-50 grayscale"
-                                                        }`}
+                                                    onClick={isOwned ? () => setSelectedArchetype(archetype.id) : undefined}
+                                                    className={`p-3 flex flex-col gap-1.5 transition-all border relative overflow-hidden ${
+                                                        isSelected
+                                                            ? "border-2 border-[#00ffff] bg-[#00ffff]/15 shadow-[0_0_12px_#00ffff20] cursor-pointer"
+                                                            : isOwned
+                                                                ? "border border-[#00ffff]/20 bg-[#00ffff]/5 hover:border-[#00ffff]/50 hover:bg-[#00ffff]/10 cursor-pointer"
+                                                                : "border border-slate-700 bg-black/30"
+                                                    }`}
                                                 >
                                                     {isSelected && (
                                                         <div className="absolute top-0 right-0 bg-[#00ffff] text-black text-xs px-1.5 font-bold">
                                                             SELEC.
                                                         </div>
                                                     )}
-                                                    <span className={`material-symbols-outlined text-2xl ${isSelected ? "text-[#00ffff]" : affordable ? "text-slate-400" : "text-slate-400"}`}>
+                                                    {isOwned && !isSelected && archetype.unlock_cost > 0 && (
+                                                        <div className="absolute top-0 right-0 bg-[#00ffff]/20 border border-[#00ffff]/40 text-[#00ffff] text-xs px-1.5 font-bold">
+                                                            COMPRADO
+                                                        </div>
+                                                    )}
+                                                    <span className={`material-symbols-outlined text-2xl ${isSelected ? "text-[#00ffff]" : isOwned ? "text-slate-400" : "text-slate-600"}`}>
                                                         {icon}
                                                     </span>
-                                                    <span className={`font-bold text-sm leading-tight ${isSelected ? "text-[#00ffff]" : "text-slate-300"}`}>
+                                                    <span className={`font-bold text-sm leading-tight ${isSelected ? "text-[#00ffff]" : isOwned ? "text-slate-300" : "text-slate-500"}`}>
                                                         {archetype.name}
                                                     </span>
-                                                    <span className="text-sm text-slate-300 leading-tight">
+                                                    <span className={`text-sm leading-tight ${isOwned ? "text-slate-300" : "text-slate-500"}`}>
                                                         {archetype.description}
                                                     </span>
-                                                    <span className={`font-bold text-sm mt-auto ${isSelected ? "text-[#00ffff]" : "text-slate-400"}`}>
-                                                        {archetype.unlock_cost === 0 ? "FREE" : `${archetype.unlock_cost} ⌬`}
-                                                    </span>
-                                                </button>
+                                                    {isOwned ? (
+                                                        <span className={`font-bold text-sm mt-auto ${isSelected ? "text-[#00ffff]" : "text-slate-400"}`}>
+                                                            {archetype.unlock_cost === 0 ? "FREE" : "COMPRADO"}
+                                                        </span>
+                                                    ) : (
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); buyAsset("archetype", archetype.id); }}
+                                                            disabled={!canAffordBuy || isBuying}
+                                                            className="mt-auto w-full py-1 text-xs font-bold uppercase tracking-wider border border-[#00ffff]/50 text-[#00ffff] hover:bg-[#00ffff]/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                                        >
+                                                            {isBuying ? "..." : canAffordBuy ? `${archetype.unlock_cost} ⌬` : "BLOQ."}
+                                                        </button>
+                                                    )}
+                                                </div>
                                             );
                                         })}
                                     </div>
@@ -623,7 +695,33 @@ function FortressConfigurePage() {
                                                     <div className="px-3 pb-3 space-y-1.5 bg-black/20">
                                                         {group.constraints.map(constraint => {
                                                             const active = constraints.has(constraint.id);
+                                                            const isOwned = ownedConstraints.has(constraint.id) || constraint.price === 0;
                                                             const locked = !active && constraints.size >= MAX_CONSTRAINTS;
+                                                            const canAffordBuy = (player?.credits ?? 0) >= constraint.price;
+                                                            const isBuying = buying === constraint.id;
+
+                                                            if (!isOwned) {
+                                                                return (
+                                                                    <div
+                                                                        key={constraint.id}
+                                                                        className={`flex items-center gap-3 px-3 py-2.5 border-l-[3px] ${
+                                                                            canAffordBuy
+                                                                                ? "bg-black/20 border-slate-600"
+                                                                                : "bg-black/20 border-slate-800 opacity-40"
+                                                                        }`}
+                                                                    >
+                                                                        <p className="text-sm leading-snug flex-1 font-medium text-slate-500">{constraint.text}</p>
+                                                                        <button
+                                                                            onClick={() => buyAsset("constraint", constraint.id)}
+                                                                            disabled={!canAffordBuy || isBuying}
+                                                                            className="text-xs font-bold border border-[#ff0033]/50 text-[#ff0033] px-2 py-1 hover:bg-[#ff0033]/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 uppercase tracking-wider"
+                                                                        >
+                                                                            {isBuying ? "..." : canAffordBuy ? `COMPRAR ${constraint.price} ⌬` : `${constraint.price} ⌬`}
+                                                                        </button>
+                                                                    </div>
+                                                                );
+                                                            }
+
                                                             return (
                                                                 <label
                                                                     key={constraint.id}
@@ -646,9 +744,7 @@ function FortressConfigurePage() {
                                                                         {constraint.text}
                                                                     </p>
                                                                     {constraint.price > 0 && (
-                                                                        <span className={`font-bold text-xs shrink-0 ml-2 ${active ? "text-[#ff0033]" : "text-slate-500"}`}>
-                                                                            -{constraint.price} ⌬
-                                                                        </span>
+                                                                        <span className="text-xs text-[#00ff41] font-bold shrink-0 ml-2">COMPRADO</span>
                                                                     )}
                                                                 </label>
                                                             );
@@ -662,51 +758,13 @@ function FortressConfigurePage() {
                                 {constraints.size > 0 && (
                                     <div className="px-4 py-2.5 text-right text-xs text-[#ff0033] font-mono font-bold tracking-widest">
                                         {constraints.size} RESTRICCIÓN{constraints.size !== 1 ? "ES" : ""} ACTIVA{constraints.size !== 1 ? "S" : ""}
-                                        {constraintCost > 0 && <> · -{constraintCost} ⌬</>}
                                     </div>
                                 )}
                             </div>
                         </section>
 
-                        {/* ── COST SUMMARY ── */}
-                        <div className="panel-float p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                            <div className="flex flex-col gap-1 font-mono text-sm">
-                                <div className="flex gap-4">
-                                    <span className="text-slate-300 uppercase">Protocolo</span>
-                                    <span className="text-[#00ff41] font-bold">
-                                        {selectedProtocolData ? `${selectedProtocolData.unlock_cost} ⌬` : "—"}
-                                    </span>
-                                </div>
-                                <div className="flex gap-4">
-                                    <span className="text-slate-300 uppercase">Arquetipo</span>
-                                    <span className="text-[#00ffff] font-bold">
-                                        {selectedArchetypeData ? `${selectedArchetypeData.unlock_cost} ⌬` : "—"}
-                                    </span>
-                                </div>
-                                <div className="flex gap-4">
-                                    <span className="text-slate-300 uppercase">Restricciones</span>
-                                    <span className="text-[#ff0033] font-bold">-{constraintCost} ⌬</span>
-                                </div>
-                                <div className="h-px w-full bg-white/10 my-1" />
-                                <div className="flex gap-4">
-                                    <span className="text-slate-300 uppercase">Coste total</span>
-                                    <span className={`font-bold text-sm ${canAfford ? "text-[#ffd700]" : "text-[#ff0033]"}`}>
-                                        {totalCost} ⌬
-                                    </span>
-                                </div>
-                                <div className="flex gap-4">
-                                    <span className="text-slate-300 uppercase">Balance</span>
-                                    <span className="text-slate-300">
-                                        {player !== null ? `${player.credits} ⌬ disponibles` : "..."}
-                                    </span>
-                                </div>
-                                {!canAfford && (
-                                    <div className="text-[#ff0033] font-bold text-xs mt-1 animate-pulse">
-                                        FONDOS_INSUFICIENTES
-                                    </div>
-                                )}
-                            </div>
-
+                        {/* ── ACTIONS ── */}
+                        <div className="panel-float p-4 flex justify-end">
                             <div className="flex flex-col gap-2 w-full sm:w-auto">
                                 {/* Error */}
                                 {error && (
@@ -723,7 +781,7 @@ function FortressConfigurePage() {
                                 {/* Deploy button */}
                                 <button
                                     onClick={handleSubmit}
-                                    disabled={saving || !canAfford}
+                                    disabled={saving}
                                     className="flex items-center justify-center gap-2 bg-[#00ffff]/10 border border-[#00ffff]/50 text-[#00ffff] font-bold text-sm px-6 py-3 hover:bg-[#00ffff]/25 transition-all uppercase tracking-widest cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed glitch-button"
                                 >
                                     <span className="material-symbols-outlined text-base">bolt</span>

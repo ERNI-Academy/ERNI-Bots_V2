@@ -6,7 +6,7 @@ from sqlalchemy import (
     DateTime,
     Text,
     Boolean,
-    Index
+    Index,
 )
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -40,6 +40,7 @@ class Player(Base):
     fortress = relationship("Fortress", back_populates="owner", uselist=False)
     battles = relationship("Battle", back_populates="attacker")
     season_stats = relationship("PlayerSeasonStats", back_populates="player")
+    purchased_assets = relationship("PlayerAsset", back_populates="player")
 
 
 # ==========================
@@ -487,6 +488,65 @@ class ProtectedWord(Base):
 
 
 Index("idx_protected_word", ProtectedWord.word)
+
+
+# ==========================
+# ASSET TYPE
+# ==========================
+
+class AssetType(Base):
+    """
+    Catalogue of purchasable asset types.
+    Seeded once: 'protocol', 'archetype', 'constraint'.
+    """
+    __tablename__ = "asset_types"
+
+    id = Column(String, primary_key=True)
+    name = Column(String(50), unique=True, nullable=False)
+
+    assets = relationship("PlayerAsset", back_populates="asset_type")
+
+
+Index("idx_asset_type_name", AssetType.name)
+
+
+# ==========================
+# PLAYER ASSET (STORE)
+# ==========================
+
+class PlayerAsset(Base):
+    """
+    Tracks assets purchased by a player in the store.
+    asset_type_id: FK → asset_types.id  ('protocol' | 'archetype' | 'constraint')
+    asset_id:      ID of the purchased Protocol / Archetype / GameConstraint
+    purchase_price: credits paid at the time of purchase (snapshot)
+    """
+    __tablename__ = "player_assets"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    player_id = Column(String, ForeignKey("players.id"), nullable=False)
+
+    asset_type_id = Column(String, ForeignKey("asset_types.id"), nullable=False)
+    asset_id = Column(String, nullable=False)
+    # References Protocol.id / Archetype.id / GameConstraint.id
+
+    purchased_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    purchase_price = Column(Integer, nullable=False)
+    # Snapshot of unlock_cost / price at time of purchase
+
+    player = relationship("Player", back_populates="purchased_assets")
+    asset_type = relationship("AssetType", back_populates="assets")
+
+
+Index(
+    "idx_player_asset_unique",
+    PlayerAsset.player_id,
+    PlayerAsset.asset_type_id,
+    PlayerAsset.asset_id,
+    unique=True
+)
+Index("idx_player_asset_player", PlayerAsset.player_id)
+Index("idx_player_asset_type", PlayerAsset.asset_type_id)
 
 
 # ==========================

@@ -19,6 +19,7 @@ from routes.feed import feed_bp
 from routes.constraints import constraints_bp
 from routes.words import words_bp
 from routes.personalities import personalities_bp
+from routes.store import store_bp
 
 
 def create_app():
@@ -85,6 +86,7 @@ def create_app():
     app.register_blueprint(constraints_bp, url_prefix="/api/v1/constraints")
     app.register_blueprint(words_bp,          url_prefix="/api/v1/words")
     app.register_blueprint(personalities_bp,  url_prefix="/api/v1/personalities")
+    app.register_blueprint(store_bp,          url_prefix="/api/v1/store")
     return app
 
 

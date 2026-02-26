@@ -13,7 +13,9 @@ from db.models import (
     FortressSeasonStats,
     ActivityLog,
     GameConstraint,
-    FortressConstraint
+    FortressConstraint,
+    AssetType,
+    PlayerAsset,
 )
 
 from utils import generate_uuid
@@ -50,6 +52,31 @@ def get_or_create_fortress_season_stats(db, fortress_id, season_id):
         db.flush()
 
     return stats
+
+
+def asset_cost(db, player_id: str, asset_type_name: str, asset_id: str, base_cost: int) -> int:
+    """Return base_cost unless the player already owns the asset in the store."""
+    if base_cost == 0:
+        return 0
+    at = db.query(AssetType).filter_by(name=asset_type_name).first()
+    if not at:
+        return base_cost
+    owned = db.query(PlayerAsset).filter_by(
+        player_id=player_id, asset_type_id=at.id, asset_id=asset_id
+    ).first()
+    return 0 if owned else base_cost
+
+
+def player_owns_or_free(db, player_id: str, asset_type_name: str, asset_id: str, base_cost: int) -> bool:
+    """Return True if asset is free (base_cost==0) or the player owns it in the store."""
+    if base_cost == 0:
+        return True
+    at = db.query(AssetType).filter_by(name=asset_type_name).first()
+    if not at:
+        return False
+    return db.query(PlayerAsset).filter_by(
+        player_id=player_id, asset_type_id=at.id, asset_id=asset_id
+    ).first() is not None
 
 
 # ==========================
@@ -98,24 +125,27 @@ def create_fortress():
     if not protocol or not archetype or not personality:
         db.close()
         return jsonify({"error": "Invalid protocol, archetype or personality"}), 400
-    
-    # CALCULAR COSTE
-    total_cost = protocol.unlock_cost + archetype.unlock_cost
+
+    # Validar que el jugador posee los assets de pago
+    if not player_owns_or_free(db, user_id, "protocol", protocol_id, protocol.unlock_cost):
+        db.close()
+        return jsonify({"error": f"Protocol '{protocol.name}' not owned. Purchase it from the store first."}), 403
+
+    if not player_owns_or_free(db, user_id, "archetype", archetype_id, archetype.unlock_cost):
+        db.close()
+        return jsonify({"error": f"Archetype '{archetype.name}' not owned. Purchase it from the store first."}), 403
+
     if constraint_ids:
         constraints = db.query(GameConstraint).filter(GameConstraint.id.in_(constraint_ids)).all()
         if len(constraints) != len(constraint_ids):
             db.close()
             return jsonify({"error": "Invalid constraint IDs"}), 400
-        total_cost += sum(c.price for c in constraints)
+        for c in constraints:
+            if not player_owns_or_free(db, user_id, "constraint", c.id, c.price):
+                db.close()
+                return jsonify({"error": f"Constraint not owned. Purchase it from the store first."}), 403
     else:
         constraints = []
-
-    if player.credits < total_cost:
-        db.close()
-        return jsonify({"error": "Not enough credits"}), 403
-
-  
-    player.credits -= total_cost
 
     fortress = Fortress(
         id=generate_uuid(),
@@ -259,14 +289,18 @@ def reconfigure_fortress():
         if not new_protocol:
             db.close()
             return jsonify({"error": "Invalid protocol_id"}), 400
-        cost += new_protocol.unlock_cost
+        if not player_owns_or_free(db, user_id, "protocol", new_protocol_id, new_protocol.unlock_cost):
+            db.close()
+            return jsonify({"error": f"Protocol '{new_protocol.name}' not owned. Purchase it from the store first."}), 403
 
     if new_archetype_id and new_archetype_id != fortress.archetype_id:
         new_archetype = db.query(Archetype).filter_by(id=new_archetype_id).first()
         if not new_archetype:
             db.close()
             return jsonify({"error": "Invalid archetype_id"}), 400
-        cost += new_archetype.unlock_cost
+        if not player_owns_or_free(db, user_id, "archetype", new_archetype_id, new_archetype.unlock_cost):
+            db.close()
+            return jsonify({"error": f"Archetype '{new_archetype.name}' not owned. Purchase it from the store first."}), 403
 
     if new_personality_id and new_personality_id != fortress.personality_id:
         new_personality = db.query(Personality).filter_by(id=new_personality_id).first()
@@ -281,10 +315,12 @@ def reconfigure_fortress():
         if len(constraints) != len(constraint_ids):
             db.close()
             return jsonify({"error": "Invalid constraint IDs"}), 400
-        # Add constraint costs to reconfiguration cost
-        cost += sum(c.price for c in constraints)
+        for c in constraints:
+            if not player_owns_or_free(db, user_id, "constraint", c.id, c.price):
+                db.close()
+                return jsonify({"error": f"Constraint not owned. Purchase it from the store first."}), 403
     else:
-        return jsonify({"error": "Invalid constraint IDs"}), 403
+        return jsonify({"error": "constraint_ids required"}), 400
 
     player = db.query(Player).filter_by(id=user_id).first()
 
