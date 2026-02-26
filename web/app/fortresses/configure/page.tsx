@@ -453,10 +453,10 @@ function FortressConfigurePage() {
                                                         }`}
                                                 >
                                                     <div className="flex flex-col gap-1 mr-2 flex-1 min-w-0">
-                                                        <span className={`font-bold text-sm truncate ${isSelected ? "text-[#00ff41]" : "text-slate-300"}`}>
+                                                        <span className={`font-bold text-sm ${isSelected ? "text-[#00ff41]" : "text-slate-300"}`}>
                                                             {protocol.name}
                                                         </span>
-                                                        <span className="text-sm text-slate-300 leading-tight line-clamp-2">
+                                                        <span className="text-sm text-slate-300 leading-tight">
                                                             {protocol.description}
                                                         </span>
                                                     </div>
@@ -526,7 +526,7 @@ function FortressConfigurePage() {
                                                     <span className={`font-bold text-sm leading-tight ${isSelected ? "text-[#00ffff]" : "text-slate-300"}`}>
                                                         {archetype.name}
                                                     </span>
-                                                    <span className="text-sm text-slate-300 leading-tight line-clamp-2">
+                                                    <span className="text-sm text-slate-300 leading-tight">
                                                         {archetype.description}
                                                     </span>
                                                     <span className={`font-bold text-sm mt-auto ${isSelected ? "text-[#00ffff]" : "text-slate-400"}`}>
