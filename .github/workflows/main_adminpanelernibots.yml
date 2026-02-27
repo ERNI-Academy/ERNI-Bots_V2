@@ -20,34 +20,14 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '24'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: ./AdminPanelWeb/package-lock.json
 
-      - name: Install dependencies
-        working-directory: ./AdminPanelWeb
-        run: npm ci
-
-      - name: Build application
-        working-directory: ./AdminPanelWeb
-        run: npm run build
-
-      - name: Prepare standalone bundle
-        working-directory: ./AdminPanelWeb
-        run: |
-          # Copy static assets into the standalone output
-          cp -r .next/static .next/standalone/.next/static
-          cp -r public .next/standalone/public
-          # Inject package.json so Azure's "npm start" runs the standalone server
-          echo '{"name":"adminpanel","scripts":{"start":"node server.js"}}' > .next/standalone/package.json
-          # Inject startup.sh in case Azure is configured to use it
-          printf '#!/bin/bash\ncd /home/site/wwwroot\nexec node server.js\n' > .next/standalone/startup.sh
-          chmod +x .next/standalone/startup.sh
-
       - name: Zip artifact for deployment
-        working-directory: ./AdminPanelWeb/.next/standalone
+        working-directory: ./AdminPanelWeb
         run: |
-          zip -r ../../../../release.zip .
+          zip -r ../release.zip . -x "*.git*" ".next/*" "node_modules/*"
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
