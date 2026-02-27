@@ -1,6 +1,6 @@
 import os
 from datetime import timedelta
-
+import urllib.parse
 
 class Config:
     # ── JWT ────────────────────────────────────────────────────────────────
