@@ -49,6 +49,9 @@ from db.models import (
     Season,
     PlayerSeasonStats,
     PlayerHistoryEntry,
+    Protocol,
+    Archetype,
+    Personality,
 )
 
 logger = logging.getLogger(__name__)
@@ -724,5 +727,40 @@ def stats():
             "free_codes":    free_codes,
             "active_season": active_season.name if active_season else None,
         })
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────────────────
+# GET /fortresses
+# ──────────────────────────────────────────────────────────
+
+@admin_bp.get("/fortresses")
+def list_fortresses():
+    """List all fortresses with owner, protocol and archetype info."""
+    if not _check_admin():
+        return jsonify({"error": "Forbidden"}), 403
+
+    db = SessionLocal()
+    try:
+        fortresses = (
+            db.query(Fortress)
+            .order_by(Fortress.created_at.desc())
+            .all()
+        )
+        result = []
+        for f in fortresses:
+            result.append({
+                "id":                   f.id,
+                "name":                 f.name,
+                "owner":                f.owner.username if f.owner else None,
+                "owner_id":             f.owner_id,
+                "protocol":             f.protocol.name if f.protocol else None,
+                "archetype":            f.archetype.name if f.archetype else None,
+                "personality":          f.personality.name if f.personality else None,
+                "created_at":           f.created_at.isoformat() + "Z" if f.created_at else None,
+                "last_reconfigured_at": f.last_reconfigured_at.isoformat() + "Z" if f.last_reconfigured_at else None,
+            })
+        return jsonify(result)
     finally:
         db.close()
