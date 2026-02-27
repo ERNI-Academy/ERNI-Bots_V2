@@ -7,21 +7,9 @@ load_dotenv()
 
 from config import Config
 from extensions import limiter
-from routes.auth import auth_bp
-from routes.players import players_bp
-from routes.fortresses import fortresses_bp
-from routes.battles import battles_bp
-from routes.leaderboard import leaderboard_bp
 from routes.admin import admin_bp
-from routes.admin_catalog import admin_catalog_bp
 from routes.admin_bosses import admin_bosses_bp
-from routes.archetypes import archetypes_bp
-from routes.protocols import protocols_bp
-from routes.feed import feed_bp
-from routes.constraints import constraints_bp
-from routes.words import words_bp
-from routes.personalities import personalities_bp
-from routes.store import store_bp
+from routes.admin_catalog import admin_catalog_bp
 
 
 def create_app():
