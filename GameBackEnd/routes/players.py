@@ -246,12 +246,14 @@ def matchmaking():
     MIN_RESULTS = 6
     INITIAL_DELTA = 100
 
-    # Fortalezas ya vencidas esta season
+    # Fortalezas ya vencidas esta season Y que no han sido reconfiguradas desde la victoria
     defeated_fortress_ids = (
         db.query(Battle.fortress_id)
+        .join(Fortress, Fortress.id == Battle.fortress_id)
         .filter(
             Battle.attacker_id == user_id,
-            Battle.status == "won"
+            Battle.status == "won",
+            Battle.updated_at >= Fortress.last_reconfigured_at
         )
         .all()
     )

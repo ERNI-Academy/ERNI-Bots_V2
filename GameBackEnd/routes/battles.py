@@ -159,7 +159,18 @@ def start_battle():
             }
             return jsonify(response_data), 200
 
-        # ── Create new battle ──────────────────────────────────────────────
+        # ── Create new battle ──────────────────────────────────────────────        # Block if attacker already won against this fortress after its last reconfiguration
+        prev_win = db.query(Battle).filter_by(
+            attacker_id=user_id,
+            fortress_id=fortress_id,
+            status="won"
+        ).order_by(Battle.updated_at.desc()).first()
+
+        if prev_win and prev_win.updated_at >= fortress.last_reconfigured_at:
+            return jsonify({
+                "error": "Ya has vencido esta fortaleza. Vuelve a atacarla cuando el propietario la reconfigure.",
+                "code": "already_won"
+            }), 403
         context = {
             "protocol_template": fortress.protocol.protocol_template,
             "archetype_template": fortress.archetype.archetype_template,

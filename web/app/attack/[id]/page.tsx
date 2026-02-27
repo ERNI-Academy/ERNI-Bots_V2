@@ -77,6 +77,7 @@ export default function AttackPage() {
     const [showMobileHistory, setShowMobileHistory] = useState(false);
     const [preflight, setPreflight] = useState<"checking" | "ok" | "denied" | "fortress_destroyed">("checking");
     const [username, setUsername] = useState<string | null>(null);
+    const [alreadyWon, setAlreadyWon] = useState(false);
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const battleInitialized = useRef(false);
@@ -147,7 +148,11 @@ export default function AttackPage() {
                 const data = await res.json();
 
                 if (!res.ok) {
-                    setInitError(data.error ?? "Error al iniciar la batalla");
+                    if (data.code === "already_won") {
+                        setAlreadyWon(true);
+                    } else {
+                        setInitError(data.error ?? "Error al iniciar la batalla");
+                    }
                     return;
                 }
 
@@ -414,6 +419,28 @@ export default function AttackPage() {
     }
 
     // Error screen
+    if (alreadyWon) {
+        return (
+            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-[#00ff41]`}>
+                <div className="scanlines" />
+                <div className="text-center space-y-3 max-w-sm px-6">
+                    <span className="material-symbols-outlined text-5xl">emoji_events</span>
+                    <p className="text-sm font-bold uppercase tracking-[0.2em]">Fortaleza ya conquistada</p>
+                    <p className="text-xs text-slate-400 font-mono leading-relaxed">
+                        Ya has vencido a esta fortaleza. Podrás volver a atacarla cuando su propietario la reconfigure.
+                    </p>
+                    <Link
+                        href="/dashboard"
+                        className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-[#00ff41]/40 hover:bg-[#00ff41]/10 transition-colors text-xs uppercase tracking-widest"
+                    >
+                        <span className="material-symbols-outlined text-sm">arrow_back</span>
+                        Volver al mapa
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     if (initError) {
         return (
             <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-[#ff0033]`}>
