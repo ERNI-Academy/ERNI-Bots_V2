@@ -32,14 +32,17 @@ jobs:
         working-directory: ./AdminPanelWeb
         run: npm run build
 
-      - name: Prune dev dependencies
-        working-directory: ./AdminPanelWeb
-        run: npm prune --production
-
-      - name: Zip artifact for deployment
+      - name: Prepare standalone bundle
         working-directory: ./AdminPanelWeb
         run: |
-          zip -r ../release.zip . -x "*.git*"
+          cp -r .next/static .next/standalone/.next/static
+          cp -r public .next/standalone/public
+          echo '{"scripts":{"start":"node server.js"}}' > .next/standalone/package.json
+
+      - name: Zip artifact for deployment
+        working-directory: ./AdminPanelWeb/.next/standalone
+        run: |
+          zip -r ../../../../release.zip .
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
