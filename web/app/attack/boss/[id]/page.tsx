@@ -55,6 +55,8 @@ export default function BossAttackPage() {
     const MAX_TURNS = 10;
     const [sentMessages, setSentMessages] = useState<string[]>([]);
     const [showMobileHistory, setShowMobileHistory] = useState(false);
+    const [showMobileStory, setShowMobileStory] = useState(false);
+    const [showStoryIntro, setShowStoryIntro] = useState(false);
     const [preflight, setPreflight] = useState<"checking" | "ok" | "denied">("checking");
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -140,6 +142,7 @@ export default function BossAttackPage() {
                         ...prev,
                         { id: uid(), role: "system", text: `Entidad detectada: ${data.boss.name} — ${data.boss.title}. Ubicación: ${data.boss.location}. ID sesión: ${data.battle_id.slice(0, 8)}...`, timestamp: now() },
                     ]);
+                    setShowStoryIntro(true);
                 }
             } catch {
                 setInitError("No se pudo conectar con la entidad");
@@ -286,6 +289,40 @@ export default function BossAttackPage() {
     return (
         <div className={`${spaceMono.className} fixed inset-0 flex flex-col bg-[#050505] text-white overflow-hidden`}>
             <div className="scanlines" />
+
+            {/* ── STORY INTRO OVERLAY ── */}
+            {showStoryIntro && battle && (
+                <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#050505]/95 backdrop-blur-sm px-6">
+                    <div className="w-full max-w-lg border border-[#8b5cf6]/50 bg-[#0a0a0a] shadow-[0_0_60px_rgba(139,92,246,0.15)]">
+                        {/* Header */}
+                        <div className="border-b border-[#8b5cf6]/30 px-6 py-4 flex items-center gap-3">
+                            <span className="material-symbols-outlined text-[#8b5cf6] text-lg">auto_stories</span>
+                            <div>
+                                <p className="text-[#8b5cf6] text-xs uppercase tracking-[0.3em] font-bold">Inteligencia del objetivo</p>
+                                <p className="text-white text-sm font-bold mt-0.5">{battle.bossName}</p>
+                                <p className="text-slate-400 text-xs">{battle.bossTitle}</p>
+                            </div>
+                        </div>
+
+                        {/* Story body */}
+                        <div className="px-6 py-5 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                            <p className="text-slate-300 text-sm leading-relaxed font-mono">{battle.bossStory}</p>
+                        </div>
+
+                        {/* CTA */}
+                        <div className="border-t border-[#8b5cf6]/30 px-6 py-4 flex items-center justify-between gap-4">
+                            <p className="text-slate-500 text-xs uppercase tracking-widest">Memoriza el trasfondo del enemigo</p>
+                            <button
+                                onClick={() => { setShowStoryIntro(false); setTimeout(() => inputRef.current?.focus(), 100); }}
+                                className="shrink-0 flex items-center gap-2 px-5 py-2 bg-[#8b5cf6]/10 border border-[#8b5cf6]/60 text-[#8b5cf6] text-xs uppercase tracking-widest hover:bg-[#8b5cf6]/20 transition-colors"
+                            >
+                                Iniciar
+                                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Dot grid */}
             <div className="fixed inset-0 pointer-events-none opacity-20"
@@ -550,7 +587,7 @@ export default function BossAttackPage() {
                         {battle?.bossStory && (
                             <div className="space-y-1 border-b border-[#8b5cf6]/10 pb-4">
                                 <p className="text-slate-400 uppercase tracking-[0.2em]">Trasfondo</p>
-                                <p className="text-slate-300 leading-relaxed">{battle.bossStory.slice(0, 200)}{battle.bossStory.length > 200 ? "..." : ""}</p>
+                                <p className="text-slate-300 leading-relaxed">{battle.bossStory}</p>
                             </div>
                         )}
 
@@ -591,6 +628,32 @@ export default function BossAttackPage() {
                 </aside>
             </div>
 
+            {/* ── MOBILE story panel ── */}
+            {showMobileStory && (
+                <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setShowMobileStory(false)}>
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                    <div
+                        className="relative bg-[#0a0a0a] border-t border-[#8b5cf6]/30 p-4 space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-bold text-[#8b5cf6] uppercase tracking-[0.2em] flex items-center gap-2">
+                                <span className="material-symbols-outlined text-xs">auto_stories</span>
+                                Trasfondo
+                            </span>
+                            <button onClick={() => setShowMobileStory(false)} className="text-slate-400 hover:text-white">
+                                <span className="material-symbols-outlined text-base">close</span>
+                            </button>
+                        </div>
+                        {battle?.bossStory ? (
+                            <p className="text-slate-300 text-xs leading-relaxed font-mono">{battle.bossStory}</p>
+                        ) : (
+                            <p className="text-slate-500 text-xs uppercase tracking-widest text-center py-4">Sin trasfondo disponible</p>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* ── MOBILE history panel ── */}
             {showMobileHistory && (
                 <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setShowMobileHistory(false)}>
@@ -630,6 +693,14 @@ export default function BossAttackPage() {
                     {battleResult === "won" ? "ENTIDAD CAÍDA — Redirigiendo..." : battle ? `${battle.bossName}` : "Conectando..."}
                 </span>
                 <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowMobileStory(prev => !prev)}
+                        disabled={!battle?.bossStory}
+                        className="text-[#8b5cf6] transition-colors disabled:opacity-30"
+                        title="Ver trasfondo"
+                    >
+                        <span className="material-symbols-outlined text-base">auto_stories</span>
+                    </button>
                     <button
                         onClick={() => setShowMobileHistory(prev => !prev)}
                         disabled={sentMessages.length === 0}
