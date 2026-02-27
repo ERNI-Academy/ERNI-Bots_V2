@@ -7,11 +7,19 @@ load_dotenv()
 
 from config import Config
 from extensions import limiter
+from routes.auth import auth_bp
+from routes.players import players_bp
+from routes.fortresses import fortresses_bp
+from routes.battles import battles_bp
 from routes.admin import admin_bp
-from routes.admin_bosses import admin_bosses_bp
 from routes.admin_catalog import admin_catalog_bp
-
-
+from routes.admin_bosses import admin_bosses_bp
+from routes.archetypes import archetypes_bp
+from routes.protocols import protocols_bp
+from routes.constraints import constraints_bp
+from routes.words import words_bp
+from routes.personalities import personalities_bp
+from routes.store import store_bp
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -68,13 +76,12 @@ def create_app():
     app.register_blueprint(players_bp,     url_prefix="/api/v1/players")
     app.register_blueprint(fortresses_bp,  url_prefix="/api/v1/fortresses")
     app.register_blueprint(battles_bp,     url_prefix="/api/v1/battles")
-    app.register_blueprint(leaderboard_bp, url_prefix="/api/v1/leaderboard")
     app.register_blueprint(admin_bp,         url_prefix="/api/v1/admin")
     app.register_blueprint(admin_catalog_bp, url_prefix="/api/v1/admin")
     app.register_blueprint(admin_bosses_bp,  url_prefix="/api/v1/admin")
     app.register_blueprint(archetypes_bp,  url_prefix="/api/v1/archetypes")
     app.register_blueprint(protocols_bp,   url_prefix="/api/v1/protocols")
-    app.register_blueprint(feed_bp,        url_prefix="/api/v1/feed")
+
     app.register_blueprint(constraints_bp, url_prefix="/api/v1/constraints")
     app.register_blueprint(words_bp,          url_prefix="/api/v1/words")
     app.register_blueprint(personalities_bp,  url_prefix="/api/v1/personalities")
