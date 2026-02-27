@@ -55,6 +55,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 web/package-lock.json
+AdminPanelWeb/package-lock.json
 
 # Python
 __pycache__/
@@ -62,3 +63,5 @@ __pycache__/
 *.pyo
 GameBackend/.venv/
 dev.db
+
+AdminPanelWeb/package-lock.json
