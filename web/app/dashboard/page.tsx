@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchMatchmakingFortresses, STATUS_STYLES, type Fortress } from "@/lib/fortresses";
+import TourOverlay from "./TourOverlay";
 
 type Tab = "map" | "log" | "console";
 
@@ -249,6 +250,7 @@ export default function DashboardPage() {
                     <div className="flex gap-1 md:gap-2">
                         <Link
                             href="/scoreboard"
+                            data-tour="tour-scoreboard"
                             className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
                             title="Marcador Global"
                         >
@@ -256,6 +258,7 @@ export default function DashboardPage() {
                         </Link>
                         <Link
                             href="/story"
+                            data-tour="tour-story"
                             className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
                             title="Historia"
                         >
@@ -281,6 +284,7 @@ export default function DashboardPage() {
 
             {/* ─── LEFT SIDEBAR: NETWORK ACTIVITY LOG ─── */}
             <aside
+                data-tour="tour-activity"
                 className={`panel-float flex flex-col z-20 ${activeTab === "log"
                     ? "fixed top-20 left-2 right-2 bottom-16 md:top-24 md:left-4 md:bottom-auto md:right-auto md:w-72 md:h-[calc(100vh-14rem)]"
                     : "hidden md:flex md:fixed md:top-24 md:left-4 md:w-72 md:h-[calc(100vh-14rem)]"
@@ -320,6 +324,7 @@ export default function DashboardPage() {
             >
                 {/* My Fortress */}
                 <aside className="md:fixed md:top-24 md:right-4 md:w-72 panel-float z-20">
+                    <div data-tour="tour-fortress">
                     <div className="panel-header p-2">
                         <h2 className="text-xs font-bold text-[#ffd700] flex items-center gap-2">
                             <span className="material-symbols-outlined text-xs">fort</span>
@@ -422,8 +427,9 @@ export default function DashboardPage() {
                             </Link>
                         )}
                     </div>
+                    </div>{/* /tour-fortress */}
                     {/* Zona Cero */}
-                    <div className="border-t border-[#8b5cf6]/30">
+                    <div data-tour="tour-zona-cero" className="border-t border-[#8b5cf6]/30">
                         <div className="panel-header px-3 py-2 flex items-center justify-between">
                             <h2 className="text-xs font-bold text-[#8b5cf6] flex items-center gap-2 uppercase tracking-widest">
                                 <span className="material-symbols-outlined text-sm">target</span>
@@ -478,7 +484,7 @@ export default function DashboardPage() {
                 </aside>
 
                 {/* Resource Management Console */}
-                <aside className="md:fixed md:bottom-4 md:left-4 md:right-4 md:h-24 panel-float flex flex-col md:flex-row md:items-center px-4 md:px-6 py-4 md:py-0 gap-6 md:gap-12 z-20 relative">
+                <aside data-tour="tour-resources" className="md:fixed md:bottom-4 md:left-4 md:right-4 md:h-24 panel-float flex flex-col md:flex-row md:items-center px-4 md:px-6 py-4 md:py-0 gap-6 md:gap-12 z-20 relative">
                     <div className="panel-header absolute top-0 left-0 right-0 h-1 hidden md:block"></div>
                     <div className="flex-1 space-y-2">
                         <div className="flex justify-between items-end">
@@ -665,6 +671,9 @@ export default function DashboardPage() {
                     </div>
                 );
             })()}
+
+            {/* ─── TOUR ─── */}
+            <TourOverlay setActiveTab={setActiveTab} username={player?.username ?? null} />
 
             {/* ─── MOBILE NAV ─── */}
             <nav className="fixed bottom-0 left-0 right-0 h-14 bg-black/90 border-t border-primary/20 flex md:hidden z-[60] backdrop-blur-lg">

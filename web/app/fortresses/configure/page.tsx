@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import FortressConfigTour from "./FortressConfigTour";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -386,7 +387,7 @@ function FortressConfigurePage() {
 
                         {/* ── IDENTITY PANEL ── */}
                         <section className="panel-float flex flex-col gap-4">
-                            <div className="panel-header px-4 py-2.5 flex items-center gap-2">
+                            <div data-tour="tour-cfg-identity" className="panel-header px-4 py-2.5 flex items-center gap-2">
                                 <span className="material-symbols-outlined text-[#ff0033] text-lg">fingerprint</span>
                                 <h2 className="text-sm font-bold text-[#ff0033] uppercase tracking-widest">
                                     Mi Fortaleza
@@ -450,7 +451,7 @@ function FortressConfigurePage() {
 
                         {/* ── PERSONALITY PANEL ── */}
                         <section className="panel-float flex flex-col">
-                            <div className="panel-header px-4 py-2.5 flex items-center gap-2">
+                            <div data-tour="tour-cfg-personality" className="panel-header px-4 py-2.5 flex items-center gap-2">
                                 <span className="material-symbols-outlined text-[#8b5cf6] text-lg">theater_comedy</span>
                                 <h2 className="text-sm font-bold text-[#8b5cf6] uppercase tracking-widest">
                                     Personalidad de la IA Defensora
@@ -500,7 +501,7 @@ function FortressConfigurePage() {
 
                         {/* ── PROTOCOLO BASE ── */}
                         <section className="panel-float">
-                            <div className="panel-header px-4 py-2.5 flex items-center justify-between">
+                            <div data-tour="tour-cfg-protocol" className="panel-header px-4 py-2.5 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-[#00ff41] text-lg">extension</span>
                                     <h2 className="text-sm font-bold text-[#00ff41] uppercase tracking-widest">
@@ -573,7 +574,7 @@ function FortressConfigurePage() {
 
                         {/* ── ARQUETIPO ── */}
                         <section className="panel-float">
-                            <div className="panel-header px-4 py-2.5 flex items-center justify-between">
+                            <div data-tour="tour-cfg-archetype" className="panel-header px-4 py-2.5 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-[#00ffff] text-lg">psychology</span>
                                     <h2 className="text-sm font-bold text-[#00ffff] uppercase tracking-widest">
@@ -647,7 +648,7 @@ function FortressConfigurePage() {
 
                         {/* ── RESTRICCIONES ── */}
                         <section className="panel-float">
-                            <div className="panel-header px-4 py-2.5 flex items-center justify-between">
+                            <div data-tour="tour-cfg-constraints" className="panel-header px-4 py-2.5 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-[#ff0033] text-lg">settings</span>
                                     <h2 className="text-sm font-bold text-[#ff0033] uppercase tracking-widest">
@@ -780,6 +781,7 @@ function FortressConfigurePage() {
                                 )}
                                 {/* Deploy button */}
                                 <button
+                                    data-tour="tour-cfg-deploy"
                                     onClick={handleSubmit}
                                     disabled={saving}
                                     className="flex items-center justify-center gap-2 bg-[#00ffff]/10 border border-[#00ffff]/50 text-[#00ffff] font-bold text-sm px-6 py-3 hover:bg-[#00ffff]/25 transition-all uppercase tracking-widest cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed glitch-button"
@@ -808,6 +810,7 @@ function FortressConfigurePage() {
             )}
 
             {/* ─── STATUS BAR ─── */}
+            <FortressConfigTour username={player?.username ?? null} />
             <footer className="border-t border-[#00ffff]/15 bg-black/80 px-4 md:px-6 py-2 flex justify-between items-center text-xs text-[#00ffff] font-mono tracking-widest shrink-0">
                 <div className="flex gap-4 md:gap-6">
                     <span>LATENCIA: 14MS</span>

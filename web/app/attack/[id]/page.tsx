@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Space_Mono } from "next/font/google";
 import { STATUS_STYLES, statusFromDefeats } from "@/lib/fortresses";
 import type { FortressStatus } from "@/lib/fortresses";
+import AttackTour from "./AttackTour";
 
 const spaceMono = Space_Mono({ weight: ["400", "700"], subsets: ["latin"] });
 
@@ -75,6 +76,7 @@ export default function AttackPage() {
     const [sentMessages, setSentMessages] = useState<string[]>([]);
     const [showMobileHistory, setShowMobileHistory] = useState(false);
     const [preflight, setPreflight] = useState<"checking" | "ok" | "denied" | "fortress_destroyed">("checking");
+    const [username, setUsername] = useState<string | null>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const battleInitialized = useRef(false);
@@ -107,6 +109,7 @@ export default function AttackPage() {
                     return;
                 }
                 const authProfile = await res.json();
+                setUsername(authProfile.username ?? null);
                 if (!authProfile.has_fortress) {
                     router.replace("/fortresses/configure?reason=no_fortress");
                     return;
@@ -494,7 +497,7 @@ export default function AttackPage() {
             <div className="flex flex-1 overflow-hidden gap-0 md:gap-4 px-4 md:px-8 py-4">
 
                 {/* ── CHAT PANEL ── */}
-                <div className="flex-1 flex flex-col border border-primary/20 bg-[#050505]/60 overflow-hidden">
+                <div data-tour="tour-attack-chat" className="flex-1 flex flex-col border border-primary/20 bg-[#050505]/60 overflow-hidden">
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4 font-mono text-sm">
                         {messages.map((msg) => (
@@ -604,7 +607,7 @@ export default function AttackPage() {
 
                     {/* Turn counter */}
                     {battle && !battleResult && (
-                        <div className="shrink-0 border-t border-primary/10 px-4 py-1.5 flex items-center justify-between bg-[#050505]/60 font-mono">
+                        <div data-tour="tour-attack-turns" className="shrink-0 border-t border-primary/10 px-4 py-1.5 flex items-center justify-between bg-[#050505]/60 font-mono">
                             <span className="text-xs text-slate-500 uppercase tracking-widest">Mensajes enviados</span>
                             <div className="flex items-center gap-2">
                                 <div className="flex gap-0.5">
@@ -633,6 +636,7 @@ export default function AttackPage() {
                     {/* Input bar */}
                     <div className="shrink-0 border-t border-primary/20 p-3 flex gap-2 bg-[#050505]/80">
                         <button
+                            data-tour="tour-attack-guess"
                             onClick={() => setShowGuessPanel(prev => !prev)}
                             disabled={!battle || !!battleResult}
                             title="Adivinar la palabra secreta"
@@ -687,7 +691,7 @@ export default function AttackPage() {
                 </div>
 
                 {/* ── INTEL SIDEBAR (desktop only) ── */}
-                <aside className="hidden md:flex w-60 flex-col shrink-0 border border-primary/20 bg-[#050505]/60 overflow-hidden">
+                <aside data-tour="tour-attack-intel" className="hidden md:flex w-60 flex-col shrink-0 border border-primary/20 bg-[#050505]/60 overflow-hidden">
                     {/* Sidebar header */}
                     <div className="flex items-center gap-2 border-b border-primary/20 px-4 py-3">
                         <span className="material-symbols-outlined text-[#ffd700] text-sm">radar</span>
@@ -832,6 +836,8 @@ export default function AttackPage() {
                     </button>
                 </div>
             </footer>
+
+            <AttackTour username={username} />
         </div>
     );
 }

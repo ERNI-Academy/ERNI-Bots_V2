@@ -252,7 +252,7 @@ export default function StoryPage() {
                                 {[
                                     { icon: "shield", label: "ACTIVA", desc: "Operativa y defendible. Puede recibir ataques.", color: "border-green-500/30 bg-green-500/5", iconColor: "text-green-400" },
                                     { icon: "construction", label: "RECONFIGURABLE", desc: "2+ derrotas acumuladas. El dueño puede reinventarla.", color: "border-yellow-500/30 bg-yellow-500/5", iconColor: "text-yellow-400" },
-                                    { icon: "delete_forever", label: "DESTRUIDA", desc: "4+ derrotas. Solo puede reconstruirse pagando cristales.", color: "border-red-500/30 bg-red-500/5", iconColor: "text-red-400" },
+                                    { icon: "delete_forever", label: "DESTRUIDA", desc: "4+ derrotas. No podrás atacar otras fortalezas y deberás reconstruir tu fortaleza.", color: "border-red-500/30 bg-red-500/5", iconColor: "text-red-400" },
                                 ].map(({ icon, label, desc, color, iconColor }) => (
                                     <div key={label} className={`border ${color} p-3 space-y-1.5`}>
                                         <div className="flex items-center gap-2">
