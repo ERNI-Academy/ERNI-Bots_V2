@@ -2,6 +2,7 @@
 
 # dependencies
 /web/node_modules
+/AdminPanelWeb/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -20,9 +21,14 @@
 /web/out/
 /web/deploy/
 /web/test-deploy/
+/AdminPanelWeb/.next/
+/AdminPanelWeb/out/
+/AdminPanelWeb/deploy/
+/AdminPanelWeb/test-deploy/
 
 # production
 /web/build
+/AdminPanelWeb/build
 
 # misc
 .DS_Store
@@ -49,6 +55,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 web/package-lock.json
+AdminPanelWeb/package-lock.json
 
 # Python
 __pycache__/

@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: #3B82F6;
+  --color-background-light: #f5f7f8;
+  --color-background-dark: #09090B;
+  --color-card-dark: #18181B;
+  --color-border-dark: #27272A;
+  --color-terminal-bg: #101818;
+  --color-matrix-green: #00ff41;
+  --color-blood-red: #ff0033;
+  --color-loot-gold: #ffd700;
+  --color-void-violet: #8b5cf6;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-space-grotesk);
+  --radius-DEFAULT: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #09090B;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom animations and effects for glitch feudalism theme */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes jitter {
+  0% { transform: translate(0,0) skew(0); }
+  25% { transform: translate(-2px, 1px) skew(1deg); }
+  50% { transform: translate(2px, -1px) skew(-1deg); }
+  75% { transform: translate(-1px, -1px) skew(0); }
+  100% { transform: translate(1px, 1px) skew(0); }
+}
+
+.cursor-blink {
+  animation: blink 1s infinite;
+}
+
+.crt-overlay {
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
+}
+
+.chromatic-aberration {
+  text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+}
+
+.glitch-button:hover {
+  animation: jitter 0.2s infinite;
+}
+
+.medieval-rain {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.15;
+  overflow: hidden;
+  color: #00ffff;
+  font-family: serif;
+  display: flex;
+  justify-content: space-around;
+}
+
+.rain-column {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  user-select: none;
+}
+
+.glitch-hover:hover {
+  text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+}
+
+/* Story page styles */
+.story-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.story-scroll::-webkit-scrollbar-thumb {
+  background: #00ffff;
+}
+
+.story-glitch-text {
+  text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+}
+
+.story-redacted {
+  background-color: #000;
+  color: #000;
+  cursor: help;
+}
+
+/* Dashboard / War Room styles */
+.scanlines {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%),
+              linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 2px, 2px 100%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.panel-float {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.panel-header {
+  background: rgba(0, 30, 30, 0.85);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+}
+
+.tactical-bg {
+  background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%);
+}
+
+.grid-overlay {
+  background-image:
+    linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.war-room-glitch {
+  text-shadow: 2px 0 #ff0033, -2px 0 #00ffff;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 2px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.33);
+}
+
+.hot-zone {
+  animation: pulse-ring 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(0.95); opacity: 0.2; }
+  50%  { transform: scale(1.05); opacity: 0.5; }
+  100% { transform: scale(0.95); opacity: 0.2; }
+}
+
+/* ── Scoreboard styles ───────────────────────────────────────────────────── */
+.scoreboard-cursor::after {
+  content: "▊";
+  animation: scoreboard-blink 1s step-start infinite;
+  margin-left: 8px;
+}
+
+@keyframes scoreboard-blink {
+  50% { opacity: 0; }
+}
+
+.scoreboard-glitch {
+  animation: scoreboard-noise 4s infinite;
+}
+
+@keyframes scoreboard-noise {
+  0%   { transform: translate(0, 0); }
+  1%   { transform: translate(1px, 1px); }
+  2%   { transform: translate(0, 0); }
+  98%  { transform: translate(0, 0); }
+  99%  { transform: translate(-1px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+
+.scoreboard-row-hover:hover {
+  background: rgba(0, 255, 255, 0.05);
+  text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+}
+
+.scoreboard-stream {
+  mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+}
