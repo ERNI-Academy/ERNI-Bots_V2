@@ -262,6 +262,9 @@ def login():
             check_password_hash(_TIMING_SENTINEL_HASH, "dummy")
             return jsonify(_AUTH_ERROR), 401
 
+        if player.is_banned:
+            return jsonify({"error": "Account suspended"}), 403
+
         # Look up the invitation already linked to this player.
         # is_active is NOT checked here: it governs new registrations,
         # not login access. Admin revocation of a player's access

@@ -1,0 +1,15 @@
+meta {
+  name: Users - Ban
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/users/PLAYER_ID_AQUI/ban
+  body: none
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+}

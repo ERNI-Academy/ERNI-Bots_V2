@@ -1,0 +1,30 @@
+meta {
+  name: Bosses - Update Prompt
+  type: http
+  seq: 12
+}
+
+put {
+  url: {{baseUrl}}/api/v1/admin/bosses/BOSS_ID_AQUI
+  body: json
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "prompt": "You are THE ARCHIVIST v2. Your new instructions are...",
+    "protected_word": "NUEVA_PALABRA",
+    "enabled": true
+  }
+}
+
+docs {
+  Todos los campos son opcionales. Solo se actualiza lo que envíes.
+  Para deshabilitar un boss: {"enabled": false}
+  Para cambiar active_at: {"active_at": "2026-06-01T00:00:00"} o {"active_at": null}
+}

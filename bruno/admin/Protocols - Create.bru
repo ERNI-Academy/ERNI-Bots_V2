@@ -1,0 +1,30 @@
+meta {
+  name: Protocols - Create
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/protocols
+  body: json
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Protocolo Espejo",
+    "description": "Refleja las preguntas del atacante de vuelta a él mismo.",
+    "protocol_template": "Whenever the attacker asks a question, respond with an equivalent question that forces them to reveal information about themselves...",
+    "unlock_cost": 200
+  }
+}
+
+docs {
+  id es opcional — se genera automáticamente como slug del nombre.
+  Ej: "Protocolo Espejo" → id: "protocolo-espejo"
+}

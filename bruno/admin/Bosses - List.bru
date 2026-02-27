@@ -1,0 +1,19 @@
+meta {
+  name: Bosses - List
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/bosses
+  body: none
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+}
+
+docs {
+  Devuelve TODOS los bosses (enabled y disabled) con prompt y protected_word incluidos.
+}
