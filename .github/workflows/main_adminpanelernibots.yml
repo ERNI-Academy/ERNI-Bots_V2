@@ -20,20 +20,24 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: ./AdminPanelWeb/package-lock.json
-      
-      - name: npm install, build, and test
+          node-version: '20'
+
+      - name: npm install and build
         working-directory: ./AdminPanelWeb
         run: |
           npm install
           npm run build
 
-      - name: Zip artifact for deployment
+      - name: Prepare standalone bundle
         working-directory: ./AdminPanelWeb
         run: |
-          zip -r ../release.zip . -x "*.git*" ".next/*" "node_modules/*"
+          cp -r .next/static .next/standalone/.next/static
+          cp -r public .next/standalone/public
+
+      - name: Zip artifact for deployment
+        working-directory: ./AdminPanelWeb/.next/standalone
+        run: |
+          zip -r ../../../../release.zip .
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
