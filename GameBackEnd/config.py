@@ -13,9 +13,9 @@ class Config:
     # ── Database ───────────────────────────────────────────────────────────
     # Azure Postgres gives "postgres://" but SQLAlchemy 2.x requires "postgresql://"
     _raw_db_url = os.getenv("DATABASE_URL", "sqlite:///dev.db")
-    DATABASE_URL = urllib.parse.quote_plus(os.environ["DATABASE_URL"])
+    password = urllib.parse.quote_plus(os.environ["PASSWORD_DB"])
     DATABASE_URL = _raw_db_url.replace("postgres://", "postgresql://", 1)
-
+    DATABASE_URL = _raw_db_url.replace("[password]", password, 1)
     # ── CORS ───────────────────────────────────────────────────────────────
     # En producción: "https://tu-dominio.com"
     # Múltiples orígenes separados por coma: "https://a.com,https://b.com"
