@@ -7,14 +7,14 @@ import { logoutApi } from "@/lib/auth";
 const navItems = [
   { label: "Ops Center",     icon: "dashboard",    href: "/dashboard" },
   { label: "Jugadores",      icon: "group",        href: "/players" },
-  { label: "Arquetipos",     icon: "badge",        href: "/archetypes" },
-  { label: "Protocolos",     icon: "terminal",     href: "/protocols" },
-  { label: "Fortalezas",     icon: "fort",         href: "/fortresses" },
-  { label: "Bosses",         icon: "skull",        href: "/bosses" },
-  { label: "Restricciones",  icon: "shield_lock",  href: "/constraints" },
+  { label: "Arquetipos",     icon: "badge",        href: "/archetypes",   disabled: true },
+  { label: "Protocolos",     icon: "terminal",     href: "/protocols",    disabled: true },
+  { label: "Fortalezas",     icon: "fort",         href: "/fortresses",   disabled: true },
+  { label: "Bosses",         icon: "skull",        href: "/bosses",       disabled: true },
+  { label: "Restricciones",  icon: "shield_lock",  href: "/constraints",  disabled: true },
   { label: "Batallas",       icon: "swords",       href: "/battles" },
-  { label: "Catálogo",       icon: "menu_book",    href: "/catalog" },
-  { label: "Invitaciones",   icon: "mail",         href: "/invitations" },
+  { label: "Catálogo",       icon: "menu_book",    href: "/catalog",      disabled: true },
+  { label: "Invitaciones",   icon: "mail",         href: "/invitations",  disabled: true },
 ];
 
 
@@ -113,6 +113,15 @@ export default function Dashboard() {
           <nav className="flex flex-col gap-0.5">
             {navItems.map((item) => {
               const active = pathname === item.href;
+              if (item.disabled) return (
+                <span
+                  key={item.href}
+                  className="flex cursor-not-allowed items-center gap-3 rounded px-3 py-2 opacity-30"
+                >
+                  <span className="material-symbols-outlined text-[20px] text-[#71717A]">{item.icon}</span>
+                  <span className="text-sm font-medium font-[var(--font-display)] text-[#71717A]">{item.label}</span>
+                </span>
+              );
               return (
                 <a
                   key={item.href}
@@ -131,7 +140,7 @@ export default function Dashboard() {
           </nav>
 
           <div className="mt-auto flex flex-col gap-0.5 border-t border-[#27272A] pt-4">
-            <a href="/settings" className="flex items-center gap-3 rounded px-3 py-2 text-[#71717A] hover:bg-[#18181B] hover:text-white transition-all">
+            <a href="/settings" className="flex cursor-not-allowed items-center gap-3 rounded px-3 py-2 opacity-30">
               <span className="material-symbols-outlined text-[20px]">settings</span>
               <span className="text-sm font-medium font-[var(--font-display)]">Configuración</span>
             </a>
