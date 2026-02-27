@@ -37,7 +37,7 @@ jobs:
       - name: Zip artifact for deployment
         working-directory: ./AdminPanelWeb/.next/standalone
         run: |
-          zip -r ../../../../release.zip .
+          zip -r ../../../release.zip .
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
