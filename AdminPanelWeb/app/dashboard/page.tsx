@@ -29,12 +29,22 @@ const feed = [
 
 type LeaderboardEntry = { rank: number; name: string; pts: string; top: boolean };
 type Stats = { players: number; fortresses: number; battles: number; active_season: string | null };
+type BattleRow = {
+  id: string;
+  created_at: string | null;
+  attacker: string | null;
+  target: string | null;
+  target_type: "fortress" | "boss" | null;
+  type: "pvp" | "pve";
+  status: "active" | "won" | "lost" | "expired";
+};
 
-const statusConfig = {
-  correct:   { label: "Correcto", cls: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", dot: "bg-emerald-400" },
-  invalid:   { label: "Inválido", cls: "text-red-400 bg-red-400/10 border-red-400/20",             dot: "bg-red-400" },
-  ratelimit: { label: "Rate Ltd", cls: "text-amber-400 bg-amber-400/10 border-amber-400/20",       dot: "bg-amber-400 animate-pulse" },
-} as const;
+const battleStatusConfig: Record<string, { label: string; cls: string; dot: string }> = {
+  active:  { label: "En curso",  cls: "text-blue-400 bg-blue-400/10 border-blue-400/20",       dot: "bg-blue-400 animate-pulse" },
+  won:     { label: "Victoria",  cls: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", dot: "bg-emerald-400" },
+  lost:    { label: "Derrota",   cls: "text-red-400 bg-red-400/10 border-red-400/20",           dot: "bg-red-400" },
+  expired: { label: "Expirada",  cls: "text-[#71717A] bg-[#71717A]/10 border-[#71717A]/20",    dot: "bg-[#71717A]" },
+};
 
 export default function Dashboard() {
   const router = useRouter();
@@ -43,12 +53,22 @@ export default function Dashboard() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [battles, setBattles] = useState<BattleRow[]>([]);
+  const [battlesLoading, setBattlesLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/admin/stats", { cache: "no-store" })
       .then((r) => r.json())
       .then((data: Stats) => setStats(data))
       .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/admin/battles/recent?limit=10")
+      .then((r) => r.json())
+      .then((data) => setBattles(data.items ?? []))
+      .catch(console.error)
+      .finally(() => setBattlesLoading(false));
   }, []);
 
   useEffect(() => {
@@ -137,20 +157,6 @@ export default function Dashboard() {
             <span className="text-white">DASHBOARD</span>
           </div>
           <div className="flex items-center gap-6">
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <span className="material-symbols-outlined text-[#71717A] text-[18px]">search</span>
-              </div>
-              <input
-                type="text"
-                placeholder="Buscar jugador, protocolo..."
-                className="block w-64 rounded border border-[#27272A] bg-[#18181B] py-1.5 pl-9 pr-10 text-sm text-white placeholder-[#71717A] font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-                <kbd className="rounded border border-[#27272A] px-1.5 font-mono text-[10px] text-[#71717A]">⌘K</kbd>
-              </div>
-            </div>
-
             <div className="flex items-center gap-3 border-l border-[#27272A] pl-6">
               <button className="relative rounded-full p-2 text-[#71717A] hover:bg-[#18181B] hover:text-white transition-colors">
                 <span className="material-symbols-outlined text-[20px]">notifications</span>
@@ -255,54 +261,69 @@ export default function Dashboard() {
               <div className="flex flex-col overflow-hidden rounded border border-[#27272A] bg-[#18181B] lg:col-span-2">
                 <div className="flex items-center justify-between border-b border-[#27272A] bg-[#18181B] px-5 py-4">
                   <h2 className="flex items-center gap-2 font-[var(--font-display)] font-semibold text-white">
-                    <span className="material-symbols-outlined text-[20px] text-blue-400">stream</span>
-                    Telemetría en Vivo
+                    <span className="material-symbols-outlined text-[20px] text-blue-400">swords</span>
+                    Batallas Recientes
                   </h2>
-                  <div className="flex gap-2">
-                    <button className="rounded p-1 text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors">
-                      <span className="material-symbols-outlined text-[18px]">filter_list</span>
-                    </button>
-                    <button className="rounded p-1 text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors">
-                      <span className="material-symbols-outlined text-[18px]">more_horiz</span>
-                    </button>
-                  </div>
+                  <a href="/battles" className="font-mono text-xs font-medium text-blue-400 hover:text-blue-300">Ver todas</a>
                 </div>
                 <div className="flex-1 overflow-x-auto">
                   <table className="w-full border-collapse text-left">
                     <thead className="sticky top-0 z-10 bg-[#27272A]/50 backdrop-blur-sm">
                       <tr className="font-mono text-[11px] uppercase tracking-wider text-[#71717A]">
-                        <th className="w-24 px-5 py-3 font-medium">Hora</th>
-                        <th className="px-5 py-3 font-medium">Jugador</th>
-                        <th className="px-5 py-3 font-medium">Desafío</th>
+                        <th className="w-28 px-5 py-3 font-medium">Hora</th>
+                        <th className="px-5 py-3 font-medium">Atacante</th>
+                        <th className="px-5 py-3 font-medium">Objetivo</th>
                         <th className="px-5 py-3 text-right font-medium">Estado</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#27272A] text-sm">
-                      {feed.map((row, i) => {
-                        const s = statusConfig[row.status as keyof typeof statusConfig];
-                        return (
-                          <tr key={i} className="h-12 transition-colors hover:bg-[#27272A]/50">
-                            <td className="px-5 py-2 font-mono text-xs text-[#71717A]">{row.time}</td>
-                            <td className="px-5 py-2">
-                              <div className="flex items-center gap-3">
-                                <div className={`h-6 w-6 rounded-full bg-gradient-to-br ${row.gradient}`} />
-                                <span className="font-medium text-white">{row.player}</span>
-                              </div>
-                            </td>
-                            <td className="px-5 py-2">
-                              <span className="inline-flex items-center rounded border border-[#27272A] bg-[#09090B] px-2 py-0.5 font-mono text-xs text-[#71717A]">
-                                {row.challenge}
-                              </span>
-                            </td>
-                            <td className="px-5 py-2 text-right">
-                              <span className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-xs font-medium ${s.cls}`}>
-                                <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-                                {s.label}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {battlesLoading
+                        ? Array.from({ length: 8 }).map((_, i) => (
+                            <tr key={i} className="h-12">
+                              <td className="px-5 py-2"><div className="h-3 w-16 animate-pulse rounded bg-[#27272A]" /></td>
+                              <td className="px-5 py-2"><div className="h-3 w-24 animate-pulse rounded bg-[#27272A]" /></td>
+                              <td className="px-5 py-2"><div className="h-5 w-32 animate-pulse rounded bg-[#27272A]" /></td>
+                              <td className="px-5 py-2 text-right"><div className="ml-auto h-5 w-20 animate-pulse rounded bg-[#27272A]" /></td>
+                            </tr>
+                          ))
+                        : battles.map((row) => {
+                            const s = battleStatusConfig[row.status] ?? battleStatusConfig.expired;
+                            const time = row.created_at
+                              ? new Date(row.created_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+                              : "—";
+                            return (
+                              <tr key={row.id} className="h-12 transition-colors hover:bg-[#27272A]/50">
+                                <td className="px-5 py-2 font-mono text-xs text-[#71717A]">{time}</td>
+                                <td className="px-5 py-2">
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 font-bold text-[10px] text-white">
+                                      {row.attacker ? row.attacker[0].toUpperCase() : "?"}
+                                    </div>
+                                    <span className="font-medium text-white">{row.attacker ?? "—"}</span>
+                                  </div>
+                                </td>
+                                <td className="px-5 py-2">
+                                  {row.target ? (
+                                    <span className="inline-flex items-center gap-1.5 rounded border border-[#27272A] bg-[#09090B] px-2 py-0.5 font-mono text-xs text-[#71717A]">
+                                      <span className="material-symbols-outlined text-[13px]">
+                                        {row.target_type === "boss" ? "skull" : "fort"}
+                                      </span>
+                                      {row.target}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[#3F3F46]">—</span>
+                                  )}
+                                </td>
+                                <td className="px-5 py-2 text-right">
+                                  <span className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-xs font-medium ${s.cls}`}>
+                                    <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+                                    {s.label}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })
+                      }
                     </tbody>
                   </table>
                 </div>

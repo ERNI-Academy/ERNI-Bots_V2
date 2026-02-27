@@ -44,6 +44,8 @@ from db.models import (
     Player,
     Fortress,
     Battle,
+    BattleMessage,
+    Boss,
     Season,
     PlayerSeasonStats,
     PlayerHistoryEntry,
@@ -503,6 +505,195 @@ def set_admin(player_id):
         db.rollback()
         logger.exception("admin: set_admin failed")
         return jsonify({"error": "Internal server error"}), 500
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────────────────
+# BATTLE MANAGEMENT
+# ──────────────────────────────────────────────────────────
+
+@admin_bp.get("/battles")
+def list_battles():
+    """List battles with pagination and optional filters.
+
+    Query params:
+        status   – active | won | lost | expired
+        type     – pvp | pve
+        search   – partial match on attacker username
+        page     – 1-based (default 1)
+        per_page – max 100 (default 20)
+    """
+    if not _check_admin():
+        return jsonify({"error": "Forbidden"}), 403
+
+    try:
+        page     = max(int(request.args.get("page", 1)), 1)
+        per_page = min(int(request.args.get("per_page", 20)), 100)
+    except (TypeError, ValueError):
+        page, per_page = 1, 20
+
+    status_f = request.args.get("status", "").strip()
+    type_f   = request.args.get("type",   "").strip()
+    search   = request.args.get("search", "").strip()
+
+    db = SessionLocal()
+    try:
+        query = db.query(Battle)
+
+        if status_f:
+            query = query.filter(Battle.status == status_f)
+        if type_f:
+            query = query.filter(Battle.type == type_f)
+        if search:
+            query = query.join(Player, Player.id == Battle.attacker_id).filter(
+                Player.username.ilike(f"%{search}%")
+            )
+
+        total = query.count()
+        rows  = (
+            query
+            .order_by(Battle.created_at.desc())
+            .offset((page - 1) * per_page)
+            .limit(per_page)
+            .all()
+        )
+
+        def _serialize(b: Battle) -> dict:
+            if b.type == "pve" and b.boss:
+                target, target_type = b.boss.name, "boss"
+            elif b.fortress:
+                target, target_type = b.fortress.name, "fortress"
+            else:
+                target, target_type = None, None
+
+            fortress_owner = b.fortress.owner.username if b.fortress and b.fortress.owner else None
+
+            return {
+                "id":             b.id,
+                "created_at":     b.created_at.isoformat() + "Z" if b.created_at else None,
+                "updated_at":     b.updated_at.isoformat() + "Z" if b.updated_at else None,
+                "attacker":       b.attacker.username if b.attacker else None,
+                "attacker_id":    b.attacker_id,
+                "target":         target,
+                "target_type":    target_type,
+                "fortress_owner": fortress_owner,
+                "type":           b.type,
+                "status":         b.status,
+                "turn_count":     b.turn_count,
+                "max_turns":      b.max_turns,
+            }
+
+        return jsonify({
+            "total":    total,
+            "page":     page,
+            "per_page": per_page,
+            "items":    [_serialize(b) for b in rows],
+        })
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────────────────
+@admin_bp.get("/battles/<battle_id>")
+def get_battle_detail(battle_id):
+    """Return full battle detail including message history."""
+    if not _check_admin():
+        return jsonify({"error": "Forbidden"}), 403
+
+    db = SessionLocal()
+    try:
+        b = db.query(Battle).filter(Battle.id == battle_id).first()
+        if not b:
+            return jsonify({"error": "Not found"}), 404
+
+        if b.type == "pve" and b.boss:
+            target, target_type = b.boss.name, "boss"
+        elif b.fortress:
+            target, target_type = b.fortress.name, "fortress"
+        else:
+            target, target_type = None, None
+
+        fortress_owner = b.fortress.owner.username if b.fortress and b.fortress.owner else None
+
+        messages = [
+            {
+                "id":         m.id,
+                "role":       m.role,
+                "text":       m.text,
+                "created_at": m.created_at.isoformat() + "Z" if m.created_at else None,
+            }
+            for m in b.messages
+        ]
+
+        return jsonify({
+            "id":             b.id,
+            "created_at":     b.created_at.isoformat() + "Z" if b.created_at else None,
+            "updated_at":     b.updated_at.isoformat() + "Z" if b.updated_at else None,
+            "session_id":     b.session_id,
+            "attacker":       b.attacker.username if b.attacker else None,
+            "attacker_id":    b.attacker_id,
+            "target":         target,
+            "target_type":    target_type,
+            "fortress_owner": fortress_owner,
+            "type":           b.type,
+            "status":         b.status,
+            "turn_count":     b.turn_count,
+            "max_turns":      b.max_turns,
+            "messages":       messages,
+        })
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────────────────
+@admin_bp.get("/battles/recent")
+def recent_battles():
+    """Return the last N battles (default 10, max 50).
+
+    Response fields per item:
+        id, created_at, attacker, target, target_type (fortress|boss), type (pvp|pve), status
+    """
+    if not _check_admin():
+        return jsonify({"error": "Forbidden"}), 403
+
+    try:
+        limit = min(int(request.args.get("limit", 10)), 50)
+    except (TypeError, ValueError):
+        limit = 10
+
+    db = SessionLocal()
+    try:
+        rows = (
+            db.query(Battle)
+            .order_by(Battle.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+
+        items = []
+        for b in rows:
+            if b.type == "pve" and b.boss:
+                target      = b.boss.name
+                target_type = "boss"
+            elif b.fortress:
+                target      = b.fortress.name
+                target_type = "fortress"
+            else:
+                target      = None
+                target_type = None
+
+            items.append({
+                "id":          b.id,
+                "created_at":  b.created_at.isoformat() + "Z" if b.created_at else None,
+                "attacker":    b.attacker.username if b.attacker else None,
+                "target":      target,
+                "target_type": target_type,
+                "type":        b.type,
+                "status":      b.status,
+            })
+
+        return jsonify({"items": items})
     finally:
         db.close()
 
