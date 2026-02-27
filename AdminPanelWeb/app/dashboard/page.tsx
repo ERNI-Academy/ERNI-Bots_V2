@@ -17,49 +17,6 @@ const navItems = [
   { label: "Invitaciones",   icon: "mail",         href: "/invitations" },
 ];
 
-const kpis = [
-  {
-    label: "Jugadores",
-    value: "412",
-    badge: "+12%",
-    badgeColor: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
-    badgeIcon: "trending_up",
-    icon: "groups",
-    sparkline: [30, 50, 40, 70, 60, 80, 50, 90, 85],
-    sparkColor: "bg-blue-500",
-  },
-  {
-    label: "Fortalezas",
-    value: "34",
-    badge: "Estable",
-    badgeColor: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
-    badgeIcon: "trending_flat",
-    icon: "fort",
-    sparkline: [20, 25, 40, 60, 35, 20, 45, 34],
-    sparkColor: "bg-blue-500",
-    isBar: true,
-  },
-  {
-    label: "Batallas",
-    value: "1,204",
-    badge: "+8/min",
-    badgeColor: "text-amber-400 bg-amber-400/10 border-amber-400/20",
-    badgeIcon: "bolt",
-    icon: "swords",
-    progress: 65,
-    progressColor: "bg-amber-400",
-    progressLabel: "Meta: 2k",
-  },
-  {
-    label: "Uptime Sistema",
-    value: "12h 45m",
-    badge: null,
-    badgeIcon: null,
-    badgeColor: "",
-    icon: "timer",
-    live: true,
-  },
-];
 
 const feed = [
   { time: "14:42:05", player: "AgentNull",  gradient: "from-blue-500 to-cyan-400",      challenge: "Crypto::RSA_Basic",     status: "correct" },
@@ -71,6 +28,7 @@ const feed = [
 ];
 
 type LeaderboardEntry = { rank: number; name: string; pts: string; top: boolean };
+type Stats = { players: number; fortresses: number; battles: number; active_season: string | null };
 
 const statusConfig = {
   correct:   { label: "Correcto", cls: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", dot: "bg-emerald-400" },
@@ -84,6 +42,14 @@ export default function Dashboard() {
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/stats", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data: Stats) => setStats(data))
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     fetch("/api/leaderboard?limit=10")
@@ -207,69 +173,79 @@ export default function Dashboard() {
 
             {/* KPI Row */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {kpis.map((kpi) => (
-                <div key={kpi.label} className="group relative flex flex-col gap-4 overflow-hidden rounded border border-[#27272A] bg-[#18181B] p-5 transition-colors hover:border-[#3F3F46]">
-                  <div className="flex items-start justify-between">
-                    <div className="flex flex-col gap-1">
-                      <span className="font-mono text-[11px] uppercase tracking-wider text-[#71717A]">{kpi.label}</span>
-                      <div className="flex items-baseline gap-3">
-                        <span className="font-[var(--font-display)] text-3xl font-bold text-white">{kpi.value}</span>
-                        {kpi.badge && (
-                          <span className={`flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-xs ${kpi.badgeColor}`}>
-                            <span className="material-symbols-outlined text-[12px]">{kpi.badgeIcon}</span>
-                            {kpi.badge}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="rounded bg-[#27272A] p-2 text-[#71717A]">
-                      <span className="material-symbols-outlined text-[20px]">{kpi.icon}</span>
+
+              {/* Jugadores */}
+              <div className="group relative flex flex-col gap-4 overflow-hidden rounded border border-[#27272A] bg-[#18181B] p-5 transition-colors hover:border-[#3F3F46]">
+                <div className="flex items-start justify-between">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-[#71717A]">Jugadores</span>
+                    <div className="flex items-baseline gap-3">
+                      {stats ? (
+                        <span className="font-[var(--font-display)] text-3xl font-bold text-white">{stats.players.toLocaleString()}</span>
+                      ) : (
+                        <div className="h-9 w-20 animate-pulse rounded bg-[#27272A]" />
+                      )}
                     </div>
                   </div>
-
-                  {kpi.sparkline && !kpi.isBar && (
-                    <div className="flex h-8 w-full items-end gap-1 opacity-50">
-                      {kpi.sparkline.map((h, i) => (
-                        <div
-                          key={i}
-                          className={`w-1 rounded-sm ${i === kpi.sparkline!.length - 1 ? "bg-blue-500" : "bg-blue-500/20"}`}
-                          style={{ height: `${h}%` }}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {kpi.isBar && kpi.sparkline && (
-                    <div className="flex h-8 w-full items-end gap-0.5 overflow-hidden opacity-50">
-                      {kpi.sparkline.map((h, i) => (
-                        <div key={i} className="flex-1 bg-blue-500/30" style={{ height: `${h}%` }} />
-                      ))}
-                    </div>
-                  )}
-
-                  {kpi.progress !== undefined && (
-                    <div className="flex h-8 w-full items-center">
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#27272A]">
-                        <div className={`h-full rounded-full ${kpi.progressColor}`} style={{ width: `${kpi.progress}%` }} />
-                      </div>
-                      <span className="ml-2 whitespace-nowrap font-mono text-[10px] text-[#71717A]">{kpi.progressLabel}</span>
-                    </div>
-                  )}
-
-                  {kpi.live && (
-                    <div className="flex h-8 w-full items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="relative flex h-2 w-2">
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
-                        </span>
-                        <span className="font-mono text-xs text-emerald-400">Sistema Activo</span>
-                      </div>
-                      <span className="font-mono text-[10px] text-[#71717A]">Fin: 11h 15m</span>
-                    </div>
-                  )}
+                  <div className="rounded bg-[#27272A] p-2 text-[#71717A]">
+                    <span className="material-symbols-outlined text-[20px]">groups</span>
+                  </div>
                 </div>
-              ))}
+                <div className="flex h-8 w-full items-end gap-1 opacity-50">
+                  {[30, 50, 40, 70, 60, 80, 50, 90, 85].map((h, i, arr) => (
+                    <div key={i} className={`w-1 rounded-sm ${i === arr.length - 1 ? "bg-blue-500" : "bg-blue-500/20"}`} style={{ height: `${h}%` }} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Fortalezas */}
+              <div className="group relative flex flex-col gap-4 overflow-hidden rounded border border-[#27272A] bg-[#18181B] p-5 transition-colors hover:border-[#3F3F46]">
+                <div className="flex items-start justify-between">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-[#71717A]">Fortalezas</span>
+                    <div className="flex items-baseline gap-3">
+                      {stats ? (
+                        <span className="font-[var(--font-display)] text-3xl font-bold text-white">{stats.fortresses.toLocaleString()}</span>
+                      ) : (
+                        <div className="h-9 w-16 animate-pulse rounded bg-[#27272A]" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="rounded bg-[#27272A] p-2 text-[#71717A]">
+                    <span className="material-symbols-outlined text-[20px]">fort</span>
+                  </div>
+                </div>
+                <div className="flex h-8 w-full items-end gap-0.5 overflow-hidden opacity-50">
+                  {[20, 25, 40, 60, 35, 20, 45, 34].map((h, i) => (
+                    <div key={i} className="flex-1 bg-blue-500/30" style={{ height: `${h}%` }} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Batallas */}
+              <div className="group relative flex flex-col gap-4 overflow-hidden rounded border border-[#27272A] bg-[#18181B] p-5 transition-colors hover:border-[#3F3F46]">
+                <div className="flex items-start justify-between">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-[#71717A]">Batallas</span>
+                    <div className="flex items-baseline gap-3">
+                      {stats ? (
+                        <span className="font-[var(--font-display)] text-3xl font-bold text-white">{stats.battles.toLocaleString()}</span>
+                      ) : (
+                        <div className="h-9 w-20 animate-pulse rounded bg-[#27272A]" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="rounded bg-[#27272A] p-2 text-[#71717A]">
+                    <span className="material-symbols-outlined text-[20px]">swords</span>
+                  </div>
+                </div>
+                <div className="flex h-8 w-full items-center">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#27272A]">
+                    <div className="h-full rounded-full bg-amber-400" style={{ width: stats ? `${Math.min(100, (stats.battles / 2000) * 100)}%` : "0%" }} />
+                  </div>
+                  <span className="ml-2 whitespace-nowrap font-mono text-[10px] text-[#71717A]">Meta: 2k</span>
+                </div>
+              </div>
             </div>
 
             {/* Main Grid */}

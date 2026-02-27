@@ -43,6 +43,7 @@ from db.models import (
     InvitationCode,
     Player,
     Fortress,
+    Battle,
     Season,
     PlayerSeasonStats,
     PlayerHistoryEntry,
@@ -514,8 +515,9 @@ def stats():
 
     db = SessionLocal()
     try:
-        player_count = db.query(Player).count()
+        player_count   = db.query(Player).count()
         fortress_count = db.query(Fortress).count()
+        battle_count   = db.query(Battle).count()
 
         active_season = db.query(Season).filter_by(is_active=True).first()
 
@@ -527,6 +529,7 @@ def stats():
         return jsonify({
             "players":       player_count,
             "fortresses":    fortress_count,
+            "battles":       battle_count,
             "free_codes":    free_codes,
             "active_season": active_season.name if active_season else None,
         })

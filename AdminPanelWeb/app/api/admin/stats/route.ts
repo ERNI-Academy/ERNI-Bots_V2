@@ -1,20 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { BACKEND } from "@/lib/backend";
 
-export async function GET(request: NextRequest) {
-  const secret = request.headers.get("X-Admin-Secret");
+export async function GET() {
+  const secret = process.env.ADMIN_SECRET;
   if (!secret) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: "ADMIN_SECRET no configurado" }, { status: 503 });
   }
 
   let backendRes: Response;
   try {
     backendRes = await fetch(`${BACKEND}/api/v1/admin/stats`, {
       method: "GET",
-      headers: {
-        "X-Admin-Secret": secret,
-      },
+      headers: { "X-Admin-Secret": secret },
+      cache: "no-store",
     });
   } catch {
     return NextResponse.json({ error: "Servicio no disponible" }, { status: 503 });
