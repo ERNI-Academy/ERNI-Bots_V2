@@ -6,8 +6,8 @@ import { logoutApi } from "@/lib/auth";
 const navItems = [
   { label: "Ops Center",    icon: "dashboard",   href: "/dashboard" },
   { label: "Jugadores",     icon: "group",       href: "/players" },
-  { label: "Arquetipos",    icon: "badge",       href: "/archetypes",   disabled: true },
-  { label: "Protocolos",    icon: "terminal",    href: "/protocols",    disabled: true },
+  { label: "Arquetipos",    icon: "badge",       href: "/archetypes" },
+  { label: "Protocolos",    icon: "terminal",    href: "/protocols" },
   { label: "Fortalezas",    icon: "fort",        href: "/fortresses",   disabled: true },
   { label: "Bosses",        icon: "skull",       href: "/bosses",       disabled: true },
   { label: "Restricciones", icon: "shield_lock", href: "/constraints",  disabled: true },
