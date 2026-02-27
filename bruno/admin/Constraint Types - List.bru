@@ -1,0 +1,15 @@
+meta {
+  name: Constraint Types - List
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/constraint-types
+  body: none
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+}

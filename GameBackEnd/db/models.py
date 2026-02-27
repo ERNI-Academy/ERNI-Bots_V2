@@ -35,6 +35,11 @@ class Player(Base):
     legacy_tokens = Column(Integer, default=0)
     energy = Column(Integer, default=100)
 
+    is_banned = Column(Boolean, default=False, nullable=False, server_default="0")
+    banned_at = Column(DateTime, nullable=True)
+
+    is_admin = Column(Boolean, default=False, nullable=False, server_default="0")
+
     created_at = Column(DateTime, default=datetime.utcnow)
 
     fortress = relationship("Fortress", back_populates="owner", uselist=False)

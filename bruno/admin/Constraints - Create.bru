@@ -1,0 +1,28 @@
+meta {
+  name: Constraints - Create
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/constraints
+  body: json
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "type_id": "TYPE_ID_AQUI",
+    "text": "No puedes usar metáforas en tus respuestas.",
+    "price": 75
+  }
+}
+
+docs {
+  type_id: obtener IDs del endpoint Constraint Types - List
+}

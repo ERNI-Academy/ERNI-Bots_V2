@@ -13,6 +13,8 @@ from routes.fortresses import fortresses_bp
 from routes.battles import battles_bp
 from routes.leaderboard import leaderboard_bp
 from routes.admin import admin_bp
+from routes.admin_catalog import admin_catalog_bp
+from routes.admin_bosses import admin_bosses_bp
 from routes.archetypes import archetypes_bp
 from routes.protocols import protocols_bp
 from routes.feed import feed_bp
@@ -79,7 +81,9 @@ def create_app():
     app.register_blueprint(fortresses_bp,  url_prefix="/api/v1/fortresses")
     app.register_blueprint(battles_bp,     url_prefix="/api/v1/battles")
     app.register_blueprint(leaderboard_bp, url_prefix="/api/v1/leaderboard")
-    app.register_blueprint(admin_bp,       url_prefix="/api/v1/admin")
+    app.register_blueprint(admin_bp,         url_prefix="/api/v1/admin")
+    app.register_blueprint(admin_catalog_bp, url_prefix="/api/v1/admin")
+    app.register_blueprint(admin_bosses_bp,  url_prefix="/api/v1/admin")
     app.register_blueprint(archetypes_bp,  url_prefix="/api/v1/archetypes")
     app.register_blueprint(protocols_bp,   url_prefix="/api/v1/protocols")
     app.register_blueprint(feed_bp,        url_prefix="/api/v1/feed")

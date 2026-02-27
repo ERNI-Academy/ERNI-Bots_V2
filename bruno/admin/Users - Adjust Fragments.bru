@@ -1,0 +1,29 @@
+meta {
+  name: Users - Adjust Fragments
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/users/PLAYER_ID_AQUI/fragments
+  body: json
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "amount": 100,
+    "reason": "admin_gift"
+  }
+}
+
+docs {
+  amount positivo → dar fragmentos
+  amount negativo → quitar fragmentos
+  reason → etiqueta para auditoría (aparece en historial del jugador)
+}

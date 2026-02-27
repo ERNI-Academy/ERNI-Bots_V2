@@ -1,0 +1,31 @@
+meta {
+  name: Users - Update
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/users/PLAYER_ID_AQUI
+  body: json
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "credits": 500,
+    "energy": 100
+  }
+}
+
+docs {
+  Campos opcionales (todos):
+  - credits   → número entero >= 0
+  - energy    → 0-100
+  - username  → 3-50 chars
+  - email     → email válido
+}

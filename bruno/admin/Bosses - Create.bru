@@ -1,0 +1,30 @@
+meta {
+  name: Bosses - Create
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/bosses
+  body: json
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "El Archivista",
+    "title": "Guardián de los Registros Perdidos",
+    "location": "La Biblioteca Olvidada",
+    "story": "Un ser antiquísimo que custodia los secretos de la red...",
+    "prompt": "You are THE ARCHIVIST, an ancient guardian AI...",
+    "protected_word": "FRAGMENTO",
+    "reward_credits": 150,
+    "enabled": true,
+    "active_at": "2026-03-01T10:00:00"
+  }
+}
