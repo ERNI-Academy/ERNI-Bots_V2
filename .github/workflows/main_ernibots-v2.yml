@@ -24,11 +24,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: ./web/package-lock.json
 
-      - name: npm install, build, and test
-        run: |
-          npm install
-          npm run build
-
       - name: Zip artifact for deployment
         working-directory: ./web
         run: |
