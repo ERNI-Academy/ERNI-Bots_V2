@@ -14,4 +14,4 @@ echo "PORT: $PORT"
 echo "NODE_ENV: $NODE_ENV"
 echo ""
 echo "Starting Next.js application..."
-npm start
+exec node server.js
