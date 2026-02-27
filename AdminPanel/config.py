@@ -1,5 +1,9 @@
 import os
+import urllib.parse
+import logging
 from datetime import timedelta
+
+logger = logging.getLogger(__name__)
 
 
 class Config:
@@ -12,8 +16,13 @@ class Config:
 
     # ── Database ───────────────────────────────────────────────────────────
     # Azure Postgres gives "postgres://" but SQLAlchemy 2.x requires "postgresql://"
+    # PASSWORD_DB must be set in production; the DATABASE_URL may contain
+    # a "[password]" placeholder that gets substituted at startup.
     _raw_db_url = os.getenv("DATABASE_URL", "sqlite:///dev.db")
+    password = urllib.parse.quote_plus(os.environ.get("PASSWORD_DB", ""))
+    logger.info("AdminPanel: building DATABASE_URL")
     DATABASE_URL = _raw_db_url.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = DATABASE_URL.replace("[password]", password, 1)
 
     # ── CORS ───────────────────────────────────────────────────────────────
     # En producción: "https://tu-dominio.com"
