@@ -24,10 +24,18 @@ jobs:
           cache: 'npm'
           cache-dependency-path: ./AdminPanelWeb/package-lock.json
 
+      - name: Install dependencies
+        working-directory: ./AdminPanelWeb
+        run: npm ci
+
+      - name: Build application
+        working-directory: ./AdminPanelWeb
+        run: npm run build
+
       - name: Zip artifact for deployment
         working-directory: ./AdminPanelWeb
         run: |
-          zip -r ../release.zip . -x "*.git*" ".next/*" "node_modules/*"
+          zip -r ../release.zip . -x "*.git*" "node_modules/*"
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
