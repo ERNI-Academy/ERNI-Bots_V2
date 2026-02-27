@@ -1,0 +1,15 @@
+meta {
+  name: Users - Detail
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/users/PLAYER_ID_AQUI
+  body: none
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+}

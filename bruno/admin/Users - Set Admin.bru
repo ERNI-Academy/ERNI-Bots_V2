@@ -1,0 +1,27 @@
+meta {
+  name: Users - Set Admin
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/users/PLAYER_ID_AQUI/set-admin
+  body: json
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "is_admin": true
+  }
+}
+
+docs {
+  is_admin: true  → dar rol admin
+  is_admin: false → quitar rol admin
+}

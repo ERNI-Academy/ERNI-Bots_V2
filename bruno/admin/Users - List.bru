@@ -1,0 +1,23 @@
+meta {
+  name: Users - List
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/users?per_page=20&page=1
+  body: none
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+}
+
+docs {
+  Parámetros opcionales:
+  - search=nombre     → filtra por username o email
+  - banned=true/false → filtra baneados
+  - page=1
+  - per_page=20
+}

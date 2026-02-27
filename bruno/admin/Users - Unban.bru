@@ -1,0 +1,15 @@
+meta {
+  name: Users - Unban
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/users/PLAYER_ID_AQUI/unban
+  body: none
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+}

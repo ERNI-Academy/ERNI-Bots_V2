@@ -1,0 +1,23 @@
+meta {
+  name: Protocols - Update
+  type: http
+  seq: 14
+}
+
+put {
+  url: {{baseUrl}}/api/v1/admin/protocols/protocolo-espejo
+  body: json
+  auth: none
+}
+
+headers {
+  X-Admin-Secret: {{adminSecret}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "protocol_template": "NUEVO TEMPLATE del protocolo...",
+    "unlock_cost": 250
+  }
+}
