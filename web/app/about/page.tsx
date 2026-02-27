@@ -32,6 +32,24 @@ const TEAM = [
         src: "https://media.licdn.com/dms/image/v2/D4E03AQGbD40lETf1Ew/profile-displayphoto-scale_200_200/B4EZwva62OKQAY-/0/1770322114564?e=1773273600&v=beta&t=tFpF7ECHK070nNnPqA6zjyq_W5XnxGMmZvQjCjaU63A",
         link: "https://www.linkedin.com/in/nil-martinez-hernandez-57a2aa16a/",
     },
+    {
+        block: "04",
+        codename: "Noel Novo Corboud",
+        job: "Software Developer & Cybersecurity Specialist",
+        bio: "TODO",
+        skills: ["TODO"],
+        src: "https://media.licdn.com/dms/image/v2/D4D03AQE0-7zk_n9eBg/profile-displayphoto-scale_200_200/B4DZeH1HDTHkAo-/0/1750330537447?e=1773878400&v=beta&t=wUN2lPZDEHumxdphgLLfZLhECBnh9Eg6qhQuiTDZJH0",
+        link: "https://www.linkedin.com/in/noel-novo-corboud-86924a269/",
+    },
+    {
+        block: "05",
+        codename: "Ivan Martinez Hernandez",
+        job: "Software Developer & Cybersecurity Specialist",
+        bio: "Ivan (a.k.a ApoloFebo) es desarrollador de software y entusiasta de la ciberseguridad por pura curiosidad. Empezó programando para crear cosas… y acabó rompiéndolas para entenderlas mejor. Desde entonces vive en ese ciclo infinito de “solo voy a probar una cosa rápida” que nunca es rápida. Ha pasado demasiadas horas en plataformas como HackTheBox, TryHackMe y CTFs, normalmente por diversión y ocasionalmente por frustración. También ha construido y gestionado sus propios proyectos online, donde aprendió que la teoría está muy bien, pero internet siempre encuentra formas creativas de sorprenderte. No se considera un experto, pero sí alguien que pregunta, prueba y aprende constantemente. Porque al final, la curiosidad sigue siendo su herramienta favorita… y también la que más problemas le causa.",
+        skills: ["Everything powered by Curiosity, and...", "Cybersecurity", ".NET", "LUA", "Python", "XSLT"],
+        src: "/ivan.jpg",
+        link: "https://www.linkedin.com/in/ivan-martinez-hernandez-10272417b/",
+    },
 ];
 
 export default function AboutPage() {
