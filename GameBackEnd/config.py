@@ -1,6 +1,8 @@
 import os
 from datetime import timedelta
 import urllib.parse
+import logging
+logger = logging.getLogger(__name__)
 
 class Config:
     # ── JWT ────────────────────────────────────────────────────────────────
@@ -14,8 +16,11 @@ class Config:
     # Azure Postgres gives "postgres://" but SQLAlchemy 2.x requires "postgresql://"
     _raw_db_url = os.getenv("DATABASE_URL", "sqlite:///dev.db")
     password = urllib.parse.quote_plus(os.environ["PASSWORD_DB"])
+    logger.info("pass: created protocol id=%s", password)
     DATABASE_URL = _raw_db_url.replace("postgres://", "postgresql://", 1)
+    logger.info("url: created protocol id=%s", DATABASE_URL)
     DATABASE_URL = DATABASE_URL.replace("[password]", password, 1)
+    logger.info("url2: created protocol id=%s", DATABASE_URL)
     # ── CORS ───────────────────────────────────────────────────────────────
     # En producción: "https://tu-dominio.com"
     # Múltiples orígenes separados por coma: "https://a.com,https://b.com"
