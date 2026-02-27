@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { logoutApi } from "@/lib/auth";
 
@@ -18,7 +19,7 @@ const navItems = [
 
 const kpis = [
   {
-    label: "Jugadores Activos",
+    label: "Jugadores",
     value: "412",
     badge: "+12%",
     badgeColor: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
@@ -28,7 +29,7 @@ const kpis = [
     sparkColor: "bg-blue-500",
   },
   {
-    label: "Fortalezas Activas",
+    label: "Fortalezas",
     value: "34",
     badge: "Estable",
     badgeColor: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
@@ -39,7 +40,7 @@ const kpis = [
     isBar: true,
   },
   {
-    label: "Batallas Hoy",
+    label: "Batallas",
     value: "1,204",
     badge: "+8/min",
     badgeColor: "text-amber-400 bg-amber-400/10 border-amber-400/20",
@@ -69,17 +70,7 @@ const feed = [
   { time: "14:38:10", player: "BitHunter",  gradient: "from-teal-500 to-emerald-400",   challenge: "Forensics::Disk_Img",   status: "correct" },
 ];
 
-const leaderboard = [
-  { rank: 1, name: "AgentNull",   pts: "9,450", region: "EU-West",  top: true },
-  { rank: 2, name: "VoidWalker",  pts: "8,920", region: "EU-West",  top: true },
-  { rank: 3, name: "RedBaron_X",  pts: "8,100", region: "Asia-Pac", top: true },
-  { rank: 4, name: "CyberPunk",   pts: "7,850", region: "",         top: false },
-  { rank: 5, name: "BitHunter",   pts: "7,225", region: "",         top: false },
-  { rank: 6, name: "GreenGhost",  pts: "6,900", region: "",         top: false },
-  { rank: 7, name: "RootAccess",  pts: "6,450", region: "",         top: false },
-  { rank: 8, name: "KernelPanic", pts: "5,980", region: "",         top: false },
-  { rank: 9, name: "ByteMe",      pts: "5,100", region: "",         top: false },
-];
+type LeaderboardEntry = { rank: number; name: string; pts: string; top: boolean };
 
 const statusConfig = {
   correct:   { label: "Correcto", cls: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", dot: "bg-emerald-400" },
@@ -90,6 +81,27 @@ const statusConfig = {
 export default function Dashboard() {
   const router = useRouter();
   const pathname = usePathname();
+
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/leaderboard?limit=10")
+      .then((r) => r.json())
+      .then((data) => {
+        const entries: LeaderboardEntry[] = (data.items ?? []).map(
+          (item: { rank: number; username: string; score: number }) => ({
+            rank: item.rank,
+            name: item.username,
+            pts: item.score.toLocaleString(),
+            top: item.rank <= 3,
+          })
+        );
+        setLeaderboard(entries);
+      })
+      .catch(console.error)
+      .finally(() => setLeaderboardLoading(false));
+  }, []);
 
   const handleLogout = async () => {
     await logoutApi();
@@ -325,40 +337,49 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between border-b border-[#27272A] bg-[#18181B] px-5 py-4">
                   <h2 className="flex items-center gap-2 font-[var(--font-display)] font-semibold text-white">
                     <span className="material-symbols-outlined text-[20px] text-amber-400">leaderboard</span>
-                    Top Agentes
+                    Top Jugadores
                   </h2>
                   <a href="/players" className="font-mono text-xs font-medium text-blue-400 hover:text-blue-300">Ver todos</a>
                 </div>
                 <div className="flex-1 space-y-1 overflow-y-auto p-2">
-                  {leaderboard.map((entry) => (
-                    <div
-                      key={entry.rank}
-                      className={`flex cursor-pointer items-center justify-between rounded p-3 transition-all hover:bg-[#27272A] ${
-                        entry.top ? "border border-[#3F3F46] bg-[#27272A]/40" : ""
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`flex h-6 w-6 items-center justify-center rounded font-bold font-mono text-xs ${
-                            entry.rank === 1
-                              ? "border border-amber-400/30 bg-amber-400/20 text-amber-400"
-                              : entry.top
-                              ? "border border-[#71717A]/30 bg-[#71717A]/20 text-[#71717A]"
-                              : "text-[#71717A]"
-                          }`}
-                        >
-                          {entry.rank < 10 ? `0${entry.rank}` : entry.rank}
-                        </span>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-white">{entry.name}</span>
-                          {entry.region && <span className="font-mono text-[10px] text-[#71717A]">{entry.region}</span>}
+                  {leaderboardLoading ? (
+                    Array.from({ length: 10 }).map((_, i) => (
+                      <div key={i} className="flex items-center justify-between rounded p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="h-6 w-6 rounded bg-[#27272A] animate-pulse" />
+                          <div className="h-4 w-28 rounded bg-[#27272A] animate-pulse" />
                         </div>
+                        <div className="h-4 w-14 rounded bg-[#27272A] animate-pulse" />
                       </div>
-                      <span className={`font-bold font-mono text-sm ${entry.rank === 1 ? "text-emerald-400" : entry.top ? "text-white" : "text-[#71717A]"}`}>
-                        {entry.pts}
-                      </span>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    leaderboard.map((entry) => (
+                      <div
+                        key={entry.rank}
+                        className={`flex cursor-pointer items-center justify-between rounded p-3 transition-all hover:bg-[#27272A] ${
+                          entry.top ? "border border-[#3F3F46] bg-[#27272A]/40" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`flex h-6 w-6 items-center justify-center rounded font-bold font-mono text-xs ${
+                              entry.rank === 1
+                                ? "border border-amber-400/30 bg-amber-400/20 text-amber-400"
+                                : entry.top
+                                ? "border border-[#71717A]/30 bg-[#71717A]/20 text-[#71717A]"
+                                : "text-[#71717A]"
+                            }`}
+                          >
+                            {entry.rank < 10 ? `0${entry.rank}` : entry.rank}
+                          </span>
+                          <span className="text-sm font-medium text-white">{entry.name}</span>
+                        </div>
+                        <span className={`font-bold font-mono text-sm ${entry.rank === 1 ? "text-emerald-400" : entry.top ? "text-white" : "text-[#71717A]"}`}>
+                          {entry.pts}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 

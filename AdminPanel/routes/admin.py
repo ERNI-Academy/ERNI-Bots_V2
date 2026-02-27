@@ -141,25 +141,36 @@ def create_invitations():
 
 @admin_bp.get("/users")
 def list_users():
-    """List players with pagination and optional search/filter.
+    """List players with pagination, optional search/filter and current-season score.
 
     Query params:
         search    – partial match on username or email
         banned    – "true" | "false" to filter by ban status
         page      – 1-based page number (default 1)
-        per_page  – items per page, max 100 (default 20)
+        per_page  – items per page, max 100 (default 20); use 0 to return all
     """
     if not _check_admin():
         return jsonify({"error": "Forbidden"}), 403
 
     page     = max(int(request.args.get("page", 1)), 1)
-    per_page = min(int(request.args.get("per_page", 20)), 100)
+    per_page_raw = int(request.args.get("per_page", 20))
+    per_page = None if per_page_raw == 0 else min(per_page_raw, 100)
     search   = request.args.get("search", "").strip()
     banned   = request.args.get("banned")
 
     db = SessionLocal()
     try:
-        query = db.query(Player)
+        season    = db.query(Season).filter_by(is_active=True).first()
+        season_id = season.id if season else None
+
+        query = (
+            db.query(Player, PlayerSeasonStats)
+            .outerjoin(
+                PlayerSeasonStats,
+                (PlayerSeasonStats.player_id == Player.id) &
+                (PlayerSeasonStats.season_id == season_id),
+            )
+        )
 
         if search:
             query = query.filter(
@@ -172,14 +183,13 @@ def list_users():
         elif banned == "false":
             query = query.filter(Player.is_banned == False)  # noqa: E712
 
-        total   = query.count()
-        players = (
-            query
-            .order_by(Player.created_at.desc())
-            .offset((page - 1) * per_page)
-            .limit(per_page)
-            .all()
-        )
+        total = query.count()
+        query = query.order_by(Player.created_at.desc())
+
+        if per_page is not None:
+            query = query.offset((page - 1) * per_page).limit(per_page)
+
+        rows = query.all()
 
         return jsonify({
             "total":    total,
@@ -187,18 +197,19 @@ def list_users():
             "per_page": per_page,
             "items": [
                 {
-                    "id":         p.id,
-                    "username":   p.username,
-                    "email":      p.email,
-                    "credits":    p.credits,
-                    "energy":     p.energy,
-                    "is_banned":  p.is_banned,
-                    "banned_at":  p.banned_at.isoformat() + "Z" if p.banned_at else None,
-                    "is_admin":   p.is_admin,
-                    "created_at": p.created_at.isoformat() + "Z" if p.created_at else None,
+                    "id":           p.id,
+                    "username":     p.username,
+                    "email":        p.email,
+                    "credits":      p.credits,
+                    "energy":       p.energy,
+                    "is_admin":     p.is_admin,
+                    "is_banned":    p.is_banned,
+                    "banned_at":    p.banned_at.isoformat() + "Z" if p.banned_at else None,
+                    "created_at":   p.created_at.isoformat() + "Z" if p.created_at else None,
                     "has_fortress": p.fortress is not None,
+                    "season_score": stats.score if stats else None,
                 }
-                for p in players
+                for p, stats in rows
             ],
         })
     finally:

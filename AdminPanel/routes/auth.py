@@ -265,7 +265,7 @@ def login():
         if player.is_banned:
             return jsonify({"error": "Account suspended"}), 403
 
-         if not player.is_admin:
+        if not player.is_admin:
             return jsonify({"error": "Unauthorized"}), 403
         # Look up the invitation already linked to this player.
         # is_active is NOT checked here: it governs new registrations,
