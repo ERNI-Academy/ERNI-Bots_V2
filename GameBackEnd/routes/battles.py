@@ -527,7 +527,19 @@ def guess_word(battle_id):
                 # Award attacker with boss reward
                 score_awarded = max(1, boss.reward_credits // 10)
                 credits_awarded = boss.reward_credits
-
+                if boss.reward_count>0:
+                    now = datetime.utcnow()
+                    purchase = PlayerAsset(
+                        id=generate_uuid(),
+                        player_id=user_id,
+                        asset_type_id=reward_asset_type,
+                        asset_id=reward_asset,
+                        purchased_at=now,
+                        purchase_price=0,
+                    )
+                    boss.reward_count=boss.reward_count-1
+                    db.add(purchase)
+     
                 player_stats.score += score_awarded
                 attacker.credits += credits_awarded
 

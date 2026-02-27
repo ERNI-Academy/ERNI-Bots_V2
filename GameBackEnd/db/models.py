@@ -309,7 +309,9 @@ class Boss(Base):
     protected_word = Column(String(64), nullable=False)
 
     reward_credits = Column(Integer, default=0)
-
+    reward_asset_type = Column(String(200), nullable=True)
+    reward_asset = Column(String(200), nullable=True)
+    reward_count = Column(Integer, default=0)
     enabled = Column(Boolean, default=True)
     active_at = Column(DateTime, nullable=True)
 
