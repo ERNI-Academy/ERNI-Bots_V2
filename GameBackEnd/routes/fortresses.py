@@ -265,6 +265,16 @@ def reconfigure_fortress():
         db.close()
         return jsonify({"error": "Not authorized"}), 403
 
+    # Validate protected_word early — before any DB modifications
+    new_word = (data.get("protected_word") or "").strip().upper()
+    if not new_word:
+        db.close()
+        return jsonify({"error": "La palabra secreta es obligatoria"}), 400
+    current_word = (fortress.protected_word or "").strip().upper()
+    if new_word == current_word:
+        db.close()
+        return jsonify({"error": "La palabra secreta debe ser diferente a la última utilizada"}), 400
+
     stats = get_or_create_fortress_season_stats(
         db, fortress.id, season.id
     )
@@ -274,10 +284,7 @@ def reconfigure_fortress():
         return jsonify({"error": "Not eligible for reconfiguration"}), 403
 
     # COSTE DINÁMICO
-    base_cost = 100
-    extra = max(0, stats.defeat_count - 3)
-    discount = extra * 10
-    cost = max(20, base_cost - discount)
+    cost = 0
 
     # Add new protocol/archetype/personality costs if changed
     new_protocol_id = data.get("protocol_id")
@@ -343,7 +350,8 @@ def reconfigure_fortress():
             constraint_id=constraint.id
         )
         db.add(fc)
-    fortress.protected_word = data.get("protected_word", fortress.protected_word)
+
+    fortress.protected_word = new_word
 
     fortress.last_reconfigured_at = datetime.utcnow()
     log = ActivityLog(

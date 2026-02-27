@@ -104,6 +104,7 @@ function FortressConfigurePage() {
     const [story, setStory] = useState("");
     const [selectedPersonality, setSelectedPersonality] = useState<string | null>(null);
     const [protectedWord, setProtectedWord] = useState("");
+    const [originalWord, setOriginalWord] = useState<string | null>(null);
     const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null);
     const [selectedArchetype, setSelectedArchetype] = useState<string | null>(null);
     const [constraints, setConstraints] = useState<Set<string>>(new Set());
@@ -163,9 +164,10 @@ function FortressConfigurePage() {
                     setConstraintTypes(ct);
                 }
 
+                let wordList: string[] = [];
                 if (wordsRes.ok) {
                     const w: { id: string; word: string }[] = await wordsRes.json();
-                    const wordList = w.map(x => x.word);
+                    wordList = w.map(x => x.word);
                     setWords(wordList);
                     if (wordList.length > 0) setProtectedWord(wordList[0]);
                 }
@@ -185,7 +187,10 @@ function FortressConfigurePage() {
                     setName(f.name ?? "");
                     setStory(f.story ?? "");
                     if (f.personality_id) setSelectedPersonality(f.personality_id);
-                    if (f.protected_word) setProtectedWord(f.protected_word);
+                    if (f.protected_word) {
+                        setOriginalWord(f.protected_word);
+                        setProtectedWord(f.protected_word);
+                    }
                     if (f.protocol_id) setSelectedProtocol(f.protocol_id);
                     if (f.archetype_id) setSelectedArchetype(f.archetype_id);
                     if (f.constraints?.length) {
@@ -260,6 +265,13 @@ function FortressConfigurePage() {
         if (!story.trim()) { setError("La historia de la fortaleza es obligatoria."); return; }
         if (!selectedPersonality) { setError("La personalidad es obligatoria."); return; }
         if (!selectedProtocol || !selectedArchetype) { setError("Debes seleccionar un protocolo y un arquetipo."); return; }
+        if (isEditMode) {
+            if (!protectedWord.trim()) { setError("La palabra secreta es obligatoria."); return; }
+            if (originalWord && protectedWord.toUpperCase() === originalWord.toUpperCase()) {
+                setError("Debes elegir una palabra secreta diferente a la actual para poder reconfigurar.");
+                return;
+            }
+        }
 
         setSaving(true);
         try {
@@ -430,7 +442,11 @@ function FortressConfigurePage() {
                                         🔐 Palabra Secreta (Código de Acceso)
                                     </label>
                                     <select
-                                        className="bg-black/60 border border-[#00ffff]/30 text-[#00ffff] p-2.5 text-sm rounded-sm focus:outline-none focus:border-[#00ffff] font-mono uppercase"
+                                        className={`bg-black/60 border text-[#00ffff] p-2.5 text-sm rounded-sm focus:outline-none focus:border-[#00ffff] font-mono uppercase ${
+                                            isEditMode && originalWord && protectedWord.toUpperCase() === originalWord.toUpperCase()
+                                                ? "border-[#ff0033]/70 ring-1 ring-[#ff0033]/40"
+                                                : "border-[#00ffff]/30"
+                                        }`}
                                         value={protectedWord}
                                         onChange={e => setProtectedWord(e.target.value)}
                                     >
@@ -442,6 +458,12 @@ function FortressConfigurePage() {
                                             ))
                                         )}
                                     </select>
+                                    {isEditMode && originalWord && protectedWord.toUpperCase() === originalWord.toUpperCase() && (
+                                        <p className="text-xs text-[#ff0033] font-mono mt-0.5 flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-xs">warning</span>
+                                            Esta es tu palabra secreta. Debes elegir una diferente en tu próxima reconfiguración.
+                                        </p>
+                                    )}
                                     <p className="text-sm text-slate-300 font-mono mt-0.5">
                                         Los atacantes deben descubrir esta palabra para ganar.
                                     </p>
