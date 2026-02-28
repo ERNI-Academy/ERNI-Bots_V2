@@ -61,24 +61,36 @@ export default function ConstraintsPage() {
       <AdminSidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <AdminHeader title="RESTRICCIONES" />
-        <main className="flex-1 overflow-y-auto p-6">
-          {/* Controls */}
-          <div className="mb-4 flex items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-[#71717A]">search</span>
-              <input
-                type="text"
-                placeholder="Buscar texto o tipo..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-9 pr-3 text-sm text-white placeholder-[#71717A] outline-none focus:border-[#3F3F46]"
-              />
+        <main className="flex-1 overflow-y-auto p-8">
+          <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
+
+          {/* Toolbar */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px] text-rose-400">shield_lock</span>
+              <h2 className="font-[var(--font-display)] text-xl font-semibold text-white">Restricciones</h2>
+              <span className="ml-2 rounded border border-[#27272A] bg-[#18181B] px-2 py-0.5 font-mono text-xs text-[#71717A]">
+                {filtered.length} tipos · {totalConstraints} total
+              </span>
             </div>
-            <button onClick={fetchConstraints} className="flex items-center gap-2 rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors">
-              <span className="material-symbols-outlined text-[18px]">refresh</span>
-              Actualizar
-            </button>
-            <span className="ml-auto text-sm text-[#71717A]">{filtered.length} tipos · {totalConstraints} restricciones</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <span className="material-symbols-outlined text-[#71717A] text-[18px]">search</span>
+                </div>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Buscar texto o tipo..."
+                  className="block w-64 rounded border border-[#27272A] bg-[#18181B] py-1.5 pl-9 pr-3 text-sm text-white placeholder-[#71717A] font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+                />
+              </div>
+              <button onClick={fetchConstraints} className="flex items-center gap-2 rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors">
+                <span className="material-symbols-outlined text-[18px]">refresh</span>
+                Actualizar
+              </button>
+            </div>
           </div>
 
           {loading ? (
@@ -129,6 +141,7 @@ export default function ConstraintsPage() {
               ))}
             </div>
           )}
+          </div>
         </main>
       </div>
     </div>
