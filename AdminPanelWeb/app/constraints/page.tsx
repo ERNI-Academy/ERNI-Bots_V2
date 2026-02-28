@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import AdminSidebar from "@/components/AdminSidebar";
-import AdminHeader from "@/components/AdminHeader";
+import AdminLayout from "@/components/AdminLayout";
 
 interface Constraint {
   id: string;
@@ -57,10 +56,7 @@ export default function ConstraintsPage() {
   const totalConstraints = filtered.reduce((acc, g) => acc + g.constraints.length, 0);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#09090B] text-white">
-      <AdminSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <AdminHeader title="RESTRICCIONES" />
+    <AdminLayout title="RESTRICCIONES">
         <main className="flex-1 overflow-y-auto p-8">
           <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
 
@@ -84,6 +80,7 @@ export default function ConstraintsPage() {
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Buscar texto o tipo..."
                   className="block w-64 rounded border border-[#27272A] bg-[#18181B] py-1.5 pl-9 pr-3 text-sm text-white placeholder-[#71717A] font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+                  suppressHydrationWarning
                 />
               </div>
               <button onClick={fetchConstraints} className="flex items-center gap-2 rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors">
@@ -143,7 +140,6 @@ export default function ConstraintsPage() {
           )}
           </div>
         </main>
-      </div>
-    </div>
+    </AdminLayout>
   );
 }

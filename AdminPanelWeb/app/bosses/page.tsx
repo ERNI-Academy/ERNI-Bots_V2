@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import AdminSidebar from "@/components/AdminSidebar";
-import AdminHeader from "@/components/AdminHeader";
+import AdminLayout from "@/components/AdminLayout";
 
 interface Boss {
   id: string;
@@ -65,10 +64,7 @@ export default function BossesPage() {
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#09090B] text-white">
-      <AdminSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <AdminHeader title="BOSSES" />
+    <AdminLayout title="BOSSES">
         <main className="flex-1 overflow-y-auto p-8">
           <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
 
@@ -92,6 +88,7 @@ export default function BossesPage() {
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Buscar por nombre, título, localización..."
                   className="block w-64 rounded border border-[#27272A] bg-[#18181B] py-1.5 pl-9 pr-3 text-sm text-white placeholder-[#71717A] font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+                  suppressHydrationWarning
                 />
               </div>
               <button onClick={fetchBosses} className="flex items-center gap-2 rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors">
@@ -102,8 +99,8 @@ export default function BossesPage() {
           </div>
 
           {/* Table */}
-          <div className="overflow-hidden rounded-lg border border-[#27272A] bg-[#09090B]">
-            <table className="w-full">
+          <div className="overflow-x-auto rounded-lg border border-[#27272A] bg-[#09090B]">
+            <table className="w-full min-w-[720px]">
               <thead>
                 <tr className="border-b border-[#27272A] bg-[#18181B]">
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Nombre</th>
@@ -180,13 +177,12 @@ export default function BossesPage() {
           )}
           </div>
         </main>
-      </div>
 
       {/* Detail slide-over */}
       {selected && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelected(null)} />
-          <aside className="relative z-10 flex w-[480px] flex-col overflow-hidden border-l border-[#27272A] bg-[#09090B]">
+          <aside className="relative z-10 flex w-full flex-col overflow-hidden border-l border-[#27272A] bg-[#09090B] sm:w-[480px]">
             <div className="flex items-center justify-between border-b border-[#27272A] px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-500/10 border border-red-500/30">
@@ -235,6 +231,6 @@ export default function BossesPage() {
           </aside>
         </div>
       )}
-    </div>
+    </AdminLayout>
   );
 }

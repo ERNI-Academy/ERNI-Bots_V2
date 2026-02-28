@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 
 interface AdminHeaderProps {
   title: string;
+  onMenuToggle?: () => void;
 }
 
-export default function AdminHeader({ title }: AdminHeaderProps) {
+export default function AdminHeader({ title, onMenuToggle }: AdminHeaderProps) {
   const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
@@ -18,6 +19,15 @@ export default function AdminHeader({ title }: AdminHeaderProps) {
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-[#27272A] bg-[#09090B]/80 px-8 backdrop-blur-md">
+      {/* Hamburger — mobile only */}
+      <button
+        onClick={onMenuToggle}
+        className="mr-3 flex items-center justify-center rounded p-1 text-[#71717A] hover:text-white md:hidden"
+        aria-label="Toggle menu"
+      >
+        <span className="material-symbols-outlined text-[24px]">menu</span>
+      </button>
+
       {/* Breadcrumb */}
       <div className="flex items-center font-mono text-sm text-[#71717A]">
         <span>SINGULARITY</span>

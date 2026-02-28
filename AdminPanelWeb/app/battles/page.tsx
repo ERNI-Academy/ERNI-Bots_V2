@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import AdminSidebar from "@/components/AdminSidebar";
-import AdminHeader from "@/components/AdminHeader";
+import AdminLayout from "@/components/AdminLayout";
 
 interface Battle {
   id: string;
@@ -119,16 +118,7 @@ export default function BattlesPage() {
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
 
   return (
-    <div className="relative flex h-screen w-full overflow-hidden bg-[#09090B]">
-
-      {/* ── Sidebar ── */}
-      <AdminSidebar />
-
-      {/* ── Main ── */}
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-
-        <AdminHeader title="BATALLAS" />
-
+    <AdminLayout title="BATALLAS">
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-8">
           <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
@@ -156,6 +146,7 @@ export default function BattlesPage() {
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Buscar atacante..."
                     className="block w-52 rounded border border-[#27272A] bg-[#18181B] py-1.5 pl-9 pr-3 text-sm text-white placeholder-[#71717A] font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+                    suppressHydrationWarning
                   />
                 </div>
                 {/* Status filter */}
@@ -348,7 +339,6 @@ export default function BattlesPage() {
 
           </div>
         </div>
-      </main>
 
       {/* ── Battle Detail Slide-over ── */}
       {selectedId && (
@@ -359,10 +349,10 @@ export default function BattlesPage() {
             onClick={() => setSelectedId(null)}
           />
           {/* Panel */}
-          <div className="relative z-10 flex h-full w-[560px] shrink-0 flex-col border-l border-[#27272A] bg-[#09090B] shadow-2xl">
+          <div className="relative z-10 flex h-full w-full shrink-0 flex-col border-l border-[#27272A] bg-[#09090B] shadow-2xl sm:w-[480px] md:w-[560px]">
 
             {/* Panel header */}
-            <div className="flex items-center justify-between border-b border-[#27272A] px-6 py-4">
+            <div className="flex items-center justify-between border-b border-[#27272A] px-4 py-4 md:px-6">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-[20px] text-blue-400">swords</span>
                 <div>
@@ -388,7 +378,7 @@ export default function BattlesPage() {
               <div className="flex flex-1 flex-col overflow-hidden">
 
                 {/* Metadata grid */}
-                <div className="grid grid-cols-2 gap-3 border-b border-[#27272A] px-6 py-5">
+                <div className="grid grid-cols-2 gap-3 border-b border-[#27272A] px-4 py-4 md:px-6 md:py-5">
                   {/* Atacante */}
                   <div className="flex flex-col gap-1">
                     <span className="font-mono text-[10px] uppercase tracking-wider text-[#71717A]">Atacante</span>
@@ -461,14 +451,14 @@ export default function BattlesPage() {
                 </div>
 
                 {/* Message history */}
-                <div className="flex flex-none items-center justify-between border-b border-[#27272A] px-6 py-2.5">
+                <div className="flex flex-none items-center justify-between border-b border-[#27272A] px-4 py-2.5 md:px-6">
                   <span className="font-mono text-[11px] uppercase tracking-wider text-[#71717A]">Historial de mensajes</span>
                   <span className="rounded border border-[#27272A] bg-[#18181B] px-2 py-0.5 font-mono text-[10px] text-[#71717A]">
                     {detail.messages.length}
                   </span>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-5 py-4">
+                <div className="flex-1 overflow-y-auto px-3 py-4 md:px-5">
                   {detail.messages.length === 0 ? (
                     <p className="text-center font-mono text-xs text-[#3F3F46]">Sin mensajes</p>
                   ) : (
@@ -513,6 +503,6 @@ export default function BattlesPage() {
         </div>
       )}
 
-    </div>
+    </AdminLayout>
   );
 }

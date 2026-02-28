@@ -16,7 +16,12 @@ const navItems = [
   { label: "Invitaciones",  icon: "mail",        href: "/invitations",  disabled: true },
 ];
 
-export default function AdminSidebar() {
+interface AdminSidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const router   = useRouter();
 
@@ -26,13 +31,23 @@ export default function AdminSidebar() {
   };
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-[#27272A] bg-[#09090B]">
+    <aside
+      className={[
+        "flex w-64 shrink-0 flex-col border-r border-[#27272A] bg-[#09090B]",
+        // mobile: fixed drawer that slides in/out
+        "fixed inset-y-0 left-0 z-40",
+        "transform transition-transform duration-200 ease-in-out",
+        isOpen ? "translate-x-0" : "-translate-x-full",
+        // desktop: static, always visible, reset transform
+        "md:static md:translate-x-0",
+      ].join(" ")}
+    >
       {/* Logo */}
       <div className="flex h-16 items-center gap-3 border-b border-[#27272A] px-6">
         <div className="flex items-center justify-center rounded bg-blue-500/20 p-1.5">
           <span className="material-symbols-outlined text-blue-400 text-[22px]">rocket_launch</span>
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-1 flex-col">
           <h1 className="font-[var(--font-display)] text-lg font-bold tracking-tight text-white leading-none">
             SINGULARITY
           </h1>
@@ -40,6 +55,14 @@ export default function AdminSidebar() {
             Admin Console v1.0
           </p>
         </div>
+        {/* Close button — mobile only */}
+        <button
+          onClick={onClose}
+          className="ml-auto flex items-center justify-center rounded p-1 text-[#71717A] hover:text-white md:hidden"
+          aria-label="Close menu"
+        >
+          <span className="material-symbols-outlined text-[20px]">close</span>
+        </button>
       </div>
 
       {/* Nav */}

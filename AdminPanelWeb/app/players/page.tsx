@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import AdminSidebar from "@/components/AdminSidebar";
-import AdminHeader from "@/components/AdminHeader";
+import AdminLayout from "@/components/AdminLayout";
 
 interface Player {
   id: string;
@@ -81,16 +80,7 @@ export default function PlayersPage() {
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
 
   return (
-    <div className="relative flex h-screen w-full overflow-hidden bg-[#09090B]">
-
-      {/* ── Sidebar ── */}
-      <AdminSidebar />
-
-      {/* ── Main ── */}
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-
-        <AdminHeader title="JUGADORES" />
-
+    <AdminLayout title="JUGADORES">
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-8">
           <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
@@ -118,6 +108,7 @@ export default function PlayersPage() {
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Buscar usuario o email..."
                     className="block w-64 rounded border border-[#27272A] bg-[#18181B] py-1.5 pl-9 pr-3 text-sm text-white placeholder-[#71717A] font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+                    suppressHydrationWarning
                   />
                 </div>
                 {/* Banned filter */}
@@ -298,7 +289,6 @@ export default function PlayersPage() {
 
           </div>
         </div>
-      </main>
-    </div>
+    </AdminLayout>
   );
 }

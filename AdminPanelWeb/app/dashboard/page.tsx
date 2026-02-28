@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminSidebar from "@/components/AdminSidebar";
-import AdminHeader from "@/components/AdminHeader";
+import AdminLayout from "@/components/AdminLayout";
 
 
 const feed = [
@@ -74,16 +73,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="relative flex h-screen w-full overflow-hidden bg-[#09090B]">
-
-      {/* ── Sidebar ── */}
-      <AdminSidebar />
-
-      {/* ── Main ── */}
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-
-        <AdminHeader title="DASHBOARD" />
-
+    <AdminLayout title="DASHBOARD">
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-8">
           <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
@@ -294,7 +284,6 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </AdminLayout>
   );
 }
