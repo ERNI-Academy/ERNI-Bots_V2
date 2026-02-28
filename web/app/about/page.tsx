@@ -36,9 +36,9 @@ const TEAM = [
         block: "04",
         codename: "Noel Novo Corboud",
         job: "Software Developer & Cybersecurity Specialist",
-        bio: "TODO",
-        skills: ["TODO"],
-        src: "https://media.licdn.com/dms/image/v2/D4D03AQE0-7zk_n9eBg/profile-displayphoto-scale_200_200/B4DZeH1HDTHkAo-/0/1750330537447?e=1773878400&v=beta&t=wUN2lPZDEHumxdphgLLfZLhECBnh9Eg6qhQuiTDZJH0",
+        bio: "Guardián de la infraestructura por instinto y devoto del desarrollo seguro. Apasionado en el ecosistema .NET y el entorno de Linux. Se mueve con comodidad entre diferentes tecnologías, desde la gestión de infraestructura hasta el desarrollo. Su motor es la curiosidad constante por aprender, y reforzar la defensa.",
+        skills: [".NET", "IaaS", "Linux", "Blue Team", "Android Studio"],
+        src: "/noel.jpg",
         link: "https://www.linkedin.com/in/noel-novo-corboud-86924a269/",
     },
     {
