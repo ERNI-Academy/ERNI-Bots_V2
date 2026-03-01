@@ -12,6 +12,7 @@ const navItems = [
   { label: "Bosses",        icon: "skull",       href: "/bosses" },
   { label: "Restricciones", icon: "shield_lock", href: "/constraints" },
   { label: "Batallas",      icon: "swords",      href: "/battles" },
+  { label: "Palabras",      icon: "key",         href: "/words" },
   { label: "Invitaciones",  icon: "mail",        href: "/invitations",  disabled: true },
 ];
 

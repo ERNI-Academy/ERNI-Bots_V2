@@ -18,6 +18,7 @@ from routes.admin_bosses import admin_bosses_bp
 from routes.admin_archetypes import admin_archetypes_bp
 from routes.admin_protocols import admin_protocols_bp
 from routes.admin_constraints import admin_constraints_bp
+from routes.admin_words import admin_words_bp
 from routes.archetypes import archetypes_bp
 from routes.protocols import protocols_bp
 from routes.constraints import constraints_bp
@@ -87,6 +88,7 @@ def create_app():
     app.register_blueprint(admin_archetypes_bp, url_prefix="/api/v1/admin")
     app.register_blueprint(admin_protocols_bp,    url_prefix="/api/v1/admin")
     app.register_blueprint(admin_constraints_bp,  url_prefix="/api/v1/admin")
+    app.register_blueprint(admin_words_bp,         url_prefix="/api/v1/admin")
     app.register_blueprint(archetypes_bp,         url_prefix="/api/v1/archetypes")
     app.register_blueprint(protocols_bp,   url_prefix="/api/v1/protocols")
 
