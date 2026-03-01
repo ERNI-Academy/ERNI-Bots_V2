@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import AdminLayout from "@/components/AdminLayout";
@@ -7,24 +7,308 @@ interface Protocol {
   id: string;
   name: string;
   description: string;
+  protocol_template: string;
   unlock_cost: number;
 }
 
+interface FormState {
+  name: string;
+  description: string;
+  protocol_template: string;
+  unlock_cost: string;
+}
+
+const EMPTY_FORM: FormState = {
+  name: "",
+  description: "",
+  protocol_template: "",
+  unlock_cost: "0",
+};
+
 const PAGE_SIZE = 10;
 
+// 
+// Modal  create / edit
+// 
+
+function ProtocolModal({
+  initial,
+  onClose,
+  onSaved,
+}: {
+  initial: Protocol | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const isEdit = initial !== null;
+  const [form, setForm] = useState<FormState>(
+    initial
+      ? {
+          name: initial.name,
+          description: initial.description,
+          protocol_template: initial.protocol_template,
+          unlock_cost: String(initial.unlock_cost),
+        }
+      : EMPTY_FORM
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError]   = useState<string | null>(null);
+
+  const set = (field: keyof FormState) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm(f => ({ ...f, [field]: e.target.value }));
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+
+    const payload = {
+      name:              form.name.trim(),
+      description:       form.description.trim(),
+      protocol_template: form.protocol_template.trim(),
+      unlock_cost:       parseInt(form.unlock_cost, 10) || 0,
+    };
+
+    try {
+      const url    = isEdit ? `/api/admin/protocols/${initial!.id}` : "/api/admin/protocols";
+      const method = isEdit ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? `Error ${res.status}`);
+      } else {
+        onSaved();
+        onClose();
+      }
+    } catch {
+      setError("Error de conexion");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-2xl rounded-lg border border-[#27272A] bg-[#09090B] shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[#27272A] px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500/10 border border-cyan-500/30">
+              <span className="material-symbols-outlined text-[18px] text-cyan-400">
+                {isEdit ? "edit" : "add"}
+              </span>
+            </div>
+            <h2 className="font-[var(--font-display)] text-lg font-bold text-white">
+              {isEdit ? "Editar protocolo" : "Nuevo protocolo"}
+            </h2>
+          </div>
+          <button onClick={onClose} className="text-[#71717A] hover:text-white">
+            <span className="material-symbols-outlined text-[22px]">close</span>
+          </button>
+        </div>
+
+        {/* Body */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="rounded border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">
+              {error}
+            </div>
+          )}
+
+          {/* Name */}
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">
+              Nombre <span className="text-red-400">*</span>
+            </label>
+            <input
+              required
+              value={form.name}
+              onChange={set("name")}
+              maxLength={50}
+              placeholder="Nombre del protocolo"
+              className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white placeholder-[#71717A] font-mono focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 focus:outline-none transition-all"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">
+              Descripcion <span className="text-red-400">*</span>
+            </label>
+            <textarea
+              required
+              value={form.description}
+              onChange={set("description")}
+              rows={3}
+              placeholder="Descripcion visible para el jugador"
+              className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white placeholder-[#71717A] focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 focus:outline-none transition-all resize-none"
+            />
+          </div>
+
+          {/* Protocol template */}
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">
+              Template del protocolo <span className="text-red-400">*</span>
+            </label>
+            <textarea
+              required
+              value={form.protocol_template}
+              onChange={set("protocol_template")}
+              rows={6}
+              placeholder="Prompt / template del protocolo (system prompt)..."
+              className="w-full rounded border border-[#27272A] bg-[#0D0D0F] px-3 py-2 text-xs text-[#A1A1AA] placeholder-[#71717A] font-mono focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 focus:outline-none transition-all resize-y"
+            />
+          </div>
+
+          {/* Unlock cost */}
+          <div className="w-48">
+            <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">
+              Coste de desbloqueo
+            </label>
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                <span className="material-symbols-outlined text-[15px] text-amber-400">diamond</span>
+              </span>
+              <input
+                type="number"
+                min={0}
+                value={form.unlock_cost}
+                onChange={set("unlock_cost")}
+                className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-10 pr-3 text-sm text-amber-400 font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded border border-[#27272A] bg-[#18181B] px-4 py-2 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex items-center gap-2 rounded border border-cyan-500/50 bg-cyan-500/20 px-4 py-2 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/30 disabled:opacity-50 transition-colors"
+            >
+              {saving && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+              {isEdit ? "Guardar cambios" : "Crear protocolo"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// 
+// Delete confirmation dialog
+// 
+
+function DeleteConfirm({
+  protocol,
+  onClose,
+  onDeleted,
+}: {
+  protocol: Protocol;
+  onClose: () => void;
+  onDeleted: () => void;
+}) {
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+
+  async function handleDelete() {
+    setDeleting(true);
+    setError(null);
+    try {
+      const res  = await fetch(`/api/admin/protocols/${protocol.id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? `Error ${res.status}`);
+      } else {
+        onDeleted();
+        onClose();
+      }
+    } catch {
+      setError("Error de conexion");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-lg border border-[#27272A] bg-[#09090B] p-6 shadow-2xl space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10 border border-red-500/30">
+            <span className="material-symbols-outlined text-[20px] text-red-400">delete</span>
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-white">Eliminar protocolo</h2>
+            <p className="text-xs text-[#71717A]">Esta accion no se puede deshacer</p>
+          </div>
+        </div>
+        <p className="text-sm text-[#A1A1AA]">
+          {`Estas seguro de que quieres eliminar el protocolo `}
+          <span className="font-semibold text-white">{protocol.name}</span>?
+        </p>
+        {error && (
+          <div className="rounded border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">
+            {error}
+          </div>
+        )}
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="rounded border border-[#27272A] bg-[#18181B] px-4 py-2 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="flex items-center gap-2 rounded border border-red-500/50 bg-red-500/20 px-4 py-2 text-sm font-semibold text-red-400 hover:bg-red-500/30 disabled:opacity-50 transition-colors"
+          >
+            {deleting && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 
+// Main page
+// 
+
 export default function ProtocolsPage() {
-  const [protocols, setProtocols]   = useState<Protocol[]>([]);
-  const [filtered, setFiltered]     = useState<Protocol[]>([]);
-  const [search, setSearch]         = useState("");
-  const [page, setPage]             = useState(1);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState<string | null>(null);
+  const [protocols, setProtocols] = useState<Protocol[]>([]);
+  const [filtered, setFiltered]   = useState<Protocol[]>([]);
+  const [search, setSearch]       = useState("");
+  const [page, setPage]           = useState(1);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState<string | null>(null);
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing]     = useState<Protocol | null>(null);
+  const [deleting, setDeleting]   = useState<Protocol | null>(null);
 
   const fetchProtocols = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/protocols");
+      const res = await fetch("/api/admin/protocols");
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const data: Protocol[] = await res.json();
       setProtocols(data);
@@ -38,7 +322,6 @@ export default function ProtocolsPage() {
 
   useEffect(() => { fetchProtocols(); }, [fetchProtocols]);
 
-  // Filter by search
   useEffect(() => {
     const q = search.toLowerCase();
     const result = protocols.filter(p =>
@@ -52,10 +335,20 @@ export default function ProtocolsPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  function openCreate() {
+    setEditing(null);
+    setModalOpen(true);
+  }
+
+  function openEdit(p: Protocol) {
+    setEditing(p);
+    setModalOpen(true);
+  }
+
   return (
     <AdminLayout title="PROTOCOLOS">
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
+      <main className="flex-1 overflow-y-auto p-8">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
 
           {/* Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -75,7 +368,7 @@ export default function ProtocolsPage() {
                   type="text"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  placeholder="Buscar por nombre o descripción..."
+                  placeholder="Buscar por nombre o descripcion..."
                   className="block w-64 rounded border border-[#27272A] bg-[#18181B] py-1.5 pl-9 pr-3 text-sm text-white placeholder-[#71717A] font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
                   suppressHydrationWarning
                 />
@@ -87,65 +380,91 @@ export default function ProtocolsPage() {
                 <span className="material-symbols-outlined text-[18px]">refresh</span>
                 Actualizar
               </button>
+              <button
+                onClick={openCreate}
+                className="flex items-center gap-2 rounded border border-cyan-500/50 bg-cyan-500/20 px-3 py-1.5 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/30 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">add</span>
+                Nuevo protocolo
+              </button>
             </div>
           </div>
 
           {/* Table */}
           <div className="overflow-hidden rounded-lg border border-[#27272A] bg-[#09090B]">
             <div className="overflow-x-auto">
-            <table className="w-full min-w-[580px]">
-              <thead>
-                <tr className="border-b border-[#27272A] bg-[#18181B]">
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Nombre</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Descripción</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[#71717A]">Coste Desbloqueo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-12 text-center text-sm text-[#71717A]">
-                      <span className="material-symbols-outlined animate-spin text-[24px]">progress_activity</span>
-                    </td>
+              <table className="w-full min-w-[640px]">
+                <thead>
+                  <tr className="border-b border-[#27272A] bg-[#18181B]">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Nombre</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Descripcion</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[#71717A]">Coste</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-[#71717A]">Acciones</th>
                   </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-12 text-center text-sm text-red-400">{error}</td>
-                  </tr>
-                ) : paginated.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-12 text-center text-sm text-[#71717A]">No se encontraron protocolos</td>
-                  </tr>
-                ) : paginated.map((p, i) => (
-                  <tr
-                    key={p.id}
-                    className={`border-b border-[#27272A] transition-colors hover:bg-[#18181B] ${
-                      i % 2 === 0 ? "bg-[#09090B]" : "bg-[#0D0D0F]"
-                    }`}
-                  >
-                    <td className="px-4 py-3 font-mono text-xs text-[#71717A]">{p.id}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-500/10 border border-cyan-500/30">
-                          <span className="material-symbols-outlined text-[15px] text-cyan-400">terminal</span>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-12 text-center text-sm text-[#71717A]">
+                        <span className="material-symbols-outlined animate-spin text-[24px]">progress_activity</span>
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-12 text-center text-sm text-red-400">{error}</td>
+                    </tr>
+                  ) : paginated.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-12 text-center text-sm text-[#71717A]">No se encontraron protocolos</td>
+                    </tr>
+                  ) : paginated.map((p, i) => (
+                    <tr
+                      key={p.id}
+                      className={`border-b border-[#27272A] transition-colors hover:bg-[#18181B] ${
+                        i % 2 === 0 ? "bg-[#09090B]" : "bg-[#0D0D0F]"
+                      }`}
+                    >
+                      <td className="px-4 py-3 font-mono text-xs text-[#71717A]">{p.id}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-500/10 border border-cyan-500/30">
+                            <span className="material-symbols-outlined text-[15px] text-cyan-400">terminal</span>
+                          </div>
+                          <span className="text-sm font-medium text-white">{p.name}</span>
                         </div>
-                        <span className="text-sm font-medium text-white">{p.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 max-w-md text-sm text-[#A1A1AA]">
-                      <p className="line-clamp-2">{p.description}</p>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <span className="material-symbols-outlined text-[15px] text-amber-400">diamond</span>
-                        <span className="font-mono text-sm font-semibold text-amber-400">{p.unlock_cost.toLocaleString()}</span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+                      <td className="px-4 py-3 max-w-md text-sm text-[#A1A1AA]">
+                        <p className="line-clamp-2">{p.description}</p>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <span className="material-symbols-outlined text-[15px] text-amber-400">diamond</span>
+                          <span className="font-mono text-sm font-semibold text-amber-400">{p.unlock_cost.toLocaleString()}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => openEdit(p)}
+                            title="Editar"
+                            className="flex items-center gap-1 rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:border-cyan-500/50 hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">edit</span>
+                          </button>
+                          <button
+                            onClick={() => setDeleting(p)}
+                            title="Eliminar"
+                            className="flex items-center gap-1 rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -153,7 +472,7 @@ export default function ProtocolsPage() {
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between">
               <p className="text-sm text-[#71717A]">
-                Página {page} de {totalPages}
+                Pagina {page} de {totalPages}
               </p>
               <div className="flex gap-1">
                 <button
@@ -204,8 +523,26 @@ export default function ProtocolsPage() {
               </div>
             </div>
           )}
-          </div>
-        </main>
+        </div>
+      </main>
+
+      {/* Create / Edit modal */}
+      {modalOpen && (
+        <ProtocolModal
+          initial={editing}
+          onClose={() => setModalOpen(false)}
+          onSaved={fetchProtocols}
+        />
+      )}
+
+      {/* Delete confirmation */}
+      {deleting && (
+        <DeleteConfirm
+          protocol={deleting}
+          onClose={() => setDeleting(null)}
+          onDeleted={fetchProtocols}
+        />
+      )}
     </AdminLayout>
   );
 }
