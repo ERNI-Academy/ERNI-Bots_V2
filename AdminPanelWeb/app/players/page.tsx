@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import AdminLayout from "@/components/AdminLayout";
@@ -19,6 +19,10 @@ interface Player {
 
 const PER_PAGE = 20;
 
+// 
+// Status badge
+// 
+
 function StatusBadge({ banned }: { banned: boolean }) {
   return banned ? (
     <span className="inline-flex items-center gap-1.5 rounded border border-red-400/20 bg-red-400/10 px-2 py-0.5 font-mono text-xs font-medium text-red-400">
@@ -33,6 +37,249 @@ function StatusBadge({ banned }: { banned: boolean }) {
   );
 }
 
+// 
+// Edit player modal
+// 
+
+function EditPlayerModal({
+  player,
+  onClose,
+  onSaved,
+}: {
+  player: Player;
+  onClose: () => void;
+  onSaved: (updated: Partial<Player>) => void;
+}) {
+  const [username, setUsername] = useState(player.username);
+  const [email, setEmail]       = useState(player.email);
+  const [credits, setCredits]   = useState(String(player.credits));
+  const [saving, setSaving]     = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    const payload: Record<string, unknown> = {};
+    if (username !== player.username) payload.username = username.trim();
+    if (email    !== player.email)    payload.email    = email.trim();
+    if (credits  !== String(player.credits)) payload.credits = parseInt(credits, 10);
+    if (Object.keys(payload).length === 0) { onClose(); return; }
+    try {
+      const res  = await fetch(`/api/admin/users/${player.id}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(data.error ?? `Error ${res.status}`); }
+      else {
+        onSaved({
+          username: (payload.username as string) ?? player.username,
+          email:    (payload.email    as string) ?? player.email,
+          credits:  (payload.credits  as number) ?? player.credits,
+        });
+        onClose();
+      }
+    } catch { setError("Error de conexion"); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-lg border border-[#27272A] bg-[#09090B] shadow-2xl">
+        <div className="flex items-center justify-between border-b border-[#27272A] px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/10 border border-blue-500/30">
+              <span className="material-symbols-outlined text-[18px] text-blue-400">edit</span>
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white">Editar jugador</h2>
+              <p className="font-mono text-[10px] text-[#52525B]">{player.id.slice(0, 16)}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-[#71717A] hover:text-white">
+            <span className="material-symbols-outlined text-[22px]">close</span>
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="rounded border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">{error}</div>
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Usuario</label>
+              <input
+                required value={username} onChange={e => setUsername(e.target.value)}
+                minLength={3} maxLength={50}
+                className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white font-mono placeholder-[#71717A] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Email</label>
+              <input
+                type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white font-mono placeholder-[#71717A] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Creditos</label>
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                  <span className="material-symbols-outlined text-[15px] text-amber-400">diamond</span>
+                </span>
+                <input
+                  type="number" min={0} value={credits} onChange={e => setCredits(e.target.value)}
+                  className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-10 pr-3 text-sm text-amber-400 font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-all"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose}
+              className="rounded border border-[#27272A] bg-[#18181B] px-4 py-2 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" disabled={saving}
+              className="flex items-center gap-2 rounded border border-blue-500/50 bg-blue-500/20 px-4 py-2 text-sm font-semibold text-blue-300 hover:bg-blue-500/30 disabled:opacity-50 transition-colors">
+              {saving && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+              Guardar cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// 
+// Confirm action dialog
+// 
+
+type ActionType = "ban" | "unban" | "make-admin" | "remove-admin";
+
+const ACTION_META: Record<ActionType, {
+  icon: string; color: string; title: string; description: string; confirmLabel: string;
+}> = {
+  "ban": {
+    icon: "block", color: "red",
+    title: "Banear jugador",
+    description: "El jugador no podra iniciar sesion ni usar la aplicacion.",
+    confirmLabel: "Banear",
+  },
+  "unban": {
+    icon: "check_circle", color: "emerald",
+    title: "Desbanear jugador",
+    description: "El jugador volvera a tener acceso completo a la aplicacion.",
+    confirmLabel: "Desbanear",
+  },
+  "make-admin": {
+    icon: "admin_panel_settings", color: "amber",
+    title: "Conceder rol Admin",
+    description: "El jugador obtendra privilegios de administrador.",
+    confirmLabel: "Hacer admin",
+  },
+  "remove-admin": {
+    icon: "person", color: "zinc",
+    title: "Revocar rol Admin",
+    description: "El jugador perdera los privilegios de administrador.",
+    confirmLabel: "Quitar admin",
+  },
+};
+
+const colorMap: Record<string, { border: string; bg: string; text: string; hoverBg: string }> = {
+  red:    { border: "border-red-500/30",    bg: "bg-red-500/10",    text: "text-red-400",    hoverBg: "hover:bg-red-500/30"    },
+  emerald:{ border: "border-emerald-500/30",bg: "bg-emerald-500/10",text: "text-emerald-400",hoverBg: "hover:bg-emerald-500/30"},
+  amber:  { border: "border-amber-500/30",  bg: "bg-amber-500/10",  text: "text-amber-400",  hoverBg: "hover:bg-amber-500/30"  },
+  zinc:   { border: "border-zinc-500/30",   bg: "bg-zinc-500/10",   text: "text-zinc-400",   hoverBg: "hover:bg-zinc-500/30"   },
+};
+
+function ConfirmAction({
+  player,
+  action,
+  onClose,
+  onDone,
+}: {
+  player: Player;
+  action: ActionType;
+  onClose: () => void;
+  onDone: (patch: Partial<Player>) => void;
+}) {
+  const meta    = ACTION_META[action];
+  const c       = colorMap[meta.color];
+  const [busy, setBusy]   = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleConfirm() {
+    setBusy(true);
+    setError(null);
+    try {
+      let res: Response;
+      if (action === "ban") {
+        res = await fetch(`/api/admin/users/${player.id}/ban`, { method: "POST" });
+      } else if (action === "unban") {
+        res = await fetch(`/api/admin/users/${player.id}/unban`, { method: "POST" });
+      } else {
+        res = await fetch(`/api/admin/users/${player.id}/set-admin`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_admin: action === "make-admin" }),
+        });
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(data.error ?? `Error ${res.status}`); }
+      else {
+        const patch: Partial<Player> =
+          action === "ban"          ? { is_banned: true,  banned_at: new Date().toISOString() } :
+          action === "unban"        ? { is_banned: false, banned_at: null } :
+          action === "make-admin"   ? { is_admin: true  } :
+                                      { is_admin: false };
+        onDone(patch);
+        onClose();
+      }
+    } catch { setError("Error de conexion"); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-lg border border-[#27272A] bg-[#09090B] p-6 shadow-2xl space-y-4">
+        <div className="flex items-center gap-3">
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${c.border} ${c.bg}`}>
+            <span className={`material-symbols-outlined text-[20px] ${c.text}`}>{meta.icon}</span>
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-white">{meta.title}</h2>
+            <p className="text-xs text-[#71717A]">{meta.description}</p>
+          </div>
+        </div>
+        <p className="text-sm text-[#A1A1AA]">
+          Jugador: <span className="font-semibold text-white">{player.username}</span>
+          <span className="ml-2 font-mono text-xs text-[#52525B]">{player.email}</span>
+        </p>
+        {error && <div className="rounded border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">{error}</div>}
+        <div className="flex justify-end gap-3">
+          <button onClick={onClose}
+            className="rounded border border-[#27272A] bg-[#18181B] px-4 py-2 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors">
+            Cancelar
+          </button>
+          <button onClick={handleConfirm} disabled={busy}
+            className={`flex items-center gap-2 rounded border px-4 py-2 text-sm font-semibold disabled:opacity-50 transition-colors ${c.border} ${c.bg} ${c.text} ${c.hoverBg}`}>
+            {busy && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+            {meta.confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 
+// Main page
+// 
+
 export default function PlayersPage() {
   const [players, setPlayers]     = useState<Player[]>([]);
   const [total, setTotal]         = useState(0);
@@ -42,6 +289,9 @@ export default function PlayersPage() {
   const [bannedFilter, setBannedFilter]       = useState<"" | "true" | "false">("");
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState<string | null>(null);
+
+  const [editTarget, setEditTarget]     = useState<Player | null>(null);
+  const [actionTarget, setActionTarget] = useState<{ player: Player; action: ActionType } | null>(null);
 
   // Debounce search
   useEffect(() => {
@@ -77,218 +327,267 @@ export default function PlayersPage() {
 
   useEffect(() => { fetchPlayers(); }, [fetchPlayers]);
 
+  // Optimistic patch
+  const patchPlayer = useCallback((id: string, patch: Partial<Player>) => {
+    setPlayers(ps => ps.map(p => p.id === id ? { ...p, ...patch } : p));
+  }, []);
+
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
 
   return (
     <AdminLayout title="JUGADORES">
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
 
-            {/* Toolbar */}
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[20px] text-blue-400">group</span>
-                <h2 className="font-[var(--font-display)] text-xl font-semibold text-white">Jugadores</h2>
-                {!loading && (
-                  <span className="ml-2 rounded border border-[#27272A] bg-[#18181B] px-2 py-0.5 font-mono text-xs text-[#71717A]">
-                    {total.toLocaleString()} total
-                  </span>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Search */}
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <span className="material-symbols-outlined text-[#71717A] text-[18px]">search</span>
-                  </div>
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Buscar usuario o email..."
-                    className="block w-64 rounded border border-[#27272A] bg-[#18181B] py-1.5 pl-9 pr-3 text-sm text-white placeholder-[#71717A] font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
-                    suppressHydrationWarning
-                  />
-                </div>
-                {/* Banned filter */}
-                <select
-                  value={bannedFilter}
-                  onChange={(e) => setBannedFilter(e.target.value as "" | "true" | "false")}
-                  className="rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 font-mono text-sm text-white focus:border-blue-500 focus:outline-none"
-                >
-                  <option value="">Todos</option>
-                  <option value="false">Activos</option>
-                  <option value="true">Baneados</option>
-                </select>
-                {/* Refresh */}
-                <button
-                  onClick={fetchPlayers}
-                  className="flex items-center gap-1.5 rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 font-mono text-sm text-[#71717A] hover:border-[#3F3F46] hover:text-white transition-all"
-                >
-                  <span className={`material-symbols-outlined text-[16px] ${loading ? "animate-spin" : ""}`}>refresh</span>
-                  Actualizar
-                </button>
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className="flex flex-col overflow-hidden rounded border border-[#27272A] bg-[#18181B]">
-              {error ? (
-                <div className="flex items-center gap-3 p-8 text-red-400">
-                  <span className="material-symbols-outlined">error</span>
-                  <span className="font-mono text-sm">{error}</span>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-left">
-                    <thead className="sticky top-0 z-10 bg-[#27272A]/50 backdrop-blur-sm">
-                      <tr className="font-mono text-[11px] uppercase tracking-wider text-[#71717A]">
-                        <th className="px-5 py-3 font-medium">Jugador</th>
-                        <th className="px-5 py-3 font-medium">Email</th>
-                        <th className="px-5 py-3 font-medium text-right">Score</th>
-                        <th className="px-5 py-3 font-medium text-right">Créditos</th>
-                        <th className="px-5 py-3 font-medium text-center">Fortaleza</th>
-                        <th className="px-5 py-3 font-medium text-center">Rol</th>
-                        <th className="px-5 py-3 font-medium text-center">Estado</th>
-                        <th className="px-5 py-3 font-medium">Registro</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#27272A] text-sm">
-                      {loading
-                        ? Array.from({ length: PER_PAGE }).map((_, i) => (
-                            <tr key={i} className="h-12">
-                              {Array.from({ length: 8 }).map((_, j) => (
-                                <td key={j} className="px-5 py-3">
-                                  <div className="h-3 w-full max-w-[120px] animate-pulse rounded bg-[#27272A]" />
-                                </td>
-                              ))}
-                            </tr>
-                          ))
-                        : players.map((p) => (
-                            <tr key={p.id} className="h-12 transition-colors hover:bg-[#27272A]/50">
-                              {/* Jugador */}
-                              <td className="px-5 py-2">
-                                <div className="flex items-center gap-3">
-                                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 font-bold text-xs text-white">
-                                    {p.username[0].toUpperCase()}
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span className="font-medium text-white">{p.username}</span>
-                                    <span className="font-mono text-[10px] text-[#52525B]">{p.id.slice(0, 8)}…</span>
-                                  </div>
-                                </div>
-                              </td>
-                              {/* Email */}
-                              <td className="px-5 py-2">
-                                <span className="font-mono text-xs text-[#71717A]">{p.email}</span>
-                              </td>
-                              {/* Score */}
-                              <td className="px-5 py-2 text-right">
-                                <span className="font-mono text-sm font-semibold text-white">
-                                  {p.season_score !== null ? p.season_score.toLocaleString() : <span className="text-[#3F3F46]">—</span>}
-                                </span>
-                              </td>
-                              {/* Créditos */}
-                              <td className="px-5 py-2 text-right">
-                                <span className="font-mono text-sm text-[#71717A]">{p.credits.toLocaleString()}</span>
-                              </td>
-                              {/* Fortaleza */}
-                              <td className="px-5 py-2 text-center">
-                                {p.has_fortress
-                                  ? <span className="material-symbols-outlined text-[18px] text-emerald-400">fort</span>
-                                  : <span className="material-symbols-outlined text-[18px] text-[#3F3F46]">fort</span>
-                                }
-                              </td>
-                              {/* Rol */}
-                              <td className="px-5 py-2 text-center">
-                                {p.is_admin
-                                  ? <span className="inline-flex items-center gap-1 rounded border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 font-mono text-[10px] text-amber-400">Admin</span>
-                                  : <span className="font-mono text-[10px] text-[#52525B]">Player</span>
-                                }
-                              </td>
-                              {/* Estado */}
-                              <td className="px-5 py-2 text-center">
-                                <StatusBadge banned={p.is_banned} />
-                              </td>
-                              {/* Registro */}
-                              <td className="px-5 py-2">
-                                <span className="font-mono text-xs text-[#71717A]">
-                                  {p.created_at
-                                    ? new Date(p.created_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })
-                                    : "—"}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Pagination */}
-              {!error && (
-                <div className="flex items-center justify-between border-t border-[#27272A] px-5 py-3">
-                  <span className="font-mono text-xs text-[#71717A]">
-                    {loading ? "Cargando…" : `${((page - 1) * PER_PAGE) + 1}–${Math.min(page * PER_PAGE, total)} de ${total.toLocaleString()}`}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setPage(1)}
-                      disabled={page === 1 || loading}
-                      className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] text-[#71717A] hover:border-[#3F3F46] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">first_page</span>
-                    </button>
-                    <button
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1 || loading}
-                      className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] text-[#71717A] hover:border-[#3F3F46] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">chevron_left</span>
-                    </button>
-
-                    {/* Page numbers */}
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      const start = Math.max(1, Math.min(page - 2, totalPages - 4));
-                      const p = start + i;
-                      return (
-                        <button
-                          key={p}
-                          onClick={() => setPage(p)}
-                          disabled={loading}
-                          className={`flex h-7 min-w-[28px] items-center justify-center rounded border px-2 font-mono text-xs transition-all disabled:cursor-not-allowed ${
-                            p === page
-                              ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                              : "border-[#27272A] text-[#71717A] hover:border-[#3F3F46] hover:text-white"
-                          }`}
-                        >
-                          {p}
-                        </button>
-                      );
-                    })}
-
-                    <button
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={page === totalPages || loading}
-                      className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] text-[#71717A] hover:border-[#3F3F46] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                    </button>
-                    <button
-                      onClick={() => setPage(totalPages)}
-                      disabled={page === totalPages || loading}
-                      className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] text-[#71717A] hover:border-[#3F3F46] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">last_page</span>
-                    </button>
-                  </div>
-                </div>
+          {/* Toolbar */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px] text-blue-400">group</span>
+              <h2 className="font-[var(--font-display)] text-xl font-semibold text-white">Jugadores</h2>
+              {!loading && (
+                <span className="ml-2 rounded border border-[#27272A] bg-[#18181B] px-2 py-0.5 font-mono text-xs text-[#71717A]">
+                  {total.toLocaleString()} total
+                </span>
               )}
             </div>
-
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <span className="material-symbols-outlined text-[#71717A] text-[18px]">search</span>
+                </div>
+                <input
+                  type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar usuario o email..."
+                  className="block w-64 rounded border border-[#27272A] bg-[#18181B] py-1.5 pl-9 pr-3 text-sm text-white placeholder-[#71717A] font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+                  suppressHydrationWarning
+                />
+              </div>
+              <select
+                value={bannedFilter}
+                onChange={(e) => setBannedFilter(e.target.value as "" | "true" | "false")}
+                className="rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 font-mono text-sm text-white focus:border-blue-500 focus:outline-none"
+              >
+                <option value="">Todos</option>
+                <option value="false">Activos</option>
+                <option value="true">Baneados</option>
+              </select>
+              <button
+                onClick={fetchPlayers}
+                className="flex items-center gap-1.5 rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 font-mono text-sm text-[#71717A] hover:border-[#3F3F46] hover:text-white transition-all"
+              >
+                <span className={`material-symbols-outlined text-[16px] ${loading ? "animate-spin" : ""}`}>refresh</span>
+                Actualizar
+              </button>
+            </div>
           </div>
+
+          {/* Table */}
+          <div className="flex flex-col overflow-hidden rounded border border-[#27272A] bg-[#18181B]">
+            {error ? (
+              <div className="flex items-center gap-3 p-8 text-red-400">
+                <span className="material-symbols-outlined">error</span>
+                <span className="font-mono text-sm">{error}</span>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-left">
+                  <thead className="sticky top-0 z-10 bg-[#27272A]/50 backdrop-blur-sm">
+                    <tr className="font-mono text-[11px] uppercase tracking-wider text-[#71717A]">
+                      <th className="px-5 py-3 font-medium">Jugador</th>
+                      <th className="px-5 py-3 font-medium">Email</th>
+                      <th className="px-5 py-3 font-medium text-right">Score</th>
+                      <th className="px-5 py-3 font-medium text-right">Creditos</th>
+                      <th className="px-5 py-3 font-medium text-center">Fortaleza</th>
+                      <th className="px-5 py-3 font-medium text-center">Rol</th>
+                      <th className="px-5 py-3 font-medium text-center">Estado</th>
+                      <th className="px-5 py-3 font-medium">Registro</th>
+                      <th className="px-5 py-3 font-medium text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#27272A] text-sm">
+                    {loading
+                      ? Array.from({ length: PER_PAGE }).map((_, i) => (
+                          <tr key={i} className="h-12">
+                            {Array.from({ length: 9 }).map((_, j) => (
+                              <td key={j} className="px-5 py-3">
+                                <div className="h-3 w-full max-w-[120px] animate-pulse rounded bg-[#27272A]" />
+                              </td>
+                            ))}
+                          </tr>
+                        ))
+                      : players.map((p) => (
+                          <tr key={p.id} className="h-12 transition-colors hover:bg-[#27272A]/50">
+                            {/* Jugador */}
+                            <td className="px-5 py-2">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 font-bold text-xs text-white">
+                                  {p.username[0].toUpperCase()}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="font-medium text-white">{p.username}</span>
+                                  <span className="font-mono text-[10px] text-[#52525B]">{p.id.slice(0, 8)}</span>
+                                </div>
+                              </div>
+                            </td>
+                            {/* Email */}
+                            <td className="px-5 py-2">
+                              <span className="font-mono text-xs text-[#71717A]">{p.email}</span>
+                            </td>
+                            {/* Score */}
+                            <td className="px-5 py-2 text-right">
+                              <span className="font-mono text-sm font-semibold text-white">
+                                {p.season_score !== null ? p.season_score.toLocaleString() : <span className="text-[#3F3F46]"></span>}
+                              </span>
+                            </td>
+                            {/* Creditos */}
+                            <td className="px-5 py-2 text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <span className="material-symbols-outlined text-[13px] text-amber-400">diamond</span>
+                                <span className="font-mono text-sm text-amber-400">{p.credits.toLocaleString()}</span>
+                              </div>
+                            </td>
+                            {/* Fortaleza */}
+                            <td className="px-5 py-2 text-center">
+                              {p.has_fortress
+                                ? <span className="material-symbols-outlined text-[18px] text-emerald-400">fort</span>
+                                : <span className="material-symbols-outlined text-[18px] text-[#3F3F46]">fort</span>
+                              }
+                            </td>
+                            {/* Rol */}
+                            <td className="px-5 py-2 text-center">
+                              {p.is_admin
+                                ? <span className="inline-flex items-center gap-1 rounded border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 font-mono text-[10px] text-amber-400">Admin</span>
+                                : <span className="font-mono text-[10px] text-[#52525B]">Player</span>
+                              }
+                            </td>
+                            {/* Estado */}
+                            <td className="px-5 py-2 text-center">
+                              <StatusBadge banned={p.is_banned} />
+                            </td>
+                            {/* Registro */}
+                            <td className="px-5 py-2">
+                              <span className="font-mono text-xs text-[#71717A]">
+                                {p.created_at
+                                  ? new Date(p.created_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })
+                                  : ""}
+                              </span>
+                            </td>
+                            {/* Acciones */}
+                            <td className="px-5 py-2">
+                              <div className="flex items-center justify-center gap-1.5">
+                                {/* Edit */}
+                                <button
+                                  onClick={() => setEditTarget(p)}
+                                  title="Editar"
+                                  className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] bg-[#18181B] text-[#71717A] hover:border-blue-500/50 hover:bg-blue-500/10 hover:text-blue-400 transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[15px]">edit</span>
+                                </button>
+                                {/* Ban / Unban */}
+                                {p.is_banned ? (
+                                  <button
+                                    onClick={() => setActionTarget({ player: p, action: "unban" })}
+                                    title="Desbanear"
+                                    className="flex h-7 w-7 items-center justify-center rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                                  >
+                                    <span className="material-symbols-outlined text-[15px]">check_circle</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => setActionTarget({ player: p, action: "ban" })}
+                                    title="Banear"
+                                    className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] bg-[#18181B] text-[#71717A] hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                                  >
+                                    <span className="material-symbols-outlined text-[15px]">block</span>
+                                  </button>
+                                )}
+                                {/* Admin toggle */}
+                                {p.is_admin ? (
+                                  <button
+                                    onClick={() => setActionTarget({ player: p, action: "remove-admin" })}
+                                    title="Quitar admin"
+                                    className="flex h-7 w-7 items-center justify-center rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
+                                  >
+                                    <span className="material-symbols-outlined text-[15px]">admin_panel_settings</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => setActionTarget({ player: p, action: "make-admin" })}
+                                    title="Hacer admin"
+                                    className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] bg-[#18181B] text-[#71717A] hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition-colors"
+                                  >
+                                    <span className="material-symbols-outlined text-[15px]">manage_accounts</span>
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {!error && (
+              <div className="flex items-center justify-between border-t border-[#27272A] px-5 py-3">
+                <span className="font-mono text-xs text-[#71717A]">
+                  {loading ? "Cargando" : `${((page - 1) * PER_PAGE) + 1}${Math.min(page * PER_PAGE, total)} de ${total.toLocaleString()}`}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setPage(1)} disabled={page === 1 || loading}
+                    className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] text-[#71717A] hover:border-[#3F3F46] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                    <span className="material-symbols-outlined text-[16px]">first_page</span>
+                  </button>
+                  <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1 || loading}
+                    className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] text-[#71717A] hover:border-[#3F3F46] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                    <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                  </button>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+                    const pg = start + i;
+                    return (
+                      <button key={pg} onClick={() => setPage(pg)} disabled={loading}
+                        className={`flex h-7 min-w-[28px] items-center justify-center rounded border px-2 font-mono text-xs transition-all disabled:cursor-not-allowed ${
+                          pg === page
+                            ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                            : "border-[#27272A] text-[#71717A] hover:border-[#3F3F46] hover:text-white"
+                        }`}>
+                        {pg}
+                      </button>
+                    );
+                  })}
+                  <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages || loading}
+                    className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] text-[#71717A] hover:border-[#3F3F46] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                    <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                  </button>
+                  <button onClick={() => setPage(totalPages)} disabled={page === totalPages || loading}
+                    className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] text-[#71717A] hover:border-[#3F3F46] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                    <span className="material-symbols-outlined text-[16px]">last_page</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
         </div>
+      </div>
+
+      {editTarget && (
+        <EditPlayerModal
+          player={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSaved={(patch) => patchPlayer(editTarget.id, patch)}
+        />
+      )}
+      {actionTarget && (
+        <ConfirmAction
+          player={actionTarget.player}
+          action={actionTarget.action}
+          onClose={() => setActionTarget(null)}
+          onDone={(patch) => patchPlayer(actionTarget.player.id, patch)}
+        />
+      )}
     </AdminLayout>
   );
 }
