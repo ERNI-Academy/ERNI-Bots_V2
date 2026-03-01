@@ -96,6 +96,8 @@ function EditPlayerModal({
   const [username, setUsername] = useState(player.username);
   const [email, setEmail]       = useState(player.email);
   const [credits, setCredits]   = useState(String(player.credits));
+  const [isAdmin, setIsAdmin]   = useState(player.is_admin);
+  const [isBot,   setIsBot]     = useState(player.is_bot);
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
 
@@ -107,6 +109,8 @@ function EditPlayerModal({
     if (username !== player.username) payload.username = username.trim();
     if (email    !== player.email)    payload.email    = email.trim();
     if (credits  !== String(player.credits)) payload.credits = parseInt(credits, 10);
+    if (isAdmin  !== player.is_admin) payload.is_admin = isAdmin;
+    if (isBot    !== player.is_bot)   payload.is_bot   = isBot;
     if (Object.keys(payload).length === 0) { onClose(); return; }
     try {
       const res  = await fetch(`/api/admin/users/${player.id}`, {
@@ -118,14 +122,52 @@ function EditPlayerModal({
       if (!res.ok) { setError(data.error ?? `Error ${res.status}`); }
       else {
         onSaved({
-          username: (payload.username as string) ?? player.username,
-          email:    (payload.email    as string) ?? player.email,
-          credits:  (payload.credits  as number) ?? player.credits,
+          username: (payload.username as string)  ?? player.username,
+          email:    (payload.email    as string)  ?? player.email,
+          credits:  (payload.credits  as number)  ?? player.credits,
+          is_admin: (payload.is_admin as boolean) ?? player.is_admin,
+          is_bot:   (payload.is_bot   as boolean) ?? player.is_bot,
         });
         onClose();
       }
     } catch { setError("Error de conexion"); }
     finally { setSaving(false); }
+  }
+
+  function RoleToggle({ label, icon, color, checked, onChange }: {
+    label: string; icon: string; color: string; checked: boolean; onChange: (v: boolean) => void;
+  }) {
+    const activeClass: Record<string, string> = {
+      amber: "border-amber-500/50 bg-amber-500/15 text-amber-400",
+      cyan:  "border-cyan-400/50  bg-cyan-400/15  text-cyan-400",
+    };
+    const thumbClass: Record<string, string> = {
+      amber: "bg-amber-400",
+      cyan:  "bg-cyan-400",
+    };
+    const trackClass: Record<string, string> = {
+      amber: "border-amber-500/40 bg-amber-500/20",
+      cyan:  "border-cyan-400/40  bg-cyan-400/20",
+    };
+    return (
+      <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        className={`flex items-center gap-2 rounded border px-3 py-2 text-xs font-mono transition-all ${
+          checked ? activeClass[color] : "border-[#27272A] bg-[#18181B] text-[#52525B] hover:border-[#3F3F46] hover:text-[#71717A]"
+        }`}
+      >
+        <span className="material-symbols-outlined text-[15px]">{icon}</span>
+        {label}
+        <span className={`ml-auto h-4 w-7 rounded-full border transition-all ${
+          checked ? trackClass[color] : "border-[#3F3F46] bg-[#27272A]"
+        }`}>
+          <span className={`block h-3 w-3 translate-y-[1px] rounded-full transition-all ${
+            checked ? `translate-x-[14px] ${thumbClass[color]}` : "translate-x-[1px] bg-[#52525B]"
+          }`} />
+        </span>
+      </button>
+    );
   }
 
   return (
@@ -176,6 +218,13 @@ function EditPlayerModal({
                   type="number" min={0} value={credits} onChange={e => setCredits(e.target.value)}
                   className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-10 pr-3 text-sm text-amber-400 font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-all"
                 />
+              </div>
+            </div>
+            <div className="col-span-2">
+              <label className="mb-2 block text-xs uppercase tracking-wider text-[#71717A]">Rol</label>
+              <div className="grid grid-cols-2 gap-2">
+                <RoleToggle label="Admin" icon="admin_panel_settings" color="amber" checked={isAdmin} onChange={(v) => { setIsAdmin(v); if (v) setIsBot(false); }} />
+                <RoleToggle label="Bot"   icon="smart_toy"            color="cyan"  checked={isBot}   onChange={(v) => { setIsBot(v);   if (v) setIsAdmin(false); }} />
               </div>
             </div>
           </div>
@@ -582,24 +631,6 @@ export default function PlayersPage() {
                                     className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] bg-[#18181B] text-[#71717A] hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 transition-colors"
                                   >
                                     <span className="material-symbols-outlined text-[15px]">block</span>
-                                  </button>
-                                )}
-                                {/* Admin toggle */}
-                                {p.is_admin ? (
-                                  <button
-                                    onClick={() => setActionTarget({ player: p, action: "remove-admin" })}
-                                    title="Quitar admin"
-                                    className="flex h-7 w-7 items-center justify-center rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
-                                  >
-                                    <span className="material-symbols-outlined text-[15px]">admin_panel_settings</span>
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => setActionTarget({ player: p, action: "make-admin" })}
-                                    title="Hacer admin"
-                                    className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] bg-[#18181B] text-[#71717A] hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition-colors"
-                                  >
-                                    <span className="material-symbols-outlined text-[15px]">manage_accounts</span>
                                   </button>
                                 )}
                               </div>

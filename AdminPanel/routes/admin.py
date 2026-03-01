@@ -314,14 +314,16 @@ def get_user(player_id):
 
 @admin_bp.patch("/users/<player_id>")
 def update_user(player_id):
-    """Partial update of player fields: credits, energy, username, email.
+    """Partial update of player fields: credits, energy, username, email, is_admin, is_bot.
 
     Body (all optional):
         {
             "username": "new_name",
             "email":    "new@email.com",
             "credits":  500,
-            "energy":   80
+            "energy":   80,
+            "is_admin": true,
+            "is_bot":   false
         }
     """
     if not _check_admin():
@@ -367,6 +369,12 @@ def update_user(player_id):
             if conflict:
                 return jsonify({"error": "Email already in use"}), 409
             player.email = new_email
+
+        if "is_admin" in data:
+            player.is_admin = bool(data["is_admin"])
+
+        if "is_bot" in data:
+            player.is_bot = bool(data["is_bot"])
 
         db.commit()
         return jsonify({"message": "Player updated", "id": player.id})
