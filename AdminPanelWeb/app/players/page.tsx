@@ -10,6 +10,7 @@ interface Player {
   credits: number;
   energy: number;
   is_admin: boolean;
+  is_bot: boolean;
   is_banned: boolean;
   banned_at: string | null;
   created_at: string | null;
@@ -286,7 +287,8 @@ export default function PlayersPage() {
   const [page, setPage]           = useState(1);
   const [search, setSearch]       = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [bannedFilter, setBannedFilter]       = useState<"" | "true" | "false">("");
+  const [bannedFilter, setBannedFilter]       = useState<"" | "true" | "false">("")
+  const [botFilter,    setBotFilter]           = useState<"" | "true" | "false">("");
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState<string | null>(null);
 
@@ -300,7 +302,7 @@ export default function PlayersPage() {
   }, [search]);
 
   // Reset to page 1 on filter change
-  useEffect(() => { setPage(1); }, [debouncedSearch, bannedFilter]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, bannedFilter, botFilter]);
 
   const fetchPlayers = useCallback(async () => {
     setLoading(true);
@@ -311,6 +313,7 @@ export default function PlayersPage() {
     });
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (bannedFilter)    params.set("banned", bannedFilter);
+    if (botFilter)       params.set("is_bot", botFilter);
 
     try {
       const res  = await fetch(`/api/admin/users?${params}`);
@@ -323,7 +326,7 @@ export default function PlayersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, bannedFilter]);
+  }, [page, debouncedSearch, bannedFilter, botFilter]);
 
   useEffect(() => { fetchPlayers(); }, [fetchPlayers]);
 
@@ -370,6 +373,15 @@ export default function PlayersPage() {
                 <option value="">Todos</option>
                 <option value="false">Activos</option>
                 <option value="true">Baneados</option>
+              </select>
+              <select
+                value={botFilter}
+                onChange={(e) => setBotFilter(e.target.value as "" | "true" | "false")}
+                className="rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 font-mono text-sm text-white focus:border-blue-500 focus:outline-none"
+              >
+                <option value="">Todos (bot/humano)</option>
+                <option value="false">Solo humanos</option>
+                <option value="true">Solo bots</option>
               </select>
               <button
                 onClick={fetchPlayers}
@@ -455,10 +467,17 @@ export default function PlayersPage() {
                             </td>
                             {/* Rol */}
                             <td className="px-5 py-2 text-center">
-                              {p.is_admin
-                                ? <span className="inline-flex items-center gap-1 rounded border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 font-mono text-[10px] text-amber-400">Admin</span>
-                                : <span className="font-mono text-[10px] text-[#52525B]">Player</span>
-                              }
+                              <div className="inline-flex flex-wrap justify-center gap-1">
+                                {p.is_admin && (
+                                  <span className="inline-flex items-center gap-1 rounded border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 font-mono text-[10px] text-amber-400">Admin</span>
+                                )}
+                                {p.is_bot && (
+                                  <span className="inline-flex items-center gap-1 rounded border border-zinc-400/20 bg-zinc-400/10 px-2 py-0.5 font-mono text-[10px] text-zinc-400">Bot</span>
+                                )}
+                                {!p.is_admin && !p.is_bot && (
+                                  <span className="font-mono text-[10px] text-[#52525B]">Player</span>
+                                )}
+                              </div>
                             </td>
                             {/* Estado */}
                             <td className="px-5 py-2 text-center">

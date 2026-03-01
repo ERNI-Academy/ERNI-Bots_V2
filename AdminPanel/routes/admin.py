@@ -150,6 +150,7 @@ def list_users():
     Query params:
         search    – partial match on username or email
         banned    – "true" | "false" to filter by ban status
+        is_bot    – "true" | "false" to filter by bot status
         page      – 1-based page number (default 1)
         per_page  – items per page, max 100 (default 20); use 0 to return all
     """
@@ -161,6 +162,7 @@ def list_users():
     per_page = None if per_page_raw == 0 else min(per_page_raw, 100)
     search   = request.args.get("search", "").strip()
     banned   = request.args.get("banned")
+    is_bot   = request.args.get("is_bot")
 
     db = SessionLocal()
     try:
@@ -187,6 +189,11 @@ def list_users():
         elif banned == "false":
             query = query.filter(Player.is_banned == False)  # noqa: E712
 
+        if is_bot == "true":
+            query = query.filter(Player.is_bot == True)      # noqa: E712
+        elif is_bot == "false":
+            query = query.filter(Player.is_bot == False)     # noqa: E712
+
         total = query.count()
         query = query.order_by(Player.created_at.desc())
 
@@ -208,6 +215,7 @@ def list_users():
                     "energy":       p.energy,
                     "is_admin":     p.is_admin,
                     "is_banned":    p.is_banned,
+                    "is_bot":       p.is_bot,
                     "banned_at":    p.banned_at.isoformat() + "Z" if p.banned_at else None,
                     "created_at":   p.created_at.isoformat() + "Z" if p.created_at else None,
                     "has_fortress": p.fortress is not None,
@@ -707,7 +715,7 @@ def stats():
 
     db = SessionLocal()
     try:
-        player_count   = db.query(Player).count()
+        player_count   = db.query(Player).filter(Player.is_bot == False).count()  # noqa: E712
         fortress_count = db.query(Fortress).count()
         battle_count   = db.query(Battle).count()
 

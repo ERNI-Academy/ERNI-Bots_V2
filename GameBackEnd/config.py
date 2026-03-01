@@ -15,7 +15,7 @@ class Config:
     # ── Database ───────────────────────────────────────────────────────────
     # Azure Postgres gives "postgres://" but SQLAlchemy 2.x requires "postgresql://"
     _raw_db_url = os.getenv("DATABASE_URL", "sqlite:///dev.db")
-    password = urllib.parse.quote_plus(os.environ["PASSWORD_DB"])
+    password = urllib.parse.quote_plus(os.getenv("PASSWORD_DB", ""))
     logger.info("pass: created protocol id=%s", password)
     DATABASE_URL = _raw_db_url.replace("postgres://", "postgresql://", 1)
     logger.info("url: created protocol id=%s", DATABASE_URL)

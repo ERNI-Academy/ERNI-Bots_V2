@@ -29,7 +29,10 @@ def leaderboard():
     base_query = (
         db.query(PlayerSeasonStats, Player)
         .join(Player, Player.id == PlayerSeasonStats.player_id)
-        .filter(PlayerSeasonStats.season_id == season.id)
+        .filter(
+            PlayerSeasonStats.season_id == season.id,
+            Player.is_bot == False,  # noqa: E712
+        )
         .order_by(PlayerSeasonStats.score.desc())
     )
 

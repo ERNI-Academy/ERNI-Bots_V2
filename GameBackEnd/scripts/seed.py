@@ -2671,6 +2671,10 @@ def seed():
         for npc in NPC_PLAYERS:
             existing = db.query(Player).filter_by(username=npc["username"]).first()
             if existing:
+                # Backfill is_bot flag on existing NPC players
+                if not existing.is_bot:
+                    existing.is_bot = True
+                    db.commit()
                 print(f"  SKIP  Player '{npc['username']}' ya existe")
                 player_map[npc["username"]] = existing
                 # Load existing assigned words
@@ -2682,6 +2686,7 @@ def seed():
             player = Player(
                 id=_gen_uuid(),
                 password_hash=generate_password_hash(_gen_code(16)),
+                is_bot=True,
                 **npc
             )
             db.add(player)
