@@ -151,6 +151,8 @@ def list_users():
         search    – partial match on username or email
         banned    – "true" | "false" to filter by ban status
         is_bot    – "true" | "false" to filter by bot status
+        sort_by   – column to sort by: username | email | credits | created_at | season_score (default: created_at)
+        sort_dir  – asc | desc (default: desc)
         page      – 1-based page number (default 1)
         per_page  – items per page, max 100 (default 20); use 0 to return all
     """
@@ -163,6 +165,8 @@ def list_users():
     search   = request.args.get("search", "").strip()
     banned   = request.args.get("banned")
     is_bot   = request.args.get("is_bot")
+    sort_by  = request.args.get("sort_by",  "created_at")
+    sort_dir = request.args.get("sort_dir", "desc")
 
     db = SessionLocal()
     try:
@@ -195,7 +199,26 @@ def list_users():
             query = query.filter(Player.is_bot == False)     # noqa: E712
 
         total = query.count()
-        query = query.order_by(Player.created_at.desc())
+
+        _sort_cols = {
+            "username":     Player.username,
+            "email":        Player.email,
+            "credits":      Player.credits,
+            "created_at":   Player.created_at,
+            "season_score": PlayerSeasonStats.score,
+        }
+        sort_fields = [f.strip() for f in sort_by.split(",")]
+        sort_dirs   = [d.strip() for d in sort_dir.split(",")]
+        order_clauses = []
+        for i, sf in enumerate(sort_fields):
+            col = _sort_cols.get(sf)
+            if col is None:
+                continue
+            sd = sort_dirs[i] if i < len(sort_dirs) else "asc"
+            order_clauses.append(col.asc().nullslast() if sd == "asc" else col.desc().nullslast())
+        if not order_clauses:
+            order_clauses = [Player.created_at.desc().nullslast()]
+        query = query.order_by(*order_clauses)
 
         if per_page is not None:
             query = query.offset((page - 1) * per_page).limit(per_page)

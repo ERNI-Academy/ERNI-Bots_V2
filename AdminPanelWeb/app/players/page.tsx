@@ -3,6 +3,48 @@
 import { useEffect, useState, useCallback } from "react";
 import AdminLayout from "@/components/AdminLayout";
 
+type SortField = "username" | "email" | "credits" | "season_score" | "created_at";
+type SortDir   = "asc" | "desc";
+type SortKey   = { field: SortField; dir: SortDir };
+
+function SortHeader({
+  label, field, align = "left", sortKeys, onSort,
+}: {
+  label: string; field: SortField; align?: "left" | "right" | "center";
+  sortKeys: SortKey[]; onSort: (f: SortField, shift: boolean) => void;
+}) {
+  const idx  = sortKeys.findIndex(k => k.field === field);
+  const active = idx !== -1;
+  const dir  = active ? sortKeys[idx].dir : null;
+  const icon = active ? (dir === "asc" ? "arrow_upward" : "arrow_downward") : "unfold_more";
+  const multi = sortKeys.length > 1;
+  return (
+    <th
+      className={`px-5 py-3 font-medium cursor-pointer select-none hover:text-white transition-colors ${
+        active ? "text-white" : ""
+      } ${align === "right" ? "text-right" : align === "center" ? "text-center" : ""}`}
+      onClick={(e) => onSort(field, e.shiftKey)}
+      title={active ? "Shift+clic para encadenar" : "Shift+clic para añadir al orden"}
+    >
+      <span className={`inline-flex items-center gap-1 ${
+        align === "right" ? "justify-end" : align === "center" ? "justify-center" : ""
+      }`}>
+        {label}
+        <span className={`inline-flex items-center gap-0.5`}>
+          <span className={`material-symbols-outlined text-[13px] ${
+            active ? "text-blue-400" : "text-[#52525B]"
+          }`}>{icon}</span>
+          {active && multi && (
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-500 font-mono text-[9px] font-bold text-white leading-none">
+              {idx + 1}
+            </span>
+          )}
+        </span>
+      </span>
+    </th>
+  );
+}
+
 interface Player {
   id: string;
   username: string;
@@ -288,7 +330,8 @@ export default function PlayersPage() {
   const [search, setSearch]       = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [bannedFilter, setBannedFilter]       = useState<"" | "true" | "false">("")
-  const [botFilter,    setBotFilter]           = useState<"" | "true" | "false">("");
+  const [botFilter,    setBotFilter]           = useState<"" | "true" | "false">("")
+  const [sortKeys, setSortKeys] = useState<SortKey[]>([{ field: "created_at", dir: "desc" }]);;
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState<string | null>(null);
 
@@ -301,8 +344,27 @@ export default function PlayersPage() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Reset to page 1 on filter change
-  useEffect(() => { setPage(1); }, [debouncedSearch, bannedFilter, botFilter]);
+  // Reset to page 1 on filter/sort change
+  useEffect(() => { setPage(1); }, [debouncedSearch, bannedFilter, botFilter, sortKeys]);
+
+  const handleSort = useCallback((field: SortField, shift: boolean) => {
+    setSortKeys(prev => {
+      const idx = prev.findIndex(k => k.field === field);
+      if (shift) {
+        // Shift+click: add to chain or toggle direction if already present
+        if (idx === -1) return [...prev, { field, dir: "asc" }];
+        const updated = [...prev];
+        updated[idx] = { field, dir: prev[idx].dir === "asc" ? "desc" : "asc" };
+        return updated;
+      } else {
+        // Regular click: single sort or toggle direction
+        if (idx !== -1 && prev.length === 1) {
+          return [{ field, dir: prev[0].dir === "asc" ? "desc" : "asc" }];
+        }
+        return [{ field, dir: "asc" }];
+      }
+    });
+  }, []);
 
   const fetchPlayers = useCallback(async () => {
     setLoading(true);
@@ -314,6 +376,8 @@ export default function PlayersPage() {
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (bannedFilter)    params.set("banned", bannedFilter);
     if (botFilter)       params.set("is_bot", botFilter);
+    params.set("sort_by",  sortKeys.map(k => k.field).join(","));
+    params.set("sort_dir", sortKeys.map(k => k.dir).join(","));
 
     try {
       const res  = await fetch(`/api/admin/users?${params}`);
@@ -326,7 +390,7 @@ export default function PlayersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, bannedFilter, botFilter]);
+  }, [page, debouncedSearch, bannedFilter, botFilter, sortKeys]);
 
   useEffect(() => { fetchPlayers(); }, [fetchPlayers]);
 
@@ -405,14 +469,14 @@ export default function PlayersPage() {
                 <table className="w-full border-collapse text-left">
                   <thead className="sticky top-0 z-10 bg-[#27272A]/50 backdrop-blur-sm">
                     <tr className="font-mono text-[11px] uppercase tracking-wider text-[#71717A]">
-                      <th className="px-5 py-3 font-medium">Jugador</th>
-                      <th className="px-5 py-3 font-medium">Email</th>
-                      <th className="px-5 py-3 font-medium text-right">Score</th>
-                      <th className="px-5 py-3 font-medium text-right">Creditos</th>
+                      <SortHeader label="Jugador"  field="username"     sortKeys={sortKeys} onSort={handleSort} />
+                      <SortHeader label="Email"    field="email"        sortKeys={sortKeys} onSort={handleSort} />
+                      <SortHeader label="Score"    field="season_score" sortKeys={sortKeys} onSort={handleSort} align="right" />
+                      <SortHeader label="Creditos" field="credits"      sortKeys={sortKeys} onSort={handleSort} align="right" />
                       <th className="px-5 py-3 font-medium text-center">Fortaleza</th>
                       <th className="px-5 py-3 font-medium text-center">Rol</th>
                       <th className="px-5 py-3 font-medium text-center">Estado</th>
-                      <th className="px-5 py-3 font-medium">Registro</th>
+                      <SortHeader label="Registro" field="created_at"   sortKeys={sortKeys} onSort={handleSort} />
                       <th className="px-5 py-3 font-medium text-center">Acciones</th>
                     </tr>
                   </thead>
