@@ -561,7 +561,7 @@ export default function PlayersPage() {
                             {/* Score */}
                             <td className="px-5 py-2 text-right">
                               <span className="font-mono text-sm font-semibold text-white">
-                                {p.season_score !== null ? p.season_score.toLocaleString() : <span className="text-[#3F3F46]"></span>}
+                                {(p.season_score ?? 0).toLocaleString()}
                               </span>
                             </td>
                             {/* Creditos */}
