@@ -15,9 +15,10 @@ import logging
 import uuid
 
 from flask import Blueprint, jsonify, request
+from sqlalchemy.exc import IntegrityError
 
 from db import SessionLocal
-from db.models import Archetype
+from db.models import Archetype, Fortress
 from routes.admin import _check_admin
 
 logger = logging.getLogger(__name__)
@@ -189,11 +190,23 @@ def delete_archetype(archetype_id):
         if not archetype:
             return jsonify({"error": "Archetype not found"}), 404
 
+        # Check for fortresses referencing this archetype
+        fortress_count = db.query(Fortress).filter_by(archetype_id=archetype_id).count()
+        if fortress_count > 0:
+            return jsonify({
+                "error": f"No se puede eliminar: {fortress_count} fortaleza{'s' if fortress_count != 1 else ''} "
+                         f"{'usan' if fortress_count != 1 else 'usa'} este arquetipo. "
+                         "Reconfigura o elimina esas fortalezas primero."
+            }), 409
+
         db.delete(archetype)
         db.commit()
         logger.info("admin: deleted archetype id=%s", archetype_id)
         return jsonify({"message": "Archetype deleted"})
 
+    except IntegrityError:
+        db.rollback()
+        return jsonify({"error": "No se puede eliminar: existen registros que dependen de este arquetipo."}), 409
     except Exception:
         db.rollback()
         logger.exception("admin: delete_archetype failed")

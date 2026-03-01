@@ -180,7 +180,7 @@ function ArchetypeModal({
                 min={0}
                 value={form.unlock_cost}
                 onChange={set("unlock_cost")}
-                className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-8 pr-3 text-sm text-amber-400 font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-all"
+                className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-10 pr-3 text-sm text-amber-400 font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-all"
               />
             </div>
           </div>
