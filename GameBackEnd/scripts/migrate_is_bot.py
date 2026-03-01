@@ -43,7 +43,7 @@ def run():
         # 1. Add column if missing
         if not column_exists(conn, "players", "is_bot"):
             conn.execute(text(
-                "ALTER TABLE players ADD COLUMN is_bot BOOLEAN NOT NULL DEFAULT 0"
+                "ALTER TABLE players ADD COLUMN is_bot BOOLEAN NOT NULL DEFAULT FALSE"
             ))
             print("✓ Added column: players.is_bot")
         else:
