@@ -99,7 +99,8 @@ export default function BossesPage() {
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto rounded-lg border border-[#27272A] bg-[#09090B]">
+          <div className="overflow-hidden rounded-lg border border-[#27272A] bg-[#09090B]">
+            <div className="overflow-x-auto">
             <table className="w-full min-w-[720px]">
               <thead>
                 <tr className="border-b border-[#27272A] bg-[#18181B]">
@@ -157,6 +158,7 @@ export default function BossesPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Pagination */}

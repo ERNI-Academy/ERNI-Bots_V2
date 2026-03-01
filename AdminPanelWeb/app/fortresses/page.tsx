@@ -99,7 +99,8 @@ export default function FortressesPage() {
 
           {/* Table */}
           <div className="overflow-hidden rounded-lg border border-[#27272A] bg-[#09090B]">
-            <table className="w-full">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px]">
               <thead>
                 <tr className="border-b border-[#27272A] bg-[#18181B]">
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Nombre</th>
@@ -140,6 +141,7 @@ export default function FortressesPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Pagination */}
