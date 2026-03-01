@@ -26,8 +26,9 @@ export async function GET(request: NextRequest) {
     });
 
     if (!backendRes.ok) {
-      // Refresh token invalid/revoked/expired → force re-login
+      // Refresh token invalid/revoked/expired, or player is banned → force re-login
       const response = NextResponse.redirect(new URL("/login", request.url));
+      response.cookies.set("auth-token",    "", { maxAge: 0, path: "/" });
       response.cookies.set("refresh-token", "", { maxAge: 0, path: "/" });
       return response;
     }

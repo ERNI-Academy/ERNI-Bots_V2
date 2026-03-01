@@ -23,7 +23,14 @@ export async function GET(request: NextRequest) {
 
   if (!backendRes.ok) {
     const data = await backendRes.json().catch(() => ({}));
-    return NextResponse.json(data, { status: backendRes.status });
+    const response = NextResponse.json(data, { status: backendRes.status });
+    // If the player has been banned, clear both cookies so the middleware
+    // redirects them to /login on the next navigation.
+    if (backendRes.status === 403) {
+      response.cookies.set("auth-token",    "", { maxAge: 0, path: "/" });
+      response.cookies.set("refresh-token", "", { maxAge: 0, path: "/" });
+    }
+    return response;
   }
 
   const data = await backendRes.json();

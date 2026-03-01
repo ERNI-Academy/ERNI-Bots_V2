@@ -387,8 +387,21 @@ def refresh():
     Responses:
         200  { "access_token": "..." }
         401  Refresh token missing / invalid / revoked
+        403  Account suspended
     """
-    user_id      = get_jwt_identity()
+    from db import SessionLocal
+    from db.models import Player
+
+    user_id = get_jwt_identity()
+    db = SessionLocal()
+    try:
+        player = db.query(Player).filter_by(id=user_id).first()
+        if player and player.is_banned:
+            logger.info("refresh: banned player attempted token refresh id=%.8s", user_id)
+            return jsonify({"error": "Account suspended"}), 403
+    finally:
+        db.close()
+
     access_token = create_access_token(identity=user_id)
     logger.info("refresh: new access token issued for id=%.8s", user_id)
     return jsonify({"access_token": access_token}), 200
@@ -418,6 +431,10 @@ def me():
         player = db.query(Player).filter_by(id=user_id).first()
         if not player:
             return jsonify({"error": "Player not found"}), 404
+
+        if player.is_banned:
+            logger.info("me: banned player request id=%.8s", user_id)
+            return jsonify({"error": "Account suspended"}), 403
 
         return jsonify({
             "id":          player.id,

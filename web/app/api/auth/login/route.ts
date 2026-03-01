@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
   const SAFE_ERRORS: Record<number, string> = {
     400: "Datos de entrada inválidos",
     401: "Credenciales incorrectas",
+    403: "Cuenta suspendida. Contacta con un administrador.",
     500: "Error interno del servidor",
   };
 
