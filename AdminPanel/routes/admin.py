@@ -64,9 +64,7 @@ admin_bp = Blueprint("admin", __name__)
 
 def _check_admin() -> bool:
     """Return True if the request carries the correct admin secret."""
-    # TODO: switch to env var before deploying to production:
-    #   secret = os.getenv("ADMIN_SECRET", "").strip()
-    secret = "erni-admin-2026"
+    secret = os.getenv("ADMIN_SECRET", "").strip()
     if not secret:
         return False
     return secrets.compare_digest(
