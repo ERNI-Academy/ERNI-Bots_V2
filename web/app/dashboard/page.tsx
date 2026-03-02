@@ -112,11 +112,21 @@ function generateSpreadPositions(count: number): MarkerPos[] {
 }
 
 function markerClass(status: Fortress["status"]): string {
+    const base = "absolute flex items-center justify-center cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
     switch (status) {
-        case "INVENCIBLE": return "absolute w-6 h-6 bg-[#ff0033] rounded-full shadow-[0_0_20px_#ff0033] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
-        case "HOSTIL": return "absolute w-4 h-4 bg-[#ffd700] rounded-full shadow-[0_0_15px_#ffd700] cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
-        case "DEBIL": return "absolute w-8 h-8 border-2 border-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors focus:outline-none -translate-x-1/2 -translate-y-1/2";
-        default: return "absolute w-4 h-4 bg-white rounded-full shadow-[0_0_15px_white] animate-pulse cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
+        case "INVENCIBLE": return `${base} text-[#ff0033] drop-shadow-[0_0_10px_#ff0033]`;
+        case "HOSTIL":     return `${base} text-[#ffd700] drop-shadow-[0_0_10px_#ffd700]`;
+        case "DEBIL":      return `${base} text-primary  drop-shadow-[0_0_8px_var(--color-primary)]`;
+        default:           return `${base} text-white    drop-shadow-[0_0_8px_white] animate-pulse`;
+    }
+}
+
+function markerIcon(status: Fortress["status"]): string {
+    switch (status) {
+        case "INVENCIBLE": return "fort";
+        case "HOSTIL":     return "shield";
+        case "DEBIL":      return "swords";
+        default:           return "fort";
     }
 }
 
@@ -212,7 +222,10 @@ export default function DashboardPage() {
                         style={{ top: markerPos[i].top, left: markerPos[i].left }}
                         title={fortress.name}
                     >
-                        <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-0.5 bg-black/90 border border-white/30 text-white text-xs font-bold font-mono uppercase tracking-wide whitespace-nowrap pointer-events-none shadow-lg">
+                        <span className="material-symbols-outlined text-2xl select-none">
+                            {markerIcon(fortress.status)}
+                        </span>
+                        <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-0.5 bg-black/90 border border-white/30 text-white text-xs font-bold font-mono uppercase tracking-wide whitespace-nowrap pointer-events-none shadow-lg">
                             {fortress.name}
                         </span>
                     </button>
