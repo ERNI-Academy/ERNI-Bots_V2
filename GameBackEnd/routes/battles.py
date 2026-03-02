@@ -619,10 +619,10 @@ def guess_word(battle_id):
                 attacker.credits   += credits_awarded
 
                 db.add(ActivityLog(
-                    type="battle_win",
+                    type="boss_defeated",
                     actor_id=attacker.id,
                     target_id=None,
-                    message=f"{attacker.username} ha derrotado a {boss.name}"
+                    message=f"{attacker.username} ha neutralizado a {boss.name}"
                 ))
 
                 db.add(PlayerHistoryEntry(

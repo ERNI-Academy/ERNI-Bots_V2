@@ -18,6 +18,8 @@ function activityStyle(type: string): { border: string; label: string; color: st
     switch (type) {
         case "battle_win":
             return { border: "border-[#ff0033]/30", label: "BRECHA", color: "text-[#ff0033]" };
+        case "boss_defeated":
+            return { border: "border-[#c084fc]/40", label: "▸ BOSS NEUTRALIZADO", color: "text-[#c084fc]" };
         case "battle_defense":
             return { border: "border-[#ffd700]/30", label: "DEFENSA", color: "text-[#ffd700]" };
         case "fortress_reconfigured":
