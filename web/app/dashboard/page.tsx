@@ -147,6 +147,7 @@ export default function DashboardPage() {
     const [tick, setTick] = useState(0);
     const [showSettings, setShowSettings] = useState(false);
     const [seasonStatus, setSeasonStatus] = useState<string>("active");
+    const [seasonStartDate, setSeasonStartDate] = useState<string | null>(null);
 
     async function handleLogout() {
         setShowSettings(false);
@@ -179,6 +180,7 @@ export default function DashboardPage() {
                 setMarkerPos(generateSpreadPositions(fortressData.length));
                 setBosses(Array.isArray(bossesRes) ? bossesRes : []);
                 setSeasonStatus((configData as Record<string, string>).season_status ?? "active");
+                setSeasonStartDate((configData as Record<string, string | null>).season_start_date ?? null);
             } finally {
                 setLoading(false);
             }
@@ -230,20 +232,32 @@ export default function DashboardPage() {
                 )}
 
                 {/* Season status banner */}
-                {battlesBlocked && !loading && (
-                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                        <div className="bg-black/80 border border-[#ffd700]/60 px-6 py-4 font-mono text-center space-y-2 max-w-sm mx-4">
-                            <div className="text-[#ffd700] font-bold uppercase tracking-widest text-sm animate-pulse">
-                                {seasonStatus === "frozen" ? "⚠ TEMPORADA CONGELADA" : "⚠ TEMPORADA FINALIZADA"}
+                {battlesBlocked && !loading && (() => {
+                    const startMs = seasonStartDate ? new Date(seasonStartDate).getTime() - Date.now() : -1;
+                    const startsInFuture = seasonStatus === "frozen" && startMs > 0;
+                    return (
+                        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                            <div className="bg-black/80 border border-[#ffd700]/60 px-6 py-4 font-mono text-center space-y-2 max-w-sm mx-4">
+                                <div className="text-[#ffd700] font-bold uppercase tracking-widest text-sm animate-pulse">
+                                    {startsInFuture ? "⏳ PRÓXIMA TEMPORADA" : seasonStatus === "frozen" ? "⚠ TEMPORADA CONGELADA" : "⚠ TEMPORADA FINALIZADA"}
+                                </div>
+                                <p className="text-slate-300 text-xs uppercase tracking-widest leading-relaxed">
+                                    {startsInFuture
+                                        ? "La nueva temporada está a punto de comenzar."
+                                        : seasonStatus === "frozen"
+                                            ? "Las batallas están pausadas. Espera a que se reactive la temporada."
+                                            : "La temporada ha concluido. No se pueden iniciar batallas."}
+                                </p>
+                                {startsInFuture && (
+                                    <div className="flex items-center justify-center gap-2 bg-black/40 border border-[#ffd700]/30 px-3 py-1.5 mt-1">
+                                        <span className="material-symbols-outlined text-[#ffd700] text-sm">schedule</span>
+                                        <span className="font-black text-[#ffd700] text-sm tracking-widest">{formatCountdown(startMs)}</span>
+                                    </div>
+                                )}
                             </div>
-                            <p className="text-slate-300 text-xs uppercase tracking-widest leading-relaxed">
-                                {seasonStatus === "frozen"
-                                    ? "Las batallas están pausadas. Espera a que se reactive la temporada."
-                                    : "La temporada ha concluido. No se pueden iniciar batallas."}
-                            </p>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 {/* Map markers */}
                 {!loading && markerPos.length === fortresses.length && fortresses.map((fortress, i) => (
@@ -498,7 +512,7 @@ export default function DashboardPage() {
                                 Sin fortaleza activa
                             </div>
                         )}
-                        {(!player?.fortress || (!player.fortress.status.includes("destroyed") && player.fortress.defeat_count < 3)) && (
+                        {(!player?.fortress || (!player.fortress.status.includes("destroyed") && player.fortress.defeat_count < 3)) && !battlesBlocked && (
                             <Link
                                 href="/fortresses/configure"
                                 className="w-full border border-primary/30 bg-primary/5 p-2 text-xs text-primary hover:bg-primary/20 transition-all uppercase flex items-center justify-center gap-2 cursor-pointer"

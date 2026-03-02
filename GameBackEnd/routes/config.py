@@ -18,9 +18,9 @@ PUBLIC_KEYS = {
 }
 
 
-def _get_season_status(db) -> str:
+def _get_season_info(db) -> dict:
     """
-    Returns the current season status as a string:
+    Returns season status and, when frozen, the season's start_date as ISO string.
       'active'    – a season is active and not frozen
       'frozen'    – the active season is frozen (battles paused)
       'finalized' – no active season, but at least one is finalized
@@ -28,10 +28,13 @@ def _get_season_status(db) -> str:
     """
     active = db.query(Season).filter_by(is_active=True).first()
     if active:
-        return "frozen" if active.is_frozen else "active"
+        if active.is_frozen:
+            start_date = active.start_date.isoformat() if active.start_date else None
+            return {"status": "frozen", "start_date": start_date}
+        return {"status": "active", "start_date": None}
     from sqlalchemy import exists
     has_finalized = db.query(exists().where(Season.finalized == True)).scalar()  # noqa: E712
-    return "finalized" if has_finalized else "none"
+    return {"status": "finalized" if has_finalized else "none", "start_date": None}
 
 
 @config_bp.get("/")
@@ -45,7 +48,9 @@ def get_public_config():
         for key in PUBLIC_KEYS:
             if key not in result:
                 result[key] = True
-        result["season_status"] = _get_season_status(db)
+        season_info = _get_season_info(db)
+        result["season_status"] = season_info["status"]
+        result["season_start_date"] = season_info["start_date"]
         return jsonify(result), 200
     finally:
         db.close()
