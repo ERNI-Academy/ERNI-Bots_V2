@@ -136,6 +136,176 @@ def create_invitations():
 
 
 # ──────────────────────────────────────────────────────────
+# GET /invitations
+# ──────────────────────────────────────────────────────────
+
+@admin_bp.get("/invitations")
+def list_invitations():
+    """
+    List invitation codes with pagination and filters.
+
+    Query params:
+        page      – page number (default 1)
+        per_page  – items per page (default 50, max 200)
+        status    – "free" | "claimed" | "inactive" | "expired" (default: all)
+        q         – search by created_by or player username
+    """
+    if not _check_admin():
+        return jsonify({"error": "Forbidden"}), 403
+
+    from sqlalchemy import or_, and_
+    from db.models import Player as _Player
+
+    page       = max(1, int(request.args.get("page", 1)))
+    per_page   = min(200, max(1, int(request.args.get("per_page", 50))))
+    status_filter = request.args.get("status", "").strip().lower()
+    q          = (request.args.get("q") or "").strip().lower()
+
+    db = SessionLocal()
+    try:
+        query = db.query(InvitationCode)
+
+        if status_filter == "free":
+            query = query.filter(
+                InvitationCode.is_active == True,   # noqa: E712
+                InvitationCode.player_id == None,   # noqa: E711
+            )
+        elif status_filter == "claimed":
+            query = query.filter(InvitationCode.player_id != None)  # noqa: E711
+        elif status_filter == "inactive":
+            query = query.filter(InvitationCode.is_active == False)  # noqa: E712
+        elif status_filter == "expired":
+            now = datetime.utcnow()
+            query = query.filter(
+                InvitationCode.expires_at != None,   # noqa: E711
+                InvitationCode.expires_at < now,
+            )
+
+        if q:
+            from sqlalchemy.orm import joinedload
+            query = query.outerjoin(InvitationCode.player).filter(
+                or_(
+                    InvitationCode.created_by.ilike(f"%{q}%"),
+                    _Player.username.ilike(f"%{q}%"),
+                )
+            )
+
+        total = query.count()
+        codes = (
+            query.order_by(InvitationCode.created_at.desc())
+                 .offset((page - 1) * per_page)
+                 .limit(per_page)
+                 .all()
+        )
+
+        now = datetime.utcnow()
+
+        def _serialize(inv: InvitationCode) -> dict:
+            expired = (inv.expires_at is not None and inv.expires_at < now)
+            if inv.player_id:
+                tag = "claimed"
+            elif not inv.is_active:
+                tag = "inactive"
+            elif expired:
+                tag = "expired"
+            else:
+                tag = "free"
+
+            return {
+                "id":           inv.id,
+                "status":       tag,
+                "is_active":    inv.is_active,
+                "max_uses":     inv.max_uses,
+                "current_uses": inv.current_uses,
+                "expires_at":   inv.expires_at.isoformat() if inv.expires_at else None,
+                "created_at":   inv.created_at.isoformat() if inv.created_at else None,
+                "created_by":   inv.created_by,
+                "last_used_at": inv.last_used_at.isoformat() if inv.last_used_at else None,
+                "player": {
+                    "id":       inv.player.id,
+                    "username": inv.player.username,
+                    "email":    inv.player.email,
+                } if inv.player else None,
+            }
+
+        return jsonify({
+            "total":    total,
+            "page":     page,
+            "per_page": per_page,
+            "pages":    max(1, (total + per_page - 1) // per_page),
+            "items":    [_serialize(c) for c in codes],
+        })
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────────────────
+# PATCH /invitations/<id>  – toggle is_active
+# ──────────────────────────────────────────────────────────
+
+@admin_bp.patch("/invitations/<inv_id>")
+def update_invitation(inv_id: str):
+    if not _check_admin():
+        return jsonify({"error": "Forbidden"}), 403
+
+    data = request.get_json(silent=True) or {}
+    db = SessionLocal()
+    try:
+        inv = db.query(InvitationCode).filter_by(id=inv_id).first()
+        if not inv:
+            return jsonify({"error": "Invitación no encontrada"}), 404
+
+        if "is_active" in data:
+            inv.is_active = bool(data["is_active"])
+        db.commit()
+
+        now = datetime.utcnow()
+        expired = inv.expires_at is not None and inv.expires_at < now
+        if inv.player_id:
+            tag = "claimed"
+        elif not inv.is_active:
+            tag = "inactive"
+        elif expired:
+            tag = "expired"
+        else:
+            tag = "free"
+
+        return jsonify({"id": inv.id, "is_active": inv.is_active, "status": tag})
+    except Exception:
+        db.rollback()
+        logger.exception("admin: update_invitation failed id=%s", inv_id)
+        return jsonify({"error": "Internal server error"}), 500
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────────────────
+# DELETE /invitations/<id>
+# ──────────────────────────────────────────────────────────
+
+@admin_bp.delete("/invitations/<inv_id>")
+def delete_invitation(inv_id: str):
+    if not _check_admin():
+        return jsonify({"error": "Forbidden"}), 403
+
+    db = SessionLocal()
+    try:
+        inv = db.query(InvitationCode).filter_by(id=inv_id).first()
+        if not inv:
+            return jsonify({"error": "Invitación no encontrada"}), 404
+        db.delete(inv)
+        db.commit()
+        logger.info("admin: deleted invitation id=%s", inv_id)
+        return jsonify({"ok": True})
+    except Exception:
+        db.rollback()
+        logger.exception("admin: delete_invitation failed id=%s", inv_id)
+        return jsonify({"error": "Internal server error"}), 500
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────────────────
 # GET /stats
 # ──────────────────────────────────────────────────────────
 

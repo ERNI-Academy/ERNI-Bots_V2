@@ -1,18 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
-
 import { BACKEND } from "@/lib/backend";
 
-export async function POST(request: NextRequest) {
-  const secret = request.headers.get("X-Admin-Secret");
-  if (!secret) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+function getSecret(): string | null {
+  return process.env.ADMIN_SECRET ?? null;
+}
+
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  const secret = getSecret();
+  if (!secret) return NextResponse.json({ error: "ADMIN_SECRET no configurado" }, { status: 503 });
+
+  const { searchParams } = new URL(request.url);
+  const qs = searchParams.toString();
+
+  try {
+    const res = await fetch(`${BACKEND}/api/v1/admin/invitations${qs ? `?${qs}` : ""}`, {
+      headers: { "X-Admin-Secret": secret },
+      cache: "no-store",
+    });
+    const data = await res.json().catch(() => ({}));
+    return NextResponse.json(data, { status: res.status });
+  } catch {
+    return NextResponse.json({ error: "Backend no disponible" }, { status: 502 });
   }
+}
+
+export async function POST(request: NextRequest) {
+  const secret = getSecret();
+  if (!secret) return NextResponse.json({ error: "ADMIN_SECRET no configurado" }, { status: 503 });
 
   const body = await request.json().catch(() => ({}));
 
-  let backendRes: Response;
   try {
-    backendRes = await fetch(`${BACKEND}/api/v1/admin/invitations`, {
+    const res = await fetch(`${BACKEND}/api/v1/admin/invitations`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -20,10 +39,9 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify(body),
     });
+    const data = await res.json().catch(() => ({}));
+    return NextResponse.json(data, { status: res.status });
   } catch {
-    return NextResponse.json({ error: "Servicio no disponible" }, { status: 503 });
+    return NextResponse.json({ error: "Backend no disponible" }, { status: 502 });
   }
-
-  const data = await backendRes.json().catch(() => ({}));
-  return NextResponse.json(data, { status: backendRes.status });
 }

@@ -13,7 +13,7 @@ const navItems = [
   { label: "Restricciones", icon: "shield_lock", href: "/constraints" },
   { label: "Batallas",      icon: "swords",      href: "/battles" },
   { label: "Palabras",      icon: "key",         href: "/words" },
-  { label: "Invitaciones",  icon: "mail",        href: "/invitations",  disabled: true },
+  { label: "Invitaciones",  icon: "mail",        href: "/invitations" },
 ];
 
 interface AdminSidebarProps {
