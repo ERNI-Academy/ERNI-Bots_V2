@@ -546,9 +546,9 @@ def guess_word(battle_id):
                 )
                 db.add(purchase)
 
-                # Reduce boss rewards for future challengers (floor: 50 each)
-                boss.reward_score   = max(50, boss.reward_score - 1)
-                boss.reward_credits = max(50, boss.reward_credits - 5)
+                # Reduce boss rewards for future challengers (configurable floor and step)
+                boss.reward_score   = max(boss.score_min,   boss.reward_score   - boss.score_reduction)
+                boss.reward_credits = max(boss.credits_min, boss.reward_credits - boss.credits_reduction)
 
                 player_stats.score += score_awarded
                 attacker.credits   += credits_awarded

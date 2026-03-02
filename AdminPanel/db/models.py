@@ -312,6 +312,12 @@ class Boss(Base):
     reward_credits = Column(Integer, default=0)
     reward_score   = Column(Integer, default=0)
 
+    # Decay config: how much reward is reduced per defeat and the floor
+    score_reduction   = Column(Integer, default=1)
+    score_min         = Column(Integer, default=50)
+    credits_reduction = Column(Integer, default=5)
+    credits_min       = Column(Integer, default=50)
+
     enabled = Column(Boolean, default=True)
     active_at = Column(DateTime, nullable=True)
 

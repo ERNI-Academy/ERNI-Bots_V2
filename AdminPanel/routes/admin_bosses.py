@@ -37,9 +37,13 @@ def _boss_to_dict(boss: Boss) -> dict:
         "story":          boss.story,
         "prompt":         boss.prompt,
         "protected_word": boss.protected_word,
-        "reward_credits": boss.reward_credits,
-        "reward_score":   boss.reward_score,
-        "enabled":        boss.enabled,
+        "reward_credits":    boss.reward_credits,
+        "reward_score":      boss.reward_score,
+        "score_reduction":   boss.score_reduction,
+        "score_min":         boss.score_min,
+        "credits_reduction": boss.credits_reduction,
+        "credits_min":       boss.credits_min,
+        "enabled":           boss.enabled,
         "active_at":      boss.active_at.isoformat() + "Z" if boss.active_at else None,
     }
 
@@ -141,6 +145,10 @@ def create_boss():
             protected_word=protected_word,
             reward_credits=int(data.get("reward_credits", 0)),
             reward_score=int(data.get("reward_score", 0)),
+            score_reduction=int(data.get("score_reduction", 1)),
+            score_min=int(data.get("score_min", 50)),
+            credits_reduction=int(data.get("credits_reduction", 5)),
+            credits_min=int(data.get("credits_min", 50)),
             enabled=bool(data.get("enabled", True)),
             active_at=active_at,
         )
@@ -191,6 +199,10 @@ def update_boss(boss_id):
 
         if "reward_score" in data:
             boss.reward_score = int(data["reward_score"])
+
+        for decay_field in ("score_reduction", "score_min", "credits_reduction", "credits_min"):
+            if decay_field in data:
+                setattr(boss, decay_field, int(data[decay_field]))
 
         if "enabled" in data:
             boss.enabled = bool(data["enabled"])

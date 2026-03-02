@@ -13,6 +13,10 @@ interface Boss {
   protected_word?: string;
   reward_credits: number;
   reward_score?: number;
+  score_reduction?: number;
+  score_min?: number;
+  credits_reduction?: number;
+  credits_min?: number;
   enabled: boolean;
   active_at?: string;
 }
@@ -37,9 +41,13 @@ function BossModal({
   const [story, setStory]                 = useState(initial?.story ?? "");
   const [prompt, setPrompt]               = useState(initial?.prompt ?? "");
   const [protectedWord, setProtectedWord] = useState(initial?.protected_word ?? "");
-  const [rewardCredits, setRewardCredits] = useState(String(initial?.reward_credits ?? 100));
-  const [rewardScore, setRewardScore]     = useState(String(initial?.reward_score ?? 0));
-  const [enabled, setEnabled]             = useState(initial?.enabled ?? true);
+  const [rewardCredits, setRewardCredits]         = useState(String(initial?.reward_credits ?? 100));
+  const [rewardScore, setRewardScore]             = useState(String(initial?.reward_score ?? 0));
+  const [scoreReduction, setScoreReduction]       = useState(String(initial?.score_reduction ?? 1));
+  const [scoreMin, setScoreMin]                   = useState(String(initial?.score_min ?? 50));
+  const [creditsReduction, setCreditsReduction]   = useState(String(initial?.credits_reduction ?? 5));
+  const [creditsMin, setCreditsMin]               = useState(String(initial?.credits_min ?? 50));
+  const [enabled, setEnabled]                     = useState(initial?.enabled ?? true);
   const [activeAt, setActiveAt]           = useState(
     initial?.active_at ? initial.active_at.slice(0, 16) : ""
   );
@@ -59,6 +67,10 @@ function BossModal({
       protected_word: protectedWord.trim(),
       reward_credits: parseInt(rewardCredits, 10) || 0,
       reward_score: parseInt(rewardScore, 10) || 0,
+      score_reduction: parseInt(scoreReduction, 10) || 1,
+      score_min: parseInt(scoreMin, 10) || 50,
+      credits_reduction: parseInt(creditsReduction, 10) || 5,
+      credits_min: parseInt(creditsMin, 10) || 50,
       enabled,
       active_at: activeAt ? `${activeAt}:00` : null,
     };
@@ -146,12 +158,63 @@ function BossModal({
                 />
               </div>
             </div>
-            <div>
-              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Activo desde</label>
-              <input type="datetime-local" value={activeAt} onChange={e => setActiveAt(e.target.value)}
-                className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none transition-all"
-              />
+          </div>
+
+          {/* Decay config */}
+          <div className="rounded border border-[#27272A] bg-[#0D0D0F] p-4 space-y-3">
+            <p className="text-[10px] uppercase tracking-wider text-[#52525B] font-semibold">Configuración de decaimiento</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1 block text-xs text-[#71717A]">Reducción de puntos por derrota</label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                    <span className="material-symbols-outlined text-[15px] text-yellow-400">trending_down</span>
+                  </span>
+                  <input type="number" min={0} value={scoreReduction} onChange={e => setScoreReduction(e.target.value)}
+                    className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-10 pr-3 text-sm text-yellow-400 font-mono focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none transition-all"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-[#71717A]">Mínimo de puntos</label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                    <span className="material-symbols-outlined text-[15px] text-yellow-400">floor</span>
+                  </span>
+                  <input type="number" min={0} value={scoreMin} onChange={e => setScoreMin(e.target.value)}
+                    className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-10 pr-3 text-sm text-yellow-400 font-mono focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none transition-all"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-[#71717A]">Reducción de fragmentos por derrota</label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                    <span className="material-symbols-outlined text-[15px] text-amber-400">trending_down</span>
+                  </span>
+                  <input type="number" min={0} value={creditsReduction} onChange={e => setCreditsReduction(e.target.value)}
+                    className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-10 pr-3 text-sm text-amber-400 font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-all"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-[#71717A]">Mínimo de fragmentos</label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                    <span className="material-symbols-outlined text-[15px] text-amber-400">floor</span>
+                  </span>
+                  <input type="number" min={0} value={creditsMin} onChange={e => setCreditsMin(e.target.value)}
+                    className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-10 pr-3 text-sm text-amber-400 font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-all"
+                  />
+                </div>
+              </div>
             </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Activo desde</label>
+            <input type="datetime-local" value={activeAt} onChange={e => setActiveAt(e.target.value)}
+              className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none transition-all"
+            />
           </div>
           <div>
             <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Historia</label>
@@ -453,6 +516,19 @@ export default function BossesPage() {
                     <div className="flex items-center gap-0.5">
                       <span className="material-symbols-outlined text-[12px] text-yellow-400">star</span>
                       <span className="font-mono font-semibold text-yellow-400">{(selected.reward_score ?? 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 px-4 py-2.5">
+                    <span className="w-20 shrink-0 text-[#52525B]">Decaimiento</span>
+                    <div className="space-y-0.5 text-[#71717A] font-mono">
+                      <div className="flex gap-1 items-center">
+                        <span className="material-symbols-outlined text-[11px] text-yellow-400">trending_down</span>
+                        <span>{selected.score_reduction ?? 1} pts/derrota · mín {selected.score_min ?? 50}</span>
+                      </div>
+                      <div className="flex gap-1 items-center">
+                        <span className="material-symbols-outlined text-[11px] text-amber-400">trending_down</span>
+                        <span>{selected.credits_reduction ?? 5} frags/derrota · mín {selected.credits_min ?? 50}</span>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 px-4 py-2.5">
