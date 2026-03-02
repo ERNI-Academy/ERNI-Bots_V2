@@ -269,6 +269,10 @@ def matchmaking():
 
     defeated_fortress_ids = [f[0] for f in defeated_fortress_ids]
 
+    # Read app config: are bot fortresses enabled?
+    cfg_bots = db.get(AppConfig, "bot_fortresses_enabled")
+    bot_fortresses_enabled = cfg_bots is None or cfg_bots.value.lower() == "true"
+
     delta = INITIAL_DELTA
     results = []
 
@@ -288,6 +292,9 @@ def matchmaking():
             .filter(PlayerSeasonStats.score.between(min_score, max_score))
             .filter(~Fortress.id.in_(defeated_fortress_ids))
         )
+
+        if not bot_fortresses_enabled:
+            query = query.filter(Player.is_bot == False)  # noqa: E712
 
         rows = query.all()
 

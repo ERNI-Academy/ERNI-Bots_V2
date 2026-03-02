@@ -15,6 +15,7 @@ config_bp = Blueprint("config", __name__)
 PUBLIC_KEYS = {
     "invitations_enabled",
     "player_invitations_enabled",
+    "bot_fortresses_enabled",
 }
 
 

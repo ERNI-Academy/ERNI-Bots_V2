@@ -32,6 +32,14 @@ INITIAL_CONFIG: list[dict] = [
             "for other users via POST /players/me/invitations."
         ),
     },
+    {
+        "key": "bot_fortresses_enabled",
+        "value": "true",
+        "description": (
+            "Controls whether bot fortresses are active and can be attacked by players. "
+            "When disabled, bot fortresses are hidden and no battles against them are allowed."
+        ),
+    },
 ]
 
 

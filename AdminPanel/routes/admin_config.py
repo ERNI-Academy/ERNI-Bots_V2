@@ -17,6 +17,7 @@ admin_config_bp = Blueprint("admin_config", __name__)
 ALLOWED_KEYS = {
     "invitations_enabled",
     "player_invitations_enabled",
+    "bot_fortresses_enabled",
 }
 
 
