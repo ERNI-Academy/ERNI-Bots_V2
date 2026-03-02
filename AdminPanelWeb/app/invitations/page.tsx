@@ -123,8 +123,13 @@ function GenerateModal({
   const [count, setCount]         = useState("1");
   const [maxUses, setMaxUses]     = useState("1");
   const [expires, setExpires]     = useState("");
-  const [createdBy, setCreatedBy] = useState("admin");
+  const [createdBy, setCreatedBy] = useState("");
   const [tag, setTag]             = useState("");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("username");
+    if (stored) setCreatedBy(stored + "-admin");
+  }, []);
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState<string | null>(null);
   const [codes, setCodes]         = useState<string[]>([]);
@@ -331,11 +336,18 @@ function GenerateModal({
               </label>
               <input
                 type="text" maxLength={100}
+                list="tag-suggestions"
                 placeholder="ej. grupo-a, evento-1..."
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
                 className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white placeholder-[#71717A] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
               />
+              <datalist id="tag-suggestions">
+                <option value="hc0n" />
+                <option value="linkedin" />
+                <option value="bot" />
+                <option value="invitation" />
+              </datalist>
             </div>
 
             <div className="flex justify-end gap-3 pt-1">
@@ -596,6 +608,7 @@ export default function InvitationsPage() {
               >
                 <option value="">Todos los tags</option>
                 <option value="hc0n">hc0n</option>
+                <option value="linkedin">linkedin</option>
                 <option value="bot">bot</option>
                 <option value="invitation">invitation</option>
               </select>

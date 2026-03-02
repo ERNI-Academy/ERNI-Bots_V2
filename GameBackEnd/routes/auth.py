@@ -195,6 +195,19 @@ def register():
                 detail="Ventaja hCON — bonus de 100 fragmentos por código de invitación hc0n",
             ))
 
+        # LinkedIn bonus: grant 100 fragments to players registering with a linkedin code
+        if inv.tag == "linkedin":
+            from db.models import PlayerHistoryEntry
+            LINKEDIN_BONUS = 100
+            player.credits += LINKEDIN_BONUS
+            db.add(PlayerHistoryEntry(
+                player_id=player.id,
+                type="fragments",
+                amount=LINKEDIN_BONUS,
+                reason="linkedin_bonus",
+                detail="Ventaja LinkedIn — bonus de 100 fragmentos por código de invitación linkedIn",
+            ))
+
         # Referral bonus: grant 20 fragments to the inviter when a player-generated code is used
         if inv.tag == "invitation" and inv.created_by:
             from db.models import PlayerHistoryEntry
