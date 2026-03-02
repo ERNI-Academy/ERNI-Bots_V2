@@ -296,6 +296,7 @@ def start_boss_battle():
                     "title": boss.title,
                     "location": boss.location,
                     "story": boss.story,
+                    "reward_score": boss.reward_score,
                     "reward_credits": boss.reward_credits,
                 },
                 "history": history
@@ -343,6 +344,7 @@ def start_boss_battle():
                 "title": boss.title,
                 "location": boss.location,
                 "story": boss.story,
+                "reward_score": boss.reward_score,
                 "reward_credits": boss.reward_credits,
             },
             "history": []
@@ -528,24 +530,28 @@ def guess_word(battle_id):
             player_stats = get_or_create_player_season_stats(db, user_id, season.id)
 
             if is_pve:
-                # Award attacker with boss reward
-                score_awarded = max(1, boss.reward_credits // 10)
+                # Award attacker with boss reward (current values before reduction)
+                score_awarded   = boss.reward_score
                 credits_awarded = boss.reward_credits
-                if boss.reward_score>0:
-                    now = datetime.utcnow()
-                    purchase = PlayerAsset(
-                        id=generate_uuid(),
-                        player_id=user_id,
-                        asset_type_id=reward_asset_type,
-                        asset_id=reward_asset,
-                        purchased_at=now,
-                        purchase_price=0,
-                    )
-                    boss.reward_score=boss.reward_score-1
-                    db.add(purchase)
-     
+
+                # Grant NFT asset if configured
+                now = datetime.utcnow()
+                purchase = PlayerAsset(
+                    id=generate_uuid(),
+                    player_id=user_id,
+                    asset_type_id=reward_asset_type,
+                    asset_id=reward_asset,
+                    purchased_at=now,
+                    purchase_price=0,
+                )
+                db.add(purchase)
+
+                # Reduce boss rewards for future challengers (floor: 50 each)
+                boss.reward_score   = max(50, boss.reward_score - 1)
+                boss.reward_credits = max(50, boss.reward_credits - 5)
+
                 player_stats.score += score_awarded
-                attacker.credits += credits_awarded
+                attacker.credits   += credits_awarded
 
                 db.add(PlayerHistoryEntry(
                     id=generate_uuid(),
