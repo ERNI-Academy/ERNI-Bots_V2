@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BACKEND } from "@/lib/backend";
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
   const secret = process.env.ADMIN_SECRET;
   if (!secret) return NextResponse.json({ error: "ADMIN_SECRET no configurado" }, { status: 503 });
   try {
+    const { id } = await params;
     const body = await request.text();
-    const res = await fetch(`${BACKEND}/api/v1/admin/prizes/${params.id}`, {
+    const res = await fetch(`${BACKEND}/api/v1/admin/prizes/${id}`, {
       method: "PUT",
       headers: { "X-Admin-Secret": secret, "Content-Type": "application/json" },
       body,
@@ -18,11 +19,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> {
   const secret = process.env.ADMIN_SECRET;
   if (!secret) return NextResponse.json({ error: "ADMIN_SECRET no configurado" }, { status: 503 });
   try {
-    const res = await fetch(`${BACKEND}/api/v1/admin/prizes/${params.id}`, {
+    const { id } = await params;
+    const res = await fetch(`${BACKEND}/api/v1/admin/prizes/${id}`, {
       method: "DELETE",
       headers: { "X-Admin-Secret": secret },
     });

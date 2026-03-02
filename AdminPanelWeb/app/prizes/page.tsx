@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import AdminLayout from "@/components/AdminLayout";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -26,6 +27,144 @@ const COLOR_OPTIONS = [
   { value: "yellow", label: "Amarillo",hex: "#ffd700" },
   { value: "orange", label: "Naranja", hex: "#fb923c" },
 ];
+
+// ─── Username Autocomplete ───────────────────────────────────────────────────
+
+function UsernameAutocomplete({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [query, setQuery]     = useState(value);
+  const [options, setOptions] = useState<string[]>([]);
+  const [open, setOpen]       = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [rect, setRect]       = useState<DOMRect | null>(null);
+  const inputRef              = useRef<HTMLInputElement>(null);
+  const debounceRef           = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      const target = e.target as Node;
+      if (inputRef.current && !inputRef.current.contains(target)) {
+        // allow clicks inside the portal list
+        const list = document.getElementById("username-ac-list");
+        if (list && list.contains(target)) return;
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Sync external value when modal opens
+  useEffect(() => { setQuery(value); }, [value]);
+
+  function openDropdown() {
+    if (inputRef.current) setRect(inputRef.current.getBoundingClientRect());
+  }
+
+  function handleInput(v: string) {
+    setQuery(v);
+    onChange(v);
+    if (!v.trim()) { setOptions([]); setOpen(false); return; }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res  = await fetch(`/api/admin/users?search=${encodeURIComponent(v.trim())}&per_page=8&is_bot=false`);
+        const data = await res.json();
+        const items: string[] = (data?.items ?? []).map((u: { username: string }) => u.username);
+        setOptions(items);
+        if (items.length > 0) {
+          openDropdown();
+          setOpen(true);
+        } else {
+          setOpen(false);
+        }
+      } catch {
+        setOptions([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+  }
+
+  function select(username: string) {
+    setQuery(username);
+    onChange(username);
+    setOpen(false);
+    setOptions([]);
+  }
+
+  function clear() {
+    setQuery("");
+    onChange("");
+    setOptions([]);
+    setOpen(false);
+  }
+
+  const dropdown = open && options.length > 0 && rect
+    ? createPortal(
+        <ul
+          id="username-ac-list"
+          style={{
+            position: "fixed",
+            top:   rect.bottom + 4,
+            left:  rect.left,
+            width: rect.width,
+            zIndex: 9999,
+          }}
+          className="rounded border border-[#27272A] bg-[#09090B] shadow-2xl max-h-48 overflow-y-auto"
+        >
+          {options.map(u => (
+            <li key={u}>
+              <button
+                type="button"
+                onMouseDown={e => { e.preventDefault(); select(u); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-[#27272A] text-left transition-colors"
+              >
+                <span className="material-symbols-outlined text-[14px] text-[#71717A]">person</span>
+                {u}
+              </button>
+            </li>
+          ))}
+        </ul>,
+        document.body
+      )
+    : null;
+
+  return (
+    <div className="relative">
+      <div className="flex items-center gap-1">
+        <div className="relative flex-1">
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={e => handleInput(e.target.value)}
+            onFocus={() => { if (options.length > 0) { openDropdown(); setOpen(true); } }}
+            placeholder="Sin ganador asignado"
+            autoComplete="off"
+            className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500/60 pr-8"
+          />
+          {loading && (
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-[#71717A] animate-pulse">…</span>
+          )}
+        </div>
+        {query && (
+          <button type="button" onClick={clear}
+            className="shrink-0 flex items-center justify-center h-8 w-8 rounded border border-[#27272A] text-[#71717A] hover:text-white hover:bg-[#27272A] transition-colors">
+            <span className="material-symbols-outlined text-[16px]">close</span>
+          </button>
+        )}
+      </div>
+      {dropdown}
+    </div>
+  );
+}
 
 // ─── Prize Modal ──────────────────────────────────────────────────────────────
 
@@ -154,8 +293,7 @@ function PrizeModal({
               <span className="material-symbols-outlined text-sm text-yellow-400">emoji_events</span>
               Ganador (username)
             </label>
-            <input value={winner} onChange={e => setWinner(e.target.value)} placeholder="Sin ganador asignado"
-              className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500/60" />
+            <UsernameAutocomplete value={winner} onChange={setWinner} />
           </div>
         </form>
         <div className="flex justify-end gap-2 px-6 py-4 border-t border-[#27272A]">
