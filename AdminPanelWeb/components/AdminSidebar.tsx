@@ -15,7 +15,8 @@ const navItems: { label: string; icon: string; href: string; disabled?: boolean 
   { label: "Palabras",      icon: "key",         href: "/words" },
   { label: "Invitaciones",  icon: "mail",        href: "/invitations" },
   { label: "Temporadas",    icon: "calendar_month", href: "/seasons" },
-  { label: "Configuración", icon: "settings",    href: "/config" },
+  { label: "Premios",       icon: "emoji_events",  href: "/prizes" },
+  { label: "Configuración", icon: "settings",      href: "/config" },
 ];
 
 interface AdminSidebarProps {

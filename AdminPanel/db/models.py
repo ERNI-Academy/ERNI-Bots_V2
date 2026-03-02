@@ -597,6 +597,31 @@ Index("idx_player_history_created", PlayerHistoryEntry.created_at.desc())
 
 
 # ==========================
+# PRIZES
+# ==========================
+
+class Prize(Base):
+    """
+    CTF prizes shown on the /premios page.
+    color_key maps to a frontend theme: 'red' | 'cyan' | 'green' | 'purple' | 'yellow' | 'orange'
+    winner_username is set once the winner is announced.
+    """
+    __tablename__ = "prizes"
+
+    id            = Column(String, primary_key=True, default=generate_uuid)
+    sort_order    = Column(Integer, default=0, nullable=False)
+    name          = Column(String(200), nullable=False)
+    tagline       = Column(String(200), nullable=True)
+    description   = Column(Text, nullable=True)
+    icon          = Column(String(50), default="star", nullable=False)
+    category      = Column(String(100), nullable=True)
+    color_key     = Column(String(20), default="cyan", nullable=False)
+    winner_username = Column(String(50), nullable=True)
+    created_at    = Column(DateTime, default=datetime.utcnow)
+    updated_at    = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# ==========================
 # APP CONFIG
 # ==========================
 
