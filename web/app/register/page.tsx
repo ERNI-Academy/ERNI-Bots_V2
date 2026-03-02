@@ -21,7 +21,7 @@ function RegisterContent() {
         username.length >= 3 &&
         username.length <= 50 &&
         /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) &&
-        invitationCode.trim().length > 0 &&
+        (invitationCode.trim().length > 0 || !!searchParams.get("code")) &&
         acceptTerms;
 
     useEffect(() => {
@@ -58,12 +58,15 @@ function RegisterContent() {
             return;
         }
 
+        // Always prefer the URL code as source of truth; fall back to typed state
+        const codeToUse = (searchParams.get("code") || invitationCode).trim();
+
         setError("");
         setLoading(true);
         try {
-            await registerApi(username, email, invitationCode);
+            await registerApi(username, email, codeToUse);
             localStorage.setItem("username", username);
-            localStorage.setItem("invitationCode", invitationCode);
+            localStorage.setItem("invitationCode", codeToUse);
             router.push("/dashboard");
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Error de registro");
