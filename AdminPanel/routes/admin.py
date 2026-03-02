@@ -1030,3 +1030,5 @@ def get_fortress(fortress_id: str):
             "season_stats":         stats_list,
             "player_words":         words_list,
         })
+    finally:
+        db.close()
