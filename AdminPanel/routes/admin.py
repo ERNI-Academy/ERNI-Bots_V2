@@ -163,6 +163,17 @@ def list_invitations():
     per_page   = min(200, max(1, int(request.args.get("per_page", 50))))
     status_filter = request.args.get("status", "").strip().lower()
     q          = (request.args.get("q") or "").strip().lower()
+    sort_by    = request.args.get("sort_by",  "created_at")
+    sort_dir   = request.args.get("sort_dir", "desc")
+
+    SORT_COLS = {
+        "created_at":   InvitationCode.created_at,
+        "last_used_at": InvitationCode.last_used_at,
+        "expires_at":   InvitationCode.expires_at,
+        "current_uses": InvitationCode.current_uses,
+        "created_by":   InvitationCode.created_by,
+        "code":         InvitationCode.code,
+    }
 
     db = SessionLocal()
     try:
@@ -194,8 +205,21 @@ def list_invitations():
             )
 
         total = query.count()
+
+        sort_fields   = [f.strip() for f in sort_by.split(",")]
+        sort_dirs_lst = [d.strip() for d in sort_dir.split(",")]
+        order_clauses = []
+        for i, sf in enumerate(sort_fields):
+            col = SORT_COLS.get(sf)
+            if col is None:
+                continue
+            sd = sort_dirs_lst[i] if i < len(sort_dirs_lst) else "asc"
+            order_clauses.append(col.desc() if sd == "desc" else col.asc())
+        if not order_clauses:
+            order_clauses = [InvitationCode.created_at.desc()]
+
         codes = (
-            query.order_by(InvitationCode.created_at.desc())
+            query.order_by(*order_clauses)
                  .offset((page - 1) * per_page)
                  .limit(per_page)
                  .all()
@@ -260,6 +284,11 @@ def update_invitation(inv_id: str):
 
         if "is_active" in data:
             inv.is_active = bool(data["is_active"])
+        if "code" in data:
+            new_code = str(data["code"]).strip()
+            if not new_code:
+                return jsonify({"error": "El código no puede estar vacío"}), 400
+            inv.code = new_code
         db.commit()
 
         now = datetime.utcnow()

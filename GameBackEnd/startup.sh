@@ -23,9 +23,8 @@ echo "[startup] Initializing database..."
 python create_db.py
 
 echo "[startup] Running migrations..."
-python scripts/migrate_player_ban.py
-python scripts/migrate_is_bot.py
-python scripts/migrate_invitation_code.py
+# python scripts/migrate_player_ban.py
+# python scripts/migrate_is_bot.py
 echo "[startup] Migrations completed."
 
 # Run seed only when SEED_DB=true is explicitly set (e.g. via Azure App Settings on first deploy)

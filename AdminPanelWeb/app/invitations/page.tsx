@@ -5,6 +5,50 @@ import { QRCodeSVG } from "qrcode.react";
 import AdminLayout from "@/components/AdminLayout";
 
 // ─────────────────────────────────────────────────────────────
+// Sorting
+// ─────────────────────────────────────────────────────────────
+
+type InvSortField = "created_at" | "expires_at" | "current_uses" | "created_by" | "code";
+type SortDir      = "asc" | "desc";
+type SortKey      = { field: InvSortField; dir: SortDir };
+
+function SortHeader({
+  label, field, align = "left", sortKeys, onSort,
+}: {
+  label: string; field: InvSortField; align?: "left" | "right" | "center";
+  sortKeys: SortKey[]; onSort: (f: InvSortField, shift: boolean) => void;
+}) {
+  const idx    = sortKeys.findIndex(k => k.field === field);
+  const active = idx !== -1;
+  const dir    = active ? sortKeys[idx].dir : null;
+  const icon   = active ? (dir === "asc" ? "arrow_upward" : "arrow_downward") : "unfold_more";
+  const multi  = sortKeys.length > 1;
+  return (
+    <th
+      className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer select-none hover:text-white transition-colors ${
+        active ? "text-white" : "text-[#71717A]"
+      } ${align === "right" ? "text-right" : align === "center" ? "text-center" : ""}`}
+      onClick={(e) => onSort(field, e.shiftKey)}
+      title={active ? "Shift+clic para encadenar" : "Shift+clic para añadir al orden"}
+    >
+      <span className={`inline-flex items-center gap-1 ${
+        align === "right" ? "justify-end" : align === "center" ? "justify-center" : ""
+      }`}>
+        {label}
+        <span className="inline-flex items-center gap-0.5">
+          <span className={`material-symbols-outlined text-[13px] ${active ? "text-blue-400" : "text-[#52525B]"}`}>{icon}</span>
+          {active && multi && (
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-500 font-mono text-[9px] font-bold text-white leading-none">
+              {idx + 1}
+            </span>
+          )}
+        </span>
+      </span>
+    </th>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────
 
@@ -156,7 +200,7 @@ function GenerateModal({
           /* — Show generated codes + QR — */
           <div className="p-6 space-y-4">
             <p className="text-sm text-[#A1A1AA]">
-              Se generaron <strong className="text-white">{codes.length}</strong> código(s). Cópialos ahora, no se vuelven a mostrar.
+              Se generaron <strong className="text-white">{codes.length}</strong> código(s).
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -393,7 +437,28 @@ export default function InvitationsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [generating, setGenerating] = useState(false);
   const [deletingInv, setDeletingInv] = useState<Invitation | null>(null);
-  const [toggling, setToggling] = useState<string | null>(null);
+  const [toggling, setToggling]     = useState<string | null>(null);
+  const [editingCode, setEditingCode] = useState<{ id: string; value: string } | null>(null);
+  const [savingCode, setSavingCode]   = useState<string | null>(null);
+  const [sortKeys, setSortKeys]       = useState<SortKey[]>([{ field: "created_at", dir: "desc" }]);
+
+  const handleSort = useCallback((field: InvSortField, shift: boolean) => {
+    setSortKeys(prev => {
+      const idx = prev.findIndex(k => k.field === field);
+      if (shift) {
+        if (idx === -1) return [...prev, { field, dir: "asc" }];
+        const updated = [...prev];
+        updated[idx] = { field, dir: prev[idx].dir === "asc" ? "desc" : "asc" };
+        return updated;
+      } else {
+        if (idx !== -1 && prev.length === 1)
+          return [{ field, dir: prev[0].dir === "asc" ? "desc" : "asc" }];
+        return [{ field, dir: "asc" }];
+      }
+    });
+  }, []);
+
+  useEffect(() => { setPage(1); }, [debouncedSearch, status, sortKeys]);
 
   useEffect(() => {
     const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
@@ -407,6 +472,8 @@ export default function InvitationsPage() {
       const params = new URLSearchParams({ page: String(page), per_page: String(PAGE_SIZE) });
       if (status) params.set("status", status);
       if (debouncedSearch) params.set("q", debouncedSearch);
+      params.set("sort_by",  sortKeys.map(k => k.field).join(","));
+      params.set("sort_dir", sortKeys.map(k => k.dir).join(","));
 
       const res  = await fetch(`/api/admin/invitations?${params}`);
       const json = await res.json().catch(() => null);
@@ -417,9 +484,27 @@ export default function InvitationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, status, debouncedSearch]);
+  }, [page, status, debouncedSearch, sortKeys]);
 
   useEffect(() => { fetchInvitations(); }, [fetchInvitations]);
+
+  async function saveCode(invId: string, code: string) {
+    setSavingCode(invId);
+    try {
+      const res = await fetch(`/api/admin/invitations/${invId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      if (res.ok) { setEditingCode(null); fetchInvitations(); }
+      else {
+        const d = await res.json().catch(() => ({}));
+        alert(d.error ?? `Error ${res.status}`);
+      }
+    } finally {
+      setSavingCode(null);
+    }
+  }
 
   async function toggleActive(inv: Invitation) {
     setToggling(inv.id);
@@ -511,12 +596,12 @@ export default function InvitationsPage() {
                 <thead>
                   <tr className="border-b border-[#27272A] bg-[#18181B]">
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Estado</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Código</th>
+                    <SortHeader label="Código"   field="code"         sortKeys={sortKeys} onSort={handleSort} />
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Jugador</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Usos</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Creado</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Expira</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Etiqueta</th>
+                    <SortHeader label="Usos"     field="current_uses" sortKeys={sortKeys} onSort={handleSort} align="left" />
+                    <SortHeader label="Creado"   field="created_at"   sortKeys={sortKeys} onSort={handleSort} />
+                    <SortHeader label="Expira"   field="expires_at"   sortKeys={sortKeys} onSort={handleSort} />
+                    <SortHeader label="Etiqueta" field="created_by"   sortKeys={sortKeys} onSort={handleSort} />
                     <th className="px-4 py-3 text-right whitespace-nowrap text-xs font-semibold uppercase tracking-wider text-[#71717A]">Acciones</th>
                   </tr>
                 </thead>
@@ -556,19 +641,60 @@ export default function InvitationsPage() {
 
                           {/* Code */}
                           <td className="px-4 py-3">
-                            {inv.code ? (
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-mono text-sm text-white">{inv.code}</span>
+                            {editingCode?.id === inv.id ? (
+                              <div className="flex items-center gap-1">
+                                <input
+                                  autoFocus
+                                  value={editingCode.value}
+                                  onChange={(e) => setEditingCode({ id: inv.id, value: e.target.value })}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") saveCode(inv.id, editingCode.value);
+                                    if (e.key === "Escape") setEditingCode(null);
+                                  }}
+                                  className="w-36 rounded border border-blue-500/50 bg-[#0D0D0F] px-2 py-0.5 font-mono text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
                                 <button
-                                  onClick={() => navigator.clipboard.writeText(inv.code!)}
-                                  title="Copiar"
-                                  className="flex items-center rounded p-0.5 text-[#52525B] hover:text-[#A1A1AA] transition-colors"
+                                  onClick={() => saveCode(inv.id, editingCode.value)}
+                                  disabled={savingCode === inv.id}
+                                  title="Guardar"
+                                  className="flex items-center rounded p-0.5 text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50"
                                 >
-                                  <span className="material-symbols-outlined text-[14px]">content_copy</span>
+                                  <span className="material-symbols-outlined text-[16px]">
+                                    {savingCode === inv.id ? "progress_activity" : "check"}
+                                  </span>
+                                </button>
+                                <button
+                                  onClick={() => setEditingCode(null)}
+                                  title="Cancelar"
+                                  className="flex items-center rounded p-0.5 text-[#71717A] hover:text-white transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[16px]">close</span>
                                 </button>
                               </div>
                             ) : (
-                              <span className="text-xs text-[#52525B]">—</span>
+                              <div className="flex items-center gap-1.5 group">
+                                {inv.code ? (
+                                  <>
+                                    <span className="font-mono text-sm text-white">{inv.code}</span>
+                                    <button
+                                      onClick={() => navigator.clipboard.writeText(inv.code!)}
+                                      title="Copiar"
+                                      className="flex items-center rounded p-0.5 text-[#52525B] hover:text-[#A1A1AA] transition-colors"
+                                    >
+                                      <span className="material-symbols-outlined text-[14px]">content_copy</span>
+                                    </button>
+                                  </>
+                                ) : (
+                                  <span className="text-xs text-[#52525B]">—</span>
+                                )}
+                                <button
+                                  onClick={() => setEditingCode({ id: inv.id, value: inv.code ?? "" })}
+                                  title="Editar código"
+                                  className="flex items-center rounded p-0.5 text-[#52525B] hover:text-blue-400 transition-colors opacity-0 group-hover:opacity-100"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">edit</span>
+                                </button>
+                              </div>
                             )}
                           </td>
 
