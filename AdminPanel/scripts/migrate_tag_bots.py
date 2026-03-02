@@ -18,7 +18,7 @@ with engine.begin() as conn:
         UPDATE invitation_codes
         SET tag = 'bot'
         WHERE player_id IN (
-            SELECT id FROM players WHERE is_bot = 1
+            SELECT id FROM players WHERE is_bot = TRUE
         )
         AND (tag IS NULL OR tag = '')
     """))
