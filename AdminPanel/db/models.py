@@ -393,6 +393,9 @@ class PlayerBossStats(Base):
 
     defeated = Column(Boolean, default=False)
 
+    # Per-player secret word assigned on first encounter (prevents flag sharing)
+    assigned_word = Column(String(100), nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
 
     player = relationship("Player")

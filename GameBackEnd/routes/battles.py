@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func
 from datetime import datetime
+import random
 
 from utils import generate_uuid
 from services.agent_service import get_agent_service, SessionExpiredError
@@ -18,7 +19,8 @@ from db.models import (
     PlayerHistoryEntry,
     Boss,
     PlayerBossStats,
-    PlayerAsset
+    PlayerAsset,
+    ProtectedWord,
 )
 
 agent_service = get_agent_service()
@@ -305,6 +307,29 @@ def start_boss_battle():
         if boss_stats and boss_stats.defeated:
             return jsonify({"error": "Boss already defeated"}), 400
 
+        # Ensure a per-player secret word is assigned on first encounter
+        if not boss_stats:
+            all_words = db.query(ProtectedWord).all()
+            if not all_words:
+                return jsonify({"error": "No protected words available in the database"}), 500
+            chosen_word = random.choice(all_words).word
+            boss_stats = PlayerBossStats(
+                id=generate_uuid(),
+                player_id=user_id,
+                boss_id=boss_id,
+                defeated=False,
+                assigned_word=chosen_word,
+            )
+            db.add(boss_stats)
+            db.commit()  # persist the word before any potential early return
+        elif not boss_stats.assigned_word:
+            # Retroactively assign a word for records created before this feature
+            all_words = db.query(ProtectedWord).all()
+            if not all_words:
+                return jsonify({"error": "No protected words available in the database"}), 500
+            boss_stats.assigned_word = random.choice(all_words).word
+            db.commit()  # persist the word before any potential early return
+
         # Resume existing active battle
         existing = db.query(Battle).filter_by(
             attacker_id=user_id,
@@ -345,13 +370,13 @@ def start_boss_battle():
                     "history": history
                 }), 200
 
-        # Create new boss battle
+        # Create new boss battle — use the player's individually assigned word
         context = {
             "protocol_template": boss.prompt,
             "archetype_template": "",
             "personality": "",
             "constraints": "",
-            "secret_word": boss.protected_word,
+            "secret_word": boss_stats.assigned_word,
             "is_boss": True,
         }
 
@@ -578,7 +603,15 @@ def guess_word(battle_id):
             boss = db.query(Boss).filter_by(id=battle.boss_id).first()
             if not boss:
                 return jsonify({"error": "Boss not found"}), 404
-            protected_word = boss.protected_word
+            # Use the word assigned to this specific player (not the shared boss word)
+            boss_stats = db.query(PlayerBossStats).filter_by(
+                player_id=user_id, boss_id=boss.id
+            ).first()
+            protected_word = (
+                boss_stats.assigned_word
+                if boss_stats and boss_stats.assigned_word
+                else boss.protected_word  # fallback for legacy records
+            )
         else:
             fortress = battle.fortress
             fortress_stats = get_or_create_fortress_season_stats(
