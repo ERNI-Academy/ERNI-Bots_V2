@@ -14,6 +14,7 @@ const navItems: { label: string; icon: string; href: string; disabled?: boolean 
   { label: "Batallas",      icon: "swords",      href: "/battles" },
   { label: "Palabras",      icon: "key",         href: "/words" },
   { label: "Invitaciones",  icon: "mail",        href: "/invitations" },
+  { label: "Temporadas",    icon: "calendar_month", href: "/seasons" },
   { label: "Configuración", icon: "settings",    href: "/config" },
 ];
 
