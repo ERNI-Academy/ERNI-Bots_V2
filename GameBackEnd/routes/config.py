@@ -7,7 +7,7 @@ render its UI (e.g. feature flags).  Sensitive keys must never appear here.
 
 from flask import Blueprint, jsonify
 from db import SessionLocal
-from db.models import AppConfig
+from db.models import AppConfig, Season
 
 config_bp = Blueprint("config", __name__)
 
@@ -18,9 +18,25 @@ PUBLIC_KEYS = {
 }
 
 
+def _get_season_status(db) -> str:
+    """
+    Returns the current season status as a string:
+      'active'    – a season is active and not frozen
+      'frozen'    – the active season is frozen (battles paused)
+      'finalized' – no active season, but at least one is finalized
+      'none'      – no seasons exist at all
+    """
+    active = db.query(Season).filter_by(is_active=True).first()
+    if active:
+        return "frozen" if active.is_frozen else "active"
+    from sqlalchemy import exists
+    has_finalized = db.query(exists().where(Season.finalized == True)).scalar()  # noqa: E712
+    return "finalized" if has_finalized else "none"
+
+
 @config_bp.get("/")
 def get_public_config():
-    """Return public feature flags as a flat dict with boolean-coerced values."""
+    """Return public feature flags and season status as a flat dict."""
     db = SessionLocal()
     try:
         rows = db.query(AppConfig).filter(AppConfig.key.in_(PUBLIC_KEYS)).all()
@@ -29,6 +45,7 @@ def get_public_config():
         for key in PUBLIC_KEYS:
             if key not in result:
                 result[key] = True
+        result["season_status"] = _get_season_status(db)
         return jsonify(result), 200
     finally:
         db.close()

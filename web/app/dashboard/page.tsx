@@ -146,6 +146,7 @@ export default function DashboardPage() {
     const [bosses, setBosses] = useState<BossEntry[]>([]);
     const [tick, setTick] = useState(0);
     const [showSettings, setShowSettings] = useState(false);
+    const [seasonStatus, setSeasonStatus] = useState<string>("active");
 
     async function handleLogout() {
         setShowSettings(false);
@@ -165,17 +166,19 @@ export default function DashboardPage() {
     useEffect(() => {
         async function load() {
             try {
-                const [fortressData, profileRes, lbRes, bossesRes] = await Promise.all([
+                const [fortressData, profileRes, lbRes, bossesRes, configData] = await Promise.all([
                     fetchMatchmakingFortresses().catch(() => [] as Fortress[]),
                     fetch("/api/players/me", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
                     fetch("/api/leaderboard?limit=100", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
                     fetch("/api/players/bosses", { credentials: "include" }).then(r => r.ok ? r.json() : []).catch(() => []),
+                    fetch("/api/config").then(r => r.ok ? r.json() : {}).catch(() => ({})),
                 ]);
                 setFortresses(fortressData);
                 setPlayer(profileRes);
                 setLeaderboard(lbRes?.items ?? []);
                 setMarkerPos(generateSpreadPositions(fortressData.length));
                 setBosses(Array.isArray(bossesRes) ? bossesRes : []);
+                setSeasonStatus((configData as Record<string, string>).season_status ?? "active");
             } finally {
                 setLoading(false);
             }
@@ -194,6 +197,7 @@ export default function DashboardPage() {
 
     const playerScore = player?.season_score ?? 0;
     const topScore = leaderboard[0]?.score ?? 1;
+    const battlesBlocked = seasonStatus !== "active";
 
     return (
         <div className="relative bg-background-dark text-white font-[var(--font-display)] overflow-hidden h-screen w-screen">
@@ -221,6 +225,22 @@ export default function DashboardPage() {
                     <div className="absolute inset-0 flex items-center justify-center z-10">
                         <div className="font-mono text-[#00ffff] text-xs animate-pulse uppercase tracking-widest">
                             ESCANEANDO FORTALEZAS...
+                        </div>
+                    </div>
+                )}
+
+                {/* Season status banner */}
+                {battlesBlocked && !loading && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                        <div className="bg-black/80 border border-[#ffd700]/60 px-6 py-4 font-mono text-center space-y-2 max-w-sm mx-4">
+                            <div className="text-[#ffd700] font-bold uppercase tracking-widest text-sm animate-pulse">
+                                {seasonStatus === "frozen" ? "⚠ TEMPORADA CONGELADA" : "⚠ TEMPORADA FINALIZADA"}
+                            </div>
+                            <p className="text-slate-300 text-xs uppercase tracking-widest leading-relaxed">
+                                {seasonStatus === "frozen"
+                                    ? "Las batallas están pausadas. Espera a que se reactive la temporada."
+                                    : "La temporada ha concluido. No se pueden iniciar batallas."}
+                            </p>
                         </div>
                     </div>
                 )}
@@ -508,7 +528,7 @@ export default function DashboardPage() {
                                 const remaining = boss.active_at ? Math.max(0, new Date(boss.active_at).getTime() - Date.now()) : 0;
                                 const noFortress = !player?.has_fortress;
                                 const fortressDestroyed = player?.fortress?.status === "destroyed";
-                                const canAttackBoss = !noFortress && !fortressDestroyed;
+                                const canAttackBoss = !noFortress && !fortressDestroyed && !battlesBlocked;
                                 return (
                                     <div key={boss.boss_id} className={`border p-3 space-y-2.5 ${available ? "border-[#8b5cf6]/50 bg-[#8b5cf6]/8" : "border-[#8b5cf6]/20 bg-[#8b5cf6]/4"}`}>
                                         {/* Name + reward */}
@@ -552,8 +572,22 @@ export default function DashboardPage() {
                                     </div>
                                 );
                             })}
+                            {/* Season blocked warning */}
+                            {bosses.length > 0 && battlesBlocked && (
+                                <div className="border border-[#ffd700]/30 bg-[#ffd700]/5 p-2.5 text-xs font-mono space-y-1.5">
+                                    <div className="flex items-center gap-1.5 text-[#ffd700] font-bold uppercase tracking-widest">
+                                        <span className="material-symbols-outlined text-sm">warning</span>
+                                        {seasonStatus === "frozen" ? "Temporada congelada" : "Temporada finalizada"}
+                                    </div>
+                                    <p className="text-slate-400 leading-relaxed">
+                                        {seasonStatus === "frozen"
+                                            ? "Las batallas están pausadas. Espera a que se reactive la temporada."
+                                            : "La temporada ha concluido. No se pueden iniciar batallas."}
+                                    </p>
+                                </div>
+                            )}
                             {/* Fortress required warning — shown once at the bottom */}
-                            {bosses.length > 0 && (() => {
+                            {bosses.length > 0 && !battlesBlocked && (() => {
                                 const noFortress = !player?.has_fortress;
                                 const fortressDestroyed = player?.fortress?.status === "destroyed";
                                 if (!noFortress && !fortressDestroyed) return null;
@@ -724,13 +758,13 @@ export default function DashboardPage() {
                                     {(() => {
                                         const fortressDestroyed = player?.fortress?.status === "destroyed";
                                         const noFortress = !player?.has_fortress;
-                                        const canAttack = !noFortress && !fortressDestroyed;
+                                        const canAttack = !noFortress && !fortressDestroyed && !battlesBlocked;
                                         return (
                                             <>
                                                 <button
                                                     onClick={() => canAttack ? router.push(`/attack/${selectedFortress.id}`) : undefined}
                                                     disabled={!canAttack}
-                                                    title={noFortress ? "Debes crear tu fortaleza antes de atacar" : fortressDestroyed ? "Tu fortaleza está destruida. Reconstruyela primero." : undefined}
+                                                    title={battlesBlocked ? (seasonStatus === "frozen" ? "Temporada congelada. Las batallas están pausadas." : "La temporada ha finalizado. No se pueden iniciar batallas.") : noFortress ? "Debes crear tu fortaleza antes de atacar" : fortressDestroyed ? "Tu fortaleza está destruida. Reconstruyela primero." : undefined}
                                                     className="flex-1 bg-[#ff0033]/10 border border-[#ff0033]/40 text-xs px-3 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
                                                     <span className="material-symbols-outlined text-xs">gps_fixed</span>

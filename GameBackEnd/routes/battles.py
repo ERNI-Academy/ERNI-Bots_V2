@@ -120,8 +120,8 @@ def start_battle():
         if not season:
             return jsonify({"error": "No active season"}), 400
 
-        if season.is_frozen:
-            return jsonify({"error": "Season is frozen"}), 403
+        if season.is_frozen or season.finalized:
+            return jsonify({"error": "Season is frozen or finalized"}), 403
 
         fortress = db.query(Fortress).filter_by(id=fortress_id).first()
         if not fortress:
@@ -282,8 +282,8 @@ def start_boss_battle():
         if not season:
             return jsonify({"error": "No active season"}), 400
 
-        if season.is_frozen:
-            return jsonify({"error": "Season is frozen"}), 403
+        if season.is_frozen or season.finalized:
+            return jsonify({"error": "Season is frozen or finalized"}), 403
 
         # Player must have an active fortress to attack bosses
         player = db.query(Player).filter_by(id=user_id).first()

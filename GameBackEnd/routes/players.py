@@ -243,6 +243,10 @@ def matchmaking():
         db.close()
         return jsonify({"error": "No active season"}), 400
 
+    if season.is_frozen or season.finalized:
+        db.close()
+        return jsonify([]), 200
+
     current_player = db.query(Player).filter_by(id=user_id).first()
     current_stats = get_or_create_player_season_stats(
         db, user_id, season.id

@@ -11,6 +11,14 @@ MAX_LIMIT = 100
 def get_active_season(db):
     return db.query(Season).filter_by(is_active=True).first()
 
+
+def get_ranked_season(db):
+    """Return the season marked as is_ranked, falling back to the active season."""
+    ranked = db.query(Season).filter_by(is_ranked=True).first()
+    if ranked:
+        return ranked
+    return get_active_season(db)
+
 @leaderboard_bp.get("")
 def leaderboard():
     try:
@@ -21,10 +29,10 @@ def leaderboard():
 
     db = SessionLocal()
 
-    season = get_active_season(db)
+    season = get_ranked_season(db)
     if not season:
         db.close()
-        return jsonify({"error": "No active season"}), 400
+        return jsonify({"error": "No ranked season"}), 400
 
     base_query = (
         db.query(PlayerSeasonStats, Player)
