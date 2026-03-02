@@ -92,7 +92,7 @@ export default function PremiosPage() {
                         className="flex items-center gap-1 px-3 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary transition-colors font-mono text-xs uppercase tracking-widest"
                     >
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
-                        <span className="hidden sm:inline">DASHBOARD</span>
+                        <span className="hidden sm:inline">VOLVER</span>
                     </Link>
                 </div>
             </header>

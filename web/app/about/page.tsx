@@ -1,8 +1,9 @@
 ﻿"use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Space_Mono } from "next/font/google";
+
+const spaceMono = Space_Mono({ weight: ["400", "700"], subsets: ["latin"] });
 
 const TEAM = [
     {
@@ -53,46 +54,60 @@ const TEAM = [
 ];
 
 export default function AboutPage() {
-    const router = useRouter();
-
-    useEffect(() => {
-
-    }, [router]);
-
     return (
-        <div className="bg-background-dark font-[var(--font-display)] text-white selection:bg-primary selection:text-background-dark overflow-x-hidden min-h-screen">
-            {/* CRT overlay */}
-            <div className="crt-overlay fixed inset-0 pointer-events-none z-50 mix-blend-overlay" />
+        <div className={`${spaceMono.className} fixed inset-0 flex flex-col bg-[#050505] text-primary overflow-hidden`}>
+            {/* CRT scanlines */}
+            <div className="scanlines" />
 
             {/* Dot-grid background */}
             <div
-                className="fixed inset-0 pointer-events-none opacity-30"
+                className="fixed inset-0 pointer-events-none opacity-20"
                 style={{
+                    backgroundImage: "radial-gradient(rgba(0,255,255,0.3) 1px, transparent 0)",
                     backgroundSize: "40px 40px",
-                    backgroundImage: "radial-gradient(circle, #1a2e2e 1px, transparent 1px)",
                 }}
             />
 
-            <div className="relative max-w-4xl mx-auto p-4 md:p-8 min-h-screen">
+            {/* Holographic radial glow */}
+            <div
+                className="fixed inset-0 pointer-events-none"
+                style={{ background: "radial-gradient(circle at center, rgba(0,255,255,0.05) 0%, transparent 70%)" }}
+            />
 
-                {/* ── Session header ── */}
-                <div className="mb-8 border-b border-primary/20 pb-4 flex items-start justify-between gap-4">
-                    <div>
-                        <p className="text-[#00ff41] text-xs mb-1 uppercase tracking-widest font-mono">
-                            [ SESSION_STARTED: 2026-02-18T00:00:00Z ]
-                        </p>
-                        <p className="text-xs text-[#00ffff] font-mono">
-                            IP: 192.168.1.0 // LOC: UNDISCLOSED // ENC: AES-256-GCM
+            {/* Corner brackets */}
+            <div className="fixed top-4 left-4 size-16 border-t border-l border-primary/30 pointer-events-none" />
+            <div className="fixed top-4 right-4 size-16 border-t border-r border-primary/30 pointer-events-none" />
+            <div className="fixed bottom-4 left-4 size-16 border-b border-l border-primary/30 pointer-events-none" />
+            <div className="fixed bottom-4 right-4 size-16 border-b border-r border-primary/30 pointer-events-none" />
+
+            {/* ─── HEADER ─── */}
+            <header className="flex items-center justify-between border-b border-primary/20 bg-[#050505]/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 sticky top-0 shrink-0">
+                <div className="flex items-center gap-2 md:gap-4">
+                    <div className="size-6 text-primary flex items-center justify-center">
+                        <span className="material-symbols-outlined text-xl md:text-2xl">people</span>
+                    </div>
+                    <div className="flex flex-col">
+                        <h1 className="text-white text-xs font-mono font-bold leading-tight tracking-wider uppercase">
+                            SYSTEM_ARCHITECTS_v2.0.0
+                        </h1>
+                        <p className="text-primary text-xs font-mono">
+                            LOS ARQUITECTOS DEL VACÍO DIGITAL
                         </p>
                     </div>
+                </div>
+                <div className="flex items-center gap-2 md:gap-4">
                     <Link
-                        href="/"
-                        className="shrink-0 flex items-center gap-1 text-xs uppercase tracking-widest text-[#00ffff] hover:text-primary font-mono border border-primary/20 hover:border-primary/50 px-2 py-1 transition-colors"
+                        href="/dashboard"
+                        className="flex items-center gap-1 px-3 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary transition-colors font-mono text-xs uppercase tracking-widest"
                     >
-                        <span className="material-symbols-outlined text-xs">arrow_back</span>
-                        VOLVER
+                        <span className="material-symbols-outlined text-sm">arrow_back</span>
+                        <span className="hidden sm:inline">VOLVER</span>
                     </Link>
                 </div>
+            </header>
+
+            <div className="flex-1 overflow-y-auto">
+            <div className="relative max-w-4xl mx-auto p-4 md:p-8">
 
                 {/* ── Hero ── */}
                 <div className="mb-12">
@@ -218,6 +233,7 @@ export default function AboutPage() {
                     </div>
                 </div>
 
+            </div>
             </div>
         </div>
     );
