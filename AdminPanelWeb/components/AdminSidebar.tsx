@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { logoutApi } from "@/lib/auth";
 
-const navItems = [
+const navItems: { label: string; icon: string; href: string; disabled?: boolean }[] = [
   { label: "Ops Center",    icon: "dashboard",   href: "/dashboard" },
   { label: "Jugadores",     icon: "group",       href: "/players" },
   { label: "Arquetipos",    icon: "badge",       href: "/archetypes" },
