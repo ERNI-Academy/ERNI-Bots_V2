@@ -368,7 +368,7 @@ export default function DashboardPage() {
                     }`}
             >
                 {/* My Fortress */}
-                <aside className="md:fixed md:top-24 md:right-4 md:w-72 panel-float z-20">
+                <aside className="md:fixed md:top-24 md:right-4 md:w-72 md:max-h-[calc(100vh-14rem)] md:overflow-y-auto panel-float z-20 custom-scrollbar">
                     <div data-tour="tour-fortress">
                     <div className="panel-header p-2">
                         <h2 className="text-xs font-bold text-[#ffd700] flex items-center gap-2">
@@ -490,6 +490,9 @@ export default function DashboardPage() {
                             ) : bosses.map(boss => {
                                 const available = !boss.active_at || new Date(boss.active_at).getTime() <= Date.now();
                                 const remaining = boss.active_at ? Math.max(0, new Date(boss.active_at).getTime() - Date.now()) : 0;
+                                const noFortress = !player?.has_fortress;
+                                const fortressDestroyed = player?.fortress?.status === "destroyed";
+                                const canAttackBoss = !noFortress && !fortressDestroyed;
                                 return (
                                     <div key={boss.boss_id} className={`border p-3 space-y-2.5 ${available ? "border-[#8b5cf6]/50 bg-[#8b5cf6]/8" : "border-[#8b5cf6]/20 bg-[#8b5cf6]/4"}`}>
                                         {/* Name + reward */}
@@ -507,13 +510,20 @@ export default function DashboardPage() {
                                         </div>
                                         {/* Action */}
                                         {available ? (
-                                            <Link
-                                                href={`/attack/boss/${boss.boss_id}`}
-                                                className="flex items-center justify-center gap-2 w-full bg-[#8b5cf6]/25 border border-[#8b5cf6] text-[#e9d5ff] text-xs font-bold uppercase tracking-widest py-1.5 hover:bg-[#8b5cf6]/50 transition-colors"
-                                            >
-                                                <span className="material-symbols-outlined text-xs">bolt</span>
-                                                Atacar
-                                            </Link>
+                                            canAttackBoss ? (
+                                                <Link
+                                                    href={`/attack/boss/${boss.boss_id}`}
+                                                    className="flex items-center justify-center gap-2 w-full bg-[#8b5cf6]/25 border border-[#8b5cf6] text-[#e9d5ff] text-xs font-bold uppercase tracking-widest py-1.5 hover:bg-[#8b5cf6]/50 transition-colors"
+                                                >
+                                                    <span className="material-symbols-outlined text-xs">bolt</span>
+                                                    Atacar
+                                                </Link>
+                                            ) : (
+                                                <div className="flex items-center justify-center gap-2 w-full bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 text-[#8b5cf6]/40 text-xs font-bold uppercase tracking-widest py-1.5 cursor-not-allowed">
+                                                    <span className="material-symbols-outlined text-xs">lock</span>
+                                                    Atacar
+                                                </div>
+                                            )
                                         ) : (
                                             <div className="space-y-1">
                                                 <div className="text-[10px] text-slate-500 uppercase tracking-widest font-mono">Disponible en</div>
@@ -526,6 +536,25 @@ export default function DashboardPage() {
                                     </div>
                                 );
                             })}
+                            {/* Fortress required warning — shown once at the bottom */}
+                            {bosses.length > 0 && (() => {
+                                const noFortress = !player?.has_fortress;
+                                const fortressDestroyed = player?.fortress?.status === "destroyed";
+                                if (!noFortress && !fortressDestroyed) return null;
+                                return (
+                                    <div className="border border-[#8b5cf6]/30 bg-[#8b5cf6]/5 p-2.5 text-xs font-mono space-y-1.5">
+                                        <div className="flex items-center gap-1.5 text-[#8b5cf6] font-bold uppercase tracking-widest">
+                                            <span className="material-symbols-outlined text-sm">lock</span>
+                                            Acceso bloqueado
+                                        </div>
+                                        <p className="text-slate-400 leading-relaxed">
+                                            {noFortress
+                                                ? "Necesitas una fortaleza activa para atacar entidades de la Zona Cero."
+                                                : "Tu fortaleza está destruida. Reconstruyela para acceder a la Zona Cero."}
+                                        </p>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
                 </aside>
@@ -732,7 +761,7 @@ export default function DashboardPage() {
                     };
                     const labels: Record<Tab, string> = {
                         map: "Vista del Mapa",
-                        log: "Registro de Actividad",
+                        log: "Actividad",
                         console: "Operaciones",
                     };
                     return (

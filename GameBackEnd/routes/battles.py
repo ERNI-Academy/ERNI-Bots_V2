@@ -249,6 +249,11 @@ def start_boss_battle():
         if season.is_frozen:
             return jsonify({"error": "Season is frozen"}), 403
 
+        # Player must have an active fortress to attack bosses
+        player = db.query(Player).filter_by(id=user_id).first()
+        if not player or not player.fortress:
+            return jsonify({"error": "You need an active fortress to attack bosses"}), 403
+
         boss = db.query(Boss).filter_by(id=boss_id, enabled=True).first()
         if not boss:
             return jsonify({"error": "Boss not found"}), 404
