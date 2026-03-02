@@ -278,6 +278,7 @@ def matchmaking():
             .join(PlayerSeasonStats,
                   PlayerSeasonStats.player_id == Player.id)
             .filter(Player.id != user_id)
+            .filter(Player.is_banned == False)  # noqa: E712
             .filter(PlayerSeasonStats.season_id == season.id)
             .filter(PlayerSeasonStats.score.between(min_score, max_score))
             .filter(~Fortress.id.in_(defeated_fortress_ids))
