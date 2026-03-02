@@ -312,40 +312,37 @@ def start_boss_battle():
         ).first()
 
         if existing:
-            # If the AI session expired in Redis, renew it transparently
+            # If the AI session expired in Redis, the battle is forfeit — start fresh
             if not agent_service.session_exists(existing.session_id):
-                new_session_id = agent_service.create_session(
-                    agent_id=boss.id,
-                    context=_build_pve_context(boss)
-                )
-                existing.session_id = new_session_id
+                existing.status = "lost"
+                existing.updated_at = datetime.utcnow()
                 db.commit()
-
-            history = [
-                {
-                    "role": m.role,
-                    "text": m.text,
-                    "timestamp": m.created_at.strftime("%H:%M:%S")
-                }
-                for m in existing.messages
-            ]
-            return jsonify({
-                "battle_id": existing.id,
-                "session_id": existing.session_id,
-                "resumed": True,
-                "turn_count": existing.turn_count,
-                "max_turns": existing.max_turns,
-                "boss": {
-                    "id": boss.id,
-                    "name": boss.name,
-                    "title": boss.title,
-                    "location": boss.location,
-                    "story": boss.story,
-                    "reward_score": boss.reward_score,
-                    "reward_credits": boss.reward_credits,
-                },
-                "history": history
-            }), 200
+            else:
+                history = [
+                    {
+                        "role": m.role,
+                        "text": m.text,
+                        "timestamp": m.created_at.strftime("%H:%M:%S")
+                    }
+                    for m in existing.messages
+                ]
+                return jsonify({
+                    "battle_id": existing.id,
+                    "session_id": existing.session_id,
+                    "resumed": True,
+                    "turn_count": existing.turn_count,
+                    "max_turns": existing.max_turns,
+                    "boss": {
+                        "id": boss.id,
+                        "name": boss.name,
+                        "title": boss.title,
+                        "location": boss.location,
+                        "story": boss.story,
+                        "reward_score": boss.reward_score,
+                        "reward_credits": boss.reward_credits,
+                    },
+                    "history": history
+                }), 200
 
         # Create new boss battle
         context = {
@@ -501,21 +498,25 @@ def send_message(battle_id):
         try:
             agent_reply = agent_service.send_message(battle.session_id, message)
         except SessionExpiredError:
-            # The Redis session expired due to inactivity; recreate it and retry
             battle.updated_at = datetime.utcnow()
             if battle.fortress_id:
+                # PvP: recreate the Redis session transparently and retry
                 new_session_id = agent_service.create_session(
                     agent_id=battle.fortress_id,
                     context=_build_pvp_context(battle.fortress)
                 )
+                battle.session_id = new_session_id
+                db.commit()
+                agent_reply = agent_service.send_message(new_session_id, message)
             else:
-                new_session_id = agent_service.create_session(
-                    agent_id=battle.boss_id,
-                    context=_build_pve_context(battle.boss)
-                )
-            battle.session_id = new_session_id
-            db.commit()
-            agent_reply = agent_service.send_message(new_session_id, message)
+                # PvE (boss): session expiry ends the battle — player must start fresh
+                battle.status = "lost"
+                db.commit()
+                try:
+                    agent_service.terminate_session(battle.session_id)
+                except Exception:
+                    pass
+                return jsonify({"error": "La sesión ha expirado. Empieza una nueva batalla.", "code": "session_expired"}), 410
 
         # Persist guardian reply
         guardian_msg = BattleMessage(
