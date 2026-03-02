@@ -16,6 +16,7 @@ interface Battle {
   status: "active" | "won" | "lost" | "expired";
   turn_count: number;
   max_turns: number;
+  secret_word: string | null;
 }
 
 interface Message {
@@ -198,6 +199,7 @@ export default function BattlesPage() {
                         <th className="px-5 py-3 font-medium">Atacante</th>
                         <th className="px-5 py-3 font-medium">Objetivo</th>
                         <th className="px-5 py-3 font-medium">Defensor</th>
+                        <th className="px-5 py-3 font-medium">Palabra</th>
                         <th className="px-5 py-3 font-medium text-center">Tipo</th>
                         <th className="px-5 py-3 font-medium text-center">Turnos</th>
                         <th className="px-5 py-3 font-medium text-center">Estado</th>
@@ -208,7 +210,7 @@ export default function BattlesPage() {
                       {loading
                         ? Array.from({ length: PER_PAGE }).map((_, i) => (
                             <tr key={i} className="h-12">
-                              {Array.from({ length: 8 }).map((_, j) => (
+                              {Array.from({ length: 9 }).map((_, j) => (
                                 <td key={j} className="px-5 py-3">
                                   <div className="h-3 w-full max-w-[100px] animate-pulse rounded bg-[#27272A]" />
                                 </td>
@@ -260,6 +262,17 @@ export default function BattlesPage() {
                                 <td className="px-5 py-2">
                                   {b.fortress_owner ? (
                                     <span className="font-mono text-xs text-[#71717A]">{b.fortress_owner}</span>
+                                  ) : (
+                                    <span className="text-[#3F3F46]">—</span>
+                                  )}
+                                </td>
+                                {/* Palabra secreta */}
+                                <td className="px-5 py-2">
+                                  {b.secret_word ? (
+                                    <span className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 font-mono text-xs font-semibold tracking-wide text-amber-300">
+                                      <span className="material-symbols-outlined text-[12px]">key</span>
+                                      {b.secret_word}
+                                    </span>
                                   ) : (
                                     <span className="text-[#3F3F46]">—</span>
                                   )}
@@ -427,6 +440,16 @@ export default function BattlesPage() {
                     <span className="font-mono text-[10px] uppercase tracking-wider text-[#71717A]">Turnos</span>
                     <TurnBar count={detail.turn_count} max={detail.max_turns} />
                   </div>
+                  {/* Palabra secreta */}
+                  {detail.secret_word && (
+                    <div className="col-span-2 flex flex-col gap-1">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-[#71717A]">Palabra secreta</span>
+                      <span className="inline-flex w-fit items-center gap-1.5 rounded border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 font-mono text-sm font-bold tracking-widest text-amber-300">
+                        <span className="material-symbols-outlined text-[16px]">key</span>
+                        {detail.secret_word}
+                      </span>
+                    </div>
+                  )}
                   {/* Inicio */}
                   <div className="flex flex-col gap-1">
                     <span className="font-mono text-[10px] uppercase tracking-wider text-[#71717A]">Inicio</span>

@@ -230,7 +230,8 @@ def start_battle():
             session_id=session_id,
             status="active",
             type="pvp",
-            max_turns=10
+            max_turns=10,
+            secret_word=fortress.protected_word,
         )
 
         db.add(battle)
@@ -393,7 +394,8 @@ def start_boss_battle():
             session_id=session_id,
             status="active",
             type="pve",
-            max_turns=10
+            max_turns=10,
+            secret_word=boss_stats.assigned_word,
         )
 
         db.add(battle)
@@ -599,25 +601,18 @@ def guess_word(battle_id):
         # ── Resolve protected word and target entity ──────────────────────
         is_pve = battle.type == "pve"
 
+        # Use the word that was snapshotted when the battle started
+        protected_word = battle.secret_word
+
         if is_pve:
             boss = db.query(Boss).filter_by(id=battle.boss_id).first()
             if not boss:
                 return jsonify({"error": "Boss not found"}), 404
-            # Use the word assigned to this specific player (not the shared boss word)
-            boss_stats = db.query(PlayerBossStats).filter_by(
-                player_id=user_id, boss_id=boss.id
-            ).first()
-            protected_word = (
-                boss_stats.assigned_word
-                if boss_stats and boss_stats.assigned_word
-                else boss.protected_word  # fallback for legacy records
-            )
         else:
             fortress = battle.fortress
             fortress_stats = get_or_create_fortress_season_stats(
                 db, fortress.id, season.id
             )
-            protected_word = fortress.protected_word
 
         # ── Correct guess ─────────────────────────────────────────────────
         if guess.upper() == protected_word.upper():

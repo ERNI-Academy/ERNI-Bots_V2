@@ -228,6 +228,8 @@ class Battle(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     turn_count = Column(Integer, default=0)
     max_turns = Column(Integer, default=15)
+    # Secret word the attacker must guess — snapshot at battle creation.
+    secret_word = Column(String(100), nullable=True)
     attacker = relationship("Player", back_populates="battles")
     fortress = relationship("Fortress", back_populates="battles")
     boss = relationship("Boss", foreign_keys=[boss_id])
