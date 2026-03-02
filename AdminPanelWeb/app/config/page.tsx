@@ -25,6 +25,12 @@ const KEY_LABELS: Record<string, { label: string; description: string; icon: str
       "Controla si los jugadores autenticados pueden generar códigos de invitación para otros usuarios. Cuando está deshabilitado, el endpoint devuelve 403.",
     icon: "mail",
   },
+  bot_fortresses_enabled: {
+    label: "Fortalezas de bots",
+    description:
+      "Controla si las fortalezas de bots aparecen en el matchmaking. Cuando está deshabilitado, los bots quedan excluidos del emparejamiento y los jugadores solo se enfrentan a fortalezas de otros usuarios.",
+    icon: "smart_toy",
+  },
 };
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
