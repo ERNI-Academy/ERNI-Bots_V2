@@ -36,7 +36,7 @@ import logging
 from datetime import datetime
 
 from flask import Blueprint, jsonify, request
-from werkzeug.security import generate_password_hash
+
 
 from db import SessionLocal
 from db.models import (
@@ -116,7 +116,7 @@ def create_invitations():
         for _ in range(count):
             plain = _gen_code()
             inv = InvitationCode(
-                code_hash=generate_password_hash(plain),
+                code=plain,
                 is_active=True,
                 max_uses=max_uses,
                 current_uses=0,

@@ -2719,7 +2719,7 @@ def seed():
             plain = _gen_code()
             inv = InvitationCode(
                 id=_gen_uuid(),
-                code_hash=generate_password_hash(plain),
+                code=plain,
                 is_active=False,  # already claimed
                 max_uses=1,
                 current_uses=1,
@@ -2741,7 +2741,7 @@ def seed():
             plain = _gen_code()
             inv = InvitationCode(
                 id=_gen_uuid(),
-                code_hash=generate_password_hash(plain),
+                code=plain,
                 is_active=True,
                 max_uses=1,
                 current_uses=0,

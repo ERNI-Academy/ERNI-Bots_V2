@@ -324,7 +324,7 @@ class Boss(Base):
 class InvitationCode(Base):
     """
     One invitation code per player.
-    - code_hash: pbkdf2+sha256+salt via werkzeug (never stored in clear)
+    - code: plain-text invitation code
     - player_id: set when a player claims this code at registration
     - is_active: admin can revoke; also auto-set to False when max_uses reached
     - max_uses: default 1 (one player per code)
@@ -335,7 +335,7 @@ class InvitationCode(Base):
     __tablename__ = "invitation_codes"
 
     id = Column(String, primary_key=True, default=generate_uuid)
-    code_hash = Column(String(255), nullable=False)
+    code = Column(String(255), nullable=False)
 
     is_active = Column(Boolean, default=True, nullable=False)
     max_uses = Column(Integer, default=1, nullable=False)

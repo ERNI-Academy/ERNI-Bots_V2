@@ -37,7 +37,7 @@ from flask_jwt_extended import (
     get_jwt_identity,
     jwt_required,
 )
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import generate_password_hash
 
 from extensions import limiter
 
@@ -46,10 +46,6 @@ logger = logging.getLogger(__name__)
 
 # Generic error returned for ALL authentication failures to prevent enumeration.
 _AUTH_ERROR = {"error": "Invalid credentials"}
-
-# Pre-computed hash for timing-attack mitigation on unknown usernames.
-# Generated once at module load so the comparison time is stable.
-_TIMING_SENTINEL_HASH = generate_password_hash("timing-sentinel")
 
 # Email format validation (minimal, RFC-permissive).
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -79,32 +75,27 @@ def _client_ip() -> str:
 
 def _find_unclaimed_invitation(db, plain_code: str):
     """
-    Scan all active, unclaimed, non-expired invitation codes and compare
-    bcrypt/pbkdf2 hashes. Returns matching InvitationCode or None.
-
-    Design note: O(n) over active unclaimed invitations. Acceptable because
-    the pool is small (closed-beta). For large scale, add a plain-text lookup
-    prefix column.
+    Direct DB lookup by plain-text code. Returns matching InvitationCode or None.
     """
     from db.models import InvitationCode
 
     now = datetime.utcnow()
-    candidates = (
+    inv = (
         db.query(InvitationCode)
         .filter(
+            InvitationCode.code == plain_code,
             InvitationCode.is_active == True,      # noqa: E712
             InvitationCode.player_id == None,       # noqa: E711  (unclaimed)
         )
-        .all()
+        .first()
     )
-    for inv in candidates:
-        if inv.expires_at and inv.expires_at < now:
-            continue
-        if inv.current_uses >= inv.max_uses:
-            continue
-        if check_password_hash(inv.code_hash, plain_code):
-            return inv
-    return None
+    if inv is None:
+        return None
+    if inv.expires_at and inv.expires_at < now:
+        return None
+    if inv.current_uses >= inv.max_uses:
+        return None
+    return inv
 
 
 # ─────────────────────────────────────────────
@@ -257,9 +248,6 @@ def login():
         player = db.query(Player).filter_by(username=username).first()
 
         if not player:
-            # Perform a dummy hash check so the response time does not reveal
-            # whether the username exists (timing-attack mitigation).
-            check_password_hash(_TIMING_SENTINEL_HASH, "dummy")
             return jsonify(_AUTH_ERROR), 401
 
         if player.is_banned:
@@ -277,7 +265,7 @@ def login():
             .first()
         )
 
-        if not inv or not check_password_hash(inv.code_hash, invitation_code):
+        if not inv or inv.code != invitation_code:
             return jsonify(_AUTH_ERROR), 401
 
         # Update audit trail (login does not increment current_uses)

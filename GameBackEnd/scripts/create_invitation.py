@@ -20,7 +20,6 @@ from datetime import datetime
 # Ensure GameBackEnd/ is in path when running as a script
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from werkzeug.security import generate_password_hash
 from db import SessionLocal, engine
 from db.base import Base
 import db.models  # register all models with Base
@@ -56,13 +55,12 @@ def main():
     Base.metadata.create_all(engine)
 
     plain_code = _generate_plain_code()
-    code_hash  = generate_password_hash(plain_code)
 
     from db.models import InvitationCode
     db = SessionLocal()
     try:
         inv = InvitationCode(
-            code_hash  = code_hash,
+            code       = plain_code,
             is_active  = True,
             max_uses   = args.max_uses,
             expires_at = expires_at,
