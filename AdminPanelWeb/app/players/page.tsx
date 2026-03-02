@@ -246,6 +246,77 @@ function EditPlayerModal({
 }
 
 // 
+// Delete player confirmation
+// 
+
+function DeletePlayerModal({
+  player,
+  onClose,
+  onDeleted,
+}: {
+  player: Player;
+  onClose: () => void;
+  onDeleted: () => void;
+}) {
+  const [busy,  setBusy]  = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleDelete() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/users/${player.id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(data.error ?? `Error ${res.status}`); }
+      else { onDeleted(); onClose(); }
+    } catch { setError("Error de conexion"); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-lg border border-[#27272A] bg-[#09090B] p-6 shadow-2xl space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10">
+            <span className="material-symbols-outlined text-[20px] text-red-400">delete_forever</span>
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-white">Eliminar jugador</h2>
+            <p className="text-xs text-[#71717A]">Esta acción es irreversible. Se borrará todo el contenido asociado.</p>
+          </div>
+        </div>
+        <div className="rounded border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-[#A1A1AA]">
+          <p>Se eliminarán permanentemente:</p>
+          <ul className="mt-1 list-inside list-disc space-y-0.5 font-mono text-xs text-[#71717A]">
+            <li>Fortaleza y sus batallas</li>
+            <li>Historial de batallas y mensajes</li>
+            <li>Palabras, assets y estadísticas</li>
+            <li>Registros de actividad</li>
+          </ul>
+        </div>
+        <p className="text-sm text-[#A1A1AA]">
+          Jugador: <span className="font-semibold text-white">{player.username}</span>
+          <span className="ml-2 font-mono text-xs text-[#52525B]">{player.email}</span>
+        </p>
+        {error && <div className="rounded border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">{error}</div>}
+        <div className="flex justify-end gap-3">
+          <button onClick={onClose}
+            className="rounded border border-[#27272A] bg-[#18181B] px-4 py-2 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors">
+            Cancelar
+          </button>
+          <button onClick={handleDelete} disabled={busy}
+            className="flex items-center gap-2 rounded border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-400 hover:bg-red-500/20 disabled:opacity-50 transition-colors">
+            {busy && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+            Eliminar definitivamente
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 
 // Confirm action dialog
 // 
 
@@ -384,8 +455,9 @@ export default function PlayersPage() {
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState<string | null>(null);
 
-  const [editTarget, setEditTarget]     = useState<Player | null>(null);
+  const [editTarget,   setEditTarget]   = useState<Player | null>(null);
   const [actionTarget, setActionTarget] = useState<{ player: Player; action: ActionType } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Player | null>(null);
 
   // Debounce search
   useEffect(() => {
@@ -633,6 +705,14 @@ export default function PlayersPage() {
                                     <span className="material-symbols-outlined text-[15px]">block</span>
                                   </button>
                                 )}
+                                {/* Delete */}
+                                <button
+                                  onClick={() => setDeleteTarget(p)}
+                                  title="Eliminar jugador"
+                                  className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] bg-[#18181B] text-[#71717A] hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[15px]">delete_forever</span>
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -700,6 +780,16 @@ export default function PlayersPage() {
           action={actionTarget.action}
           onClose={() => setActionTarget(null)}
           onDone={(patch) => patchPlayer(actionTarget.player.id, patch)}
+        />
+      )}
+      {deleteTarget && (
+        <DeletePlayerModal
+          player={deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          onDeleted={() => {
+            setPlayers(ps => ps.filter(p => p.id !== deleteTarget.id));
+            setTotal(t => t - 1);
+          }}
         />
       )}
     </AdminLayout>

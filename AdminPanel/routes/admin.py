@@ -43,6 +43,7 @@ from db.models import (
     InvitationCode,
     Player,
     Fortress,
+    FortressConstraint,
     FortressSeasonStats,
     Battle,
     BattleMessage,
@@ -51,6 +52,9 @@ from db.models import (
     PlayerSeasonStats,
     PlayerHistoryEntry,
     PlayerWord,
+    PlayerBossStats,
+    PlayerAsset,
+    ActivityLog,
     ProtectedWord,
     Protocol,
     Archetype,
@@ -716,6 +720,102 @@ def adjust_fragments(player_id):
     except Exception:
         db.rollback()
         logger.exception("admin: adjust_fragments failed")
+        return jsonify({"error": "Internal server error"}), 500
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────────────────
+# DELETE /users/<player_id>  — hard delete
+# ──────────────────────────────────────────────────────────
+
+@admin_bp.delete("/users/<player_id>")
+def delete_player(player_id):
+    """Hard-delete a player and ALL associated data.
+
+    Deletes in FK-safe order:
+    activity_logs, player_boss_stats, player_history_entries,
+    player_words, player_assets, player_season_stats,
+    invitation_codes (unlinked), attacker battles + messages,
+    defender battles + messages (via fortress), fortress_constraints,
+    fortress_season_stats, fortress, player.
+    """
+    if not _check_admin():
+        return jsonify({"error": "Forbidden"}), 403
+
+    db = SessionLocal()
+    try:
+        player = db.query(Player).filter_by(id=player_id).first()
+        if not player:
+            return jsonify({"error": "Player not found"}), 404
+
+        username = player.username
+
+        # 1. Activity logs (actor)
+        db.query(ActivityLog).filter_by(actor_id=player_id).delete()
+
+        # 2. Boss stats
+        db.query(PlayerBossStats).filter_by(player_id=player_id).delete()
+
+        # 3. History entries
+        db.query(PlayerHistoryEntry).filter_by(player_id=player_id).delete()
+
+        # 4. Player words
+        db.query(PlayerWord).filter_by(player_id=player_id).delete()
+
+        # 5. Store assets
+        db.query(PlayerAsset).filter_by(player_id=player_id).delete()
+
+        # 6. Season stats
+        db.query(PlayerSeasonStats).filter_by(player_id=player_id).delete()
+
+        # 7. Unlink invitation codes (preserve the codes themselves)
+        db.query(InvitationCode).filter_by(player_id=player_id).update(
+            {"player_id": None}, synchronize_session=False
+        )
+
+        # 8. Battles where this player is the attacker (+ messages)
+        attacker_ids = [
+            b.id for b in db.query(Battle.id).filter_by(attacker_id=player_id)
+        ]
+        if attacker_ids:
+            db.query(BattleMessage).filter(
+                BattleMessage.battle_id.in_(attacker_ids)
+            ).delete(synchronize_session=False)
+            db.query(Battle).filter(
+                Battle.id.in_(attacker_ids)
+            ).delete(synchronize_session=False)
+
+        # 9. Player's fortress and related data
+        fortress = db.query(Fortress).filter_by(owner_id=player_id).first()
+        if fortress:
+            # Battles against this fortress (+ messages)
+            fortress_battle_ids = [
+                b.id for b in db.query(Battle.id).filter_by(fortress_id=fortress.id)
+            ]
+            if fortress_battle_ids:
+                db.query(BattleMessage).filter(
+                    BattleMessage.battle_id.in_(fortress_battle_ids)
+                ).delete(synchronize_session=False)
+                db.query(Battle).filter(
+                    Battle.id.in_(fortress_battle_ids)
+                ).delete(synchronize_session=False)
+
+            db.query(FortressConstraint).filter_by(fortress_id=fortress.id).delete()
+            db.query(FortressSeasonStats).filter_by(fortress_id=fortress.id).delete()
+            db.delete(fortress)
+            db.flush()
+
+        # 10. Player
+        db.delete(player)
+        db.commit()
+
+        logger.info("admin: hard-deleted player id=%.8s (%s)", player_id, username)
+        return jsonify({"message": f"Player '{username}' deleted"}), 200
+
+    except Exception:
+        db.rollback()
+        logger.exception("admin: delete_player failed")
         return jsonify({"error": "Internal server error"}), 500
     finally:
         db.close()

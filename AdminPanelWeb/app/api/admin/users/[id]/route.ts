@@ -21,3 +21,20 @@ export async function PATCH(request: NextRequest, { params }: Params): Promise<N
     return NextResponse.json({ error: "Backend no disponible" }, { status: 502 });
   }
 }
+
+export async function DELETE(_request: NextRequest, { params }: Params): Promise<NextResponse> {
+  const secret = process.env.ADMIN_SECRET;
+  if (!secret) return NextResponse.json({ error: "ADMIN_SECRET no configurado" }, { status: 503 });
+
+  const { id } = await params;
+  try {
+    const res = await fetch(`${BACKEND}/api/v1/admin/users/${id}`, {
+      method:  "DELETE",
+      headers: { "X-Admin-Secret": secret },
+    });
+    const data = await res.json().catch(() => ({}));
+    return NextResponse.json(data, { status: res.status });
+  } catch {
+    return NextResponse.json({ error: "Backend no disponible" }, { status: 502 });
+  }
+}
