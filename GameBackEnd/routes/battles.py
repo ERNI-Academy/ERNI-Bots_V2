@@ -599,16 +599,17 @@ def guess_word(battle_id):
                 credits_awarded = boss.reward_credits
 
                 # Grant NFT asset if configured
-                now = datetime.utcnow()
-                purchase = PlayerAsset(
-                    id=generate_uuid(),
-                    player_id=user_id,
-                    asset_type_id=reward_asset_type,
-                    asset_id=reward_asset,
-                    purchased_at=now,
-                    purchase_price=0,
-                )
-                db.add(purchase)
+                if boss.reward_asset_type_id and boss.reward_asset_id:
+                    now = datetime.utcnow()
+                    purchase = PlayerAsset(
+                        id=generate_uuid(),
+                        player_id=user_id,
+                        asset_type_id=boss.reward_asset_type_id,
+                        asset_id=boss.reward_asset_id,
+                        purchased_at=now,
+                        purchase_price=0,
+                    )
+                    db.add(purchase)
 
                 # Reduce boss rewards for future challengers (configurable floor and step)
                 boss.reward_score   = max(boss.score_min,   boss.reward_score   - boss.score_reduction)

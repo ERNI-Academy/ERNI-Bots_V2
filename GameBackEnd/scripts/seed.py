@@ -2736,23 +2736,23 @@ def seed():
 
         # ── 6. Unclaimed invitation codes (10) ───────────
         print("\n[6/8] Creando códigos de invitación libres (10)...")
-        free_codes = []
-        for i in range(10):
-            plain = _gen_code()
-            inv = InvitationCode(
-                id=_gen_uuid(),
-                code=plain,
-                is_active=True,
-                max_uses=1,
-                current_uses=0,
-                expires_at=datetime(2026, 3, 31),
-                created_by="seed",
-            )
-            db.add(inv)
-            free_codes.append(plain)
+        # free_codes = []
+        # for i in range(10):
+        #     plain = _gen_code()
+        #     inv = InvitationCode(
+        #         id=_gen_uuid(),
+        #         code=plain,
+        #         is_active=True,
+        #         max_uses=1,
+        #         current_uses=0,
+        #         expires_at=datetime(2026, 3, 31),
+        #         created_by="seed",
+        #     )
+        #     db.add(inv)
+        #     free_codes.append(plain)
 
-        db.commit()
-        print(f"  OK    10 códigos libres creados")
+        # db.commit()
+        # print(f"  OK    10 códigos libres creados")
 
         # ── 6b. hCON invitation codes ─────────────────────
         print("\n[6b] Creando códigos de invitación hCON...")
