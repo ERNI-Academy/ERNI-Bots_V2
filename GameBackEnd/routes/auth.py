@@ -76,14 +76,16 @@ def _client_ip() -> str:
 def _find_unclaimed_invitation(db, plain_code: str):
     """
     Direct DB lookup by plain-text code. Returns matching InvitationCode or None.
+    Case-insensitive: both the stored code and the input are uppercased for comparison.
     """
     from db.models import InvitationCode
+    from sqlalchemy import func
 
     now = datetime.utcnow()
     inv = (
         db.query(InvitationCode)
         .filter(
-            InvitationCode.code == plain_code,
+            func.upper(InvitationCode.code) == plain_code.upper(),
             InvitationCode.is_active == True,      # noqa: E712
             InvitationCode.player_id == None,       # noqa: E711  (unclaimed)
         )
@@ -291,7 +293,7 @@ def login():
             .first()
         )
 
-        if not inv or inv.code != invitation_code:
+        if not inv or inv.code.upper() != invitation_code.upper():
             return jsonify(_AUTH_ERROR), 401
 
         # Update audit trail (login does not increment current_uses)
