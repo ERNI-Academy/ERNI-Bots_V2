@@ -129,7 +129,7 @@ function GenerateModal({
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
 
   const BASE_URL = "https://ernibots-v2.azurewebsites.net";
-  const codeUrl  = (c: string) => `${BASE_URL}/?code=${encodeURIComponent(c)}`;
+  const codeUrl  = (c: string) => `${BASE_URL}/register?code=${encodeURIComponent(c)}`;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

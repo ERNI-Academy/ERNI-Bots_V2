@@ -316,7 +316,7 @@ export default function InvitationsPage() {
 
             {/* ─── QR MODAL ─── */}
             {qrCode && (() => {
-                const url = `${REGISTER_BASE}?code=${encodeURIComponent(qrCode)}`;
+                const url = `${REGISTER_BASE}/register?code=${encodeURIComponent(qrCode)}`;
                 return (
                     <div
                         className="fixed inset-0 z-50 flex items-center justify-center p-4"
