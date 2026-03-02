@@ -43,12 +43,15 @@ from db.models import (
     InvitationCode,
     Player,
     Fortress,
+    FortressSeasonStats,
     Battle,
     BattleMessage,
     Boss,
     Season,
     PlayerSeasonStats,
     PlayerHistoryEntry,
+    PlayerWord,
+    ProtectedWord,
     Protocol,
     Archetype,
     Personality,
@@ -965,9 +968,65 @@ def list_fortresses():
                 "protocol":             f.protocol.name if f.protocol else None,
                 "archetype":            f.archetype.name if f.archetype else None,
                 "personality":          f.personality.name if f.personality else None,
+                "protected_word":       f.protected_word,
                 "created_at":           f.created_at.isoformat() + "Z" if f.created_at else None,
                 "last_reconfigured_at": f.last_reconfigured_at.isoformat() + "Z" if f.last_reconfigured_at else None,
             })
         return jsonify(result)
     finally:
         db.close()
+
+
+@admin_bp.get("/fortresses/<fortress_id>")
+def get_fortress(fortress_id: str):
+    """Fortress detail: season stats + owner's available player words."""
+    if not _check_admin():
+        return jsonify({"error": "Forbidden"}), 403
+
+    db = SessionLocal()
+    try:
+        f = db.query(Fortress).filter_by(id=fortress_id).first()
+        if not f:
+            return jsonify({"error": "Fortress not found"}), 404
+
+        # Season stats
+        stats = (
+            db.query(FortressSeasonStats)
+            .filter_by(fortress_id=fortress_id)
+            .all()
+        )
+        stats_list = [{
+            "season_id":    s.season_id,
+            "season_name":  s.season.name if s.season else s.season_id,
+            "attack_count": s.attack_count,
+            "defeat_count": s.defeat_count,
+            "status":       s.status,
+            "updated_at":   s.updated_at.isoformat() + "Z" if s.updated_at else None,
+        } for s in stats]
+
+        # Owner's available player words
+        player_words = (
+            db.query(PlayerWord)
+            .filter_by(player_id=f.owner_id)
+            .all()
+        )
+        words_list = [{
+            "id":   pw.word.id,
+            "word": pw.word.word,
+        } for pw in player_words if pw.word]
+
+        return jsonify({
+            "id":                   f.id,
+            "name":                 f.name,
+            "story":                f.story,
+            "owner":                f.owner.username if f.owner else None,
+            "owner_id":             f.owner_id,
+            "protocol":             f.protocol.name if f.protocol else None,
+            "archetype":            f.archetype.name if f.archetype else None,
+            "personality":          f.personality.name if f.personality else None,
+            "protected_word":       f.protected_word,
+            "created_at":           f.created_at.isoformat() + "Z" if f.created_at else None,
+            "last_reconfigured_at": f.last_reconfigured_at.isoformat() + "Z" if f.last_reconfigured_at else None,
+            "season_stats":         stats_list,
+            "player_words":         words_list,
+        })

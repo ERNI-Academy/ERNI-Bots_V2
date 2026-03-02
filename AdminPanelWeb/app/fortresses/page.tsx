@@ -3,23 +3,229 @@
 import { useEffect, useState, useCallback } from "react";
 import AdminLayout from "@/components/AdminLayout";
 
+// ─────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────
+
 interface Fortress {
   id: string;
   name: string;
   owner: string;
   owner_id: string;
-  protocol: string;
-  archetype: string;
-  personality: string;
-  created_at: string;
-  last_reconfigured_at: string;
+  protocol: string | null;
+  archetype: string | null;
+  personality: string | null;
+  protected_word: string | null;
+  created_at: string | null;
+  last_reconfigured_at: string | null;
+}
+
+interface SeasonStat {
+  season_id: string;
+  season_name: string;
+  attack_count: number;
+  defeat_count: number;
+  status: string;
+  updated_at: string | null;
+}
+
+interface PlayerWord {
+  id: string;
+  word: string;
+}
+
+interface FortressDetail extends Fortress {
+  story: string | null;
+  season_stats: SeasonStat[];
+  player_words: PlayerWord[];
 }
 
 const PAGE_SIZE = 20;
 
 function fmt(iso: string | null) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+  return new Date(iso).toLocaleDateString("es-ES", {
+    day: "2-digit", month: "short", year: "numeric",
+  });
+}
+
+const STAT_STATUS_STYLE: Record<string, string> = {
+  active:         "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  reconfigurable: "border-amber-500/40 bg-amber-500/10 text-amber-400",
+  destroyed:      "border-red-500/40 bg-red-500/10 text-red-400",
+};
+
+// ─────────────────────────────────────────────────────────────
+// Detail Drawer
+// ─────────────────────────────────────────────────────────────
+
+function FortressDrawer({
+  fortress,
+  onClose,
+}: {
+  fortress: Fortress;
+  onClose: () => void;
+}) {
+  const [detail, setDetail]   = useState<FortressDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    fetch(`/api/admin/fortresses/${fortress.id}`)
+      .then((r) => r.json())
+      .then((d) => { setDetail(d); setLoading(false); })
+      .catch(() => { setError("Error al cargar el detalle"); setLoading(false); });
+  }, [fortress.id]);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+
+      {/* Drawer */}
+      <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-[#27272A] bg-[#09090B] shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[#27272A] px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/10">
+              <span className="material-symbols-outlined text-[18px] text-orange-400">fort</span>
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white">{fortress.name}</h2>
+              <p className="text-xs text-[#71717A]">@{fortress.owner}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-[#71717A] hover:text-white">
+            <span className="material-symbols-outlined text-[22px]">close</span>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <span className="material-symbols-outlined animate-spin text-[28px] text-[#71717A]">progress_activity</span>
+            </div>
+          ) : error ? (
+            <p className="text-sm text-red-400">{error}</p>
+          ) : detail ? (
+            <>
+              {/* Info grid */}
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { label: "Protocolo",        value: detail.protocol    ?? "—" },
+                  { label: "Arquetipo",         value: detail.archetype   ?? "—" },
+                  { label: "Personalidad",      value: detail.personality ?? "—" },
+                  { label: "Creada",            value: fmt(detail.created_at) },
+                  { label: "Última reconfig.",  value: fmt(detail.last_reconfigured_at) },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <p className="text-xs uppercase tracking-wider text-[#71717A]">{label}</p>
+                    <p className="mt-0.5 text-sm text-white">{value}</p>
+                  </div>
+                ))}
+                {/* Protected word highlighted */}
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-[#71717A]">Palabra secreta</p>
+                  {detail.protected_word ? (
+                    <span className="mt-0.5 inline-flex items-center gap-1 rounded border border-orange-500/40 bg-orange-500/10 px-2 py-0.5 font-mono text-sm font-semibold text-orange-300">
+                      <span className="material-symbols-outlined text-[12px]">lock</span>
+                      {detail.protected_word}
+                    </span>
+                  ) : (
+                    <p className="mt-0.5 text-sm text-[#52525B]">—</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Story */}
+              {detail.story && (
+                <div>
+                  <p className="mb-1 text-xs uppercase tracking-wider text-[#71717A]">Historia</p>
+                  <p className="rounded border border-[#27272A] bg-[#0D0D0F] p-3 text-sm leading-relaxed text-[#A1A1AA]">
+                    {detail.story}
+                  </p>
+                </div>
+              )}
+
+              {/* Season stats */}
+              <div>
+                <p className="mb-2 text-xs uppercase tracking-wider text-[#71717A]">
+                  Stats por temporada
+                  <span className="ml-2 rounded bg-[#18181B] px-1.5 py-0.5 font-mono text-[10px] text-[#52525B]">
+                    {detail.season_stats.length}
+                  </span>
+                </p>
+                {detail.season_stats.length === 0 ? (
+                  <p className="text-sm text-[#52525B]">Sin estadísticas de temporada.</p>
+                ) : (
+                  <div className="overflow-hidden rounded border border-[#27272A]">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[#27272A] bg-[#18181B]">
+                          <th className="px-3 py-2 text-left text-xs uppercase tracking-wider text-[#71717A]">Temporada</th>
+                          <th className="px-3 py-2 text-left text-xs uppercase tracking-wider text-[#71717A]">Ataques</th>
+                          <th className="px-3 py-2 text-left text-xs uppercase tracking-wider text-[#71717A]">Derrotas</th>
+                          <th className="px-3 py-2 text-left text-xs uppercase tracking-wider text-[#71717A]">Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detail.season_stats.map((s) => (
+                          <tr key={s.season_id} className="border-b border-[#27272A] bg-[#09090B] last:border-0">
+                            <td className="px-3 py-2 text-white">{s.season_name}</td>
+                            <td className="px-3 py-2 font-mono text-[#A1A1AA]">{s.attack_count}</td>
+                            <td className="px-3 py-2 font-mono text-[#A1A1AA]">{s.defeat_count}</td>
+                            <td className="px-3 py-2">
+                              <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium capitalize ${STAT_STATUS_STYLE[s.status] ?? "border-zinc-500/40 bg-zinc-500/10 text-zinc-400"}`}>
+                                {s.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Player words */}
+              <div>
+                <p className="mb-2 text-xs uppercase tracking-wider text-[#71717A]">
+                  Palabras disponibles del jugador
+                  <span className="ml-2 rounded bg-[#18181B] px-1.5 py-0.5 font-mono text-[10px] text-[#52525B]">
+                    {detail.player_words.length}
+                  </span>
+                </p>
+                {detail.player_words.length === 0 ? (
+                  <p className="text-sm text-[#52525B]">Sin palabras asignadas.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {detail.player_words.map((w) => (
+                      <span
+                        key={w.id}
+                        className={`inline-flex items-center rounded border px-2.5 py-1 font-mono text-sm ${
+                          detail.protected_word === w.word
+                            ? "border-orange-500/50 bg-orange-500/15 text-orange-300"
+                            : "border-[#27272A] bg-[#18181B] text-[#A1A1AA]"
+                        }`}
+                      >
+                        {w.word}
+                        {detail.protected_word === w.word && (
+                          <span className="material-symbols-outlined ml-1 text-[12px] text-orange-400">lock</span>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : null}
+        </div>
+      </aside>
+    </>
+  );
 }
 
 export default function FortressesPage() {
@@ -29,6 +235,7 @@ export default function FortressesPage() {
   const [page, setPage]             = useState(1);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
+  const [selected, setSelected]     = useState<Fortress | null>(null);
 
   const fetchFortresses = useCallback(async () => {
     setLoading(true);
@@ -50,12 +257,16 @@ export default function FortressesPage() {
 
   useEffect(() => {
     const q = search.toLowerCase();
-    setFiltered(fortresses.filter(f =>
-      f.name.toLowerCase().includes(q) ||
-      f.owner.toLowerCase().includes(q) ||
-      f.protocol?.toLowerCase().includes(q) ||
-      f.archetype?.toLowerCase().includes(q)
-    ));
+    setFiltered(
+      fortresses.filter(
+        (f) =>
+          f.name.toLowerCase().includes(q) ||
+          f.owner.toLowerCase().includes(q) ||
+          f.protocol?.toLowerCase().includes(q) ||
+          f.archetype?.toLowerCase().includes(q) ||
+          f.protected_word?.toLowerCase().includes(q)
+      )
+    );
     setPage(1);
   }, [search, fortresses]);
 
@@ -64,8 +275,8 @@ export default function FortressesPage() {
 
   return (
     <AdminLayout title="FORTALEZAS">
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
+      <main className="flex-1 overflow-y-auto p-8">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
 
           {/* Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -84,13 +295,16 @@ export default function FortressesPage() {
                 <input
                   type="text"
                   value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Buscar por nombre, dueño, protocolo..."
-                  className="block w-64 rounded border border-[#27272A] bg-[#18181B] py-1.5 pl-9 pr-3 text-sm text-white placeholder-[#71717A] font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Nombre, dueño, protocolo, palabra…"
+                  className="block w-72 rounded border border-[#27272A] bg-[#18181B] py-1.5 pl-9 pr-3 text-sm text-white placeholder-[#71717A] focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all"
                   suppressHydrationWarning
                 />
               </div>
-              <button onClick={fetchFortresses} className="flex items-center gap-2 rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors">
+              <button
+                onClick={fetchFortresses}
+                className="flex items-center gap-2 rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors"
+              >
                 <span className="material-symbols-outlined text-[18px]">refresh</span>
                 Actualizar
               </button>
@@ -100,68 +314,123 @@ export default function FortressesPage() {
           {/* Table */}
           <div className="overflow-hidden rounded-lg border border-[#27272A] bg-[#09090B]">
             <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px]">
-              <thead>
-                <tr className="border-b border-[#27272A] bg-[#18181B]">
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Nombre</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Dueño</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Protocolo</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Arquetipo</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Personalidad</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Creada</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Últ. reconfig.</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-[#71717A]">
-                    <span className="material-symbols-outlined animate-spin text-[24px]">progress_activity</span>
-                  </td></tr>
-                ) : error ? (
-                  <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-red-400">{error}</td></tr>
-                ) : paginated.length === 0 ? (
-                  <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-[#71717A]">No se encontraron fortalezas</td></tr>
-                ) : paginated.map((f, i) => (
-                  <tr key={f.id} className={`border-b border-[#27272A] transition-colors hover:bg-[#18181B] ${i % 2 === 0 ? "bg-[#09090B]" : "bg-[#0D0D0F]"}`}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-500/10 border border-orange-500/30">
-                          <span className="material-symbols-outlined text-[15px] text-orange-400">fort</span>
-                        </div>
-                        <span className="text-sm font-medium text-white">{f.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.owner}</td>
-                    <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.protocol ?? "—"}</td>
-                    <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.archetype ?? "—"}</td>
-                    <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.personality ?? "—"}</td>
-                    <td className="px-4 py-3 text-sm text-[#71717A] font-mono">{fmt(f.created_at)}</td>
-                    <td className="px-4 py-3 text-sm text-[#71717A] font-mono">{fmt(f.last_reconfigured_at)}</td>
+              <table className="w-full min-w-[1000px]">
+                <thead>
+                  <tr className="border-b border-[#27272A] bg-[#18181B]">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Nombre</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Dueño</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Protocolo</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Arquetipo</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Personalidad</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Palabra secreta</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Creada</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Últ. reconfig.</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-12 text-center text-sm text-[#71717A]">
+                        <span className="material-symbols-outlined animate-spin text-[24px]">progress_activity</span>
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-12 text-center text-sm text-red-400">{error}</td>
+                    </tr>
+                  ) : paginated.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-12 text-center text-sm text-[#71717A]">
+                        No se encontraron fortalezas
+                      </td>
+                    </tr>
+                  ) : (
+                    paginated.map((f, i) => (
+                      <tr
+                        key={f.id}
+                        onClick={() => setSelected(f)}
+                        className={`cursor-pointer border-b border-[#27272A] transition-colors hover:bg-[#18181B] ${
+                          i % 2 === 0 ? "bg-[#09090B]" : "bg-[#0D0D0F]"
+                        }`}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/10">
+                              <span className="material-symbols-outlined text-[15px] text-orange-400">fort</span>
+                            </div>
+                            <span className="text-sm font-medium text-white">{f.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.owner}</td>
+                        <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.protocol ?? "—"}</td>
+                        <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.archetype ?? "—"}</td>
+                        <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.personality ?? "—"}</td>
+                        <td className="px-4 py-3">
+                          {f.protected_word ? (
+                            <span className="inline-flex items-center gap-1 rounded border border-orange-500/40 bg-orange-500/10 px-2 py-0.5 font-mono text-xs font-medium text-orange-300">
+                              <span className="material-symbols-outlined text-[11px]">lock</span>
+                              {f.protected_word}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-[#52525B]">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-sm text-[#71717A]">{fmt(f.created_at)}</td>
+                        <td className="px-4 py-3 font-mono text-sm text-[#71717A]">{fmt(f.last_reconfigured_at)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <p className="text-sm text-[#71717A]">Página {page} de {totalPages}</p>
               <div className="flex gap-1">
-                <button onClick={() => setPage(1)} disabled={page === 1} className="rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:bg-[#27272A] disabled:opacity-30"><span className="material-symbols-outlined text-[16px]">first_page</span></button>
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:bg-[#27272A] disabled:opacity-30"><span className="material-symbols-outlined text-[16px]">chevron_left</span></button>
+                <button onClick={() => setPage(1)} disabled={page === 1}
+                  className="rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:bg-[#27272A] disabled:opacity-30">
+                  <span className="material-symbols-outlined text-[16px]">first_page</span>
+                </button>
+                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
+                  className="rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:bg-[#27272A] disabled:opacity-30">
+                  <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                </button>
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   const n = Math.max(1, Math.min(page - 2, totalPages - 4)) + i;
-                  return <button key={n} onClick={() => setPage(n)} className={`rounded border px-3 py-1 text-xs transition-colors ${n === page ? "border-blue-500/50 bg-blue-500/20 text-blue-400" : "border-[#27272A] bg-[#18181B] text-[#71717A] hover:bg-[#27272A]"}`}>{n}</button>;
+                  return (
+                    <button key={n} onClick={() => setPage(n)}
+                      className={`rounded border px-3 py-1 text-xs transition-colors ${
+                        n === page
+                          ? "border-orange-500/50 bg-orange-500/20 text-orange-400"
+                          : "border-[#27272A] bg-[#18181B] text-[#71717A] hover:bg-[#27272A]"
+                      }`}>
+                      {n}
+                    </button>
+                  );
                 })}
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:bg-[#27272A] disabled:opacity-30"><span className="material-symbols-outlined text-[16px]">chevron_right</span></button>
-                <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:bg-[#27272A] disabled:opacity-30"><span className="material-symbols-outlined text-[16px]">last_page</span></button>
+                <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                  className="rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:bg-[#27272A] disabled:opacity-30">
+                  <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                </button>
+                <button onClick={() => setPage(totalPages)} disabled={page === totalPages}
+                  className="rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:bg-[#27272A] disabled:opacity-30">
+                  <span className="material-symbols-outlined text-[16px]">last_page</span>
+                </button>
               </div>
             </div>
           )}
-          </div>
-        </main>
+        </div>
+      </main>
+
+      {selected && (
+        <FortressDrawer
+          fortress={selected}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </AdminLayout>
   );
 }
