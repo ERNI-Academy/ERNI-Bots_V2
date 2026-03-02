@@ -130,6 +130,22 @@ def create_session(data: CreateSessionRequest, x_internal_key: str = Header(None
 
 
 # ==========================
+# Check Session
+# ==========================
+
+@app.get("/sessions/{session_id}")
+def check_session(session_id: str, x_internal_key: str = Header(None)):
+    verify_internal_key(x_internal_key)
+    try:
+        raw = redis_client.get(f"session:{session_id}")
+    except redis.exceptions.RedisError as e:
+        raise HTTPException(status_code=503, detail="Session store unavailable")
+    if not raw:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {"session_id": session_id, "exists": True}
+
+
+# ==========================
 # Send Message
 # ==========================
 

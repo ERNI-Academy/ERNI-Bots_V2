@@ -4,7 +4,7 @@ from sqlalchemy import func
 from datetime import datetime
 
 from utils import generate_uuid
-from services.agent_service import get_agent_service
+from services.agent_service import get_agent_service, SessionExpiredError
 from db import SessionLocal
 from db.models import (
     Battle,
@@ -31,6 +31,30 @@ battles_bp = Blueprint("battles", __name__)
 def get_active_season(db):
     season = db.query(Season).filter_by(is_active=True).first()
     return season
+
+
+def _build_pvp_context(fortress):
+    """Build the AgenticService context dict for a PvP fortress battle."""
+    return {
+        "protocol_template": fortress.protocol.protocol_template,
+        "archetype_template": fortress.archetype.archetype_template,
+        "story": fortress.story,
+        "personality": fortress.personality.personality_template,
+        "constraints": [c.text for c in fortress.constraints],
+        "secret_word": fortress.protected_word,
+    }
+
+
+def _build_pve_context(boss):
+    """Build the AgenticService context dict for a PvE boss battle."""
+    return {
+        "protocol_template": boss.prompt,
+        "archetype_template": "",
+        "personality": "",
+        "constraints": "",
+        "secret_word": boss.protected_word,
+        "is_boss": True,
+    }
 
 
 def get_or_create_player_season_stats(db, player_id, season_id):
@@ -135,6 +159,15 @@ def start_battle():
         ).first()
 
         if existing:
+            # If the AI session expired in Redis, renew it transparently
+            if not agent_service.session_exists(existing.session_id):
+                new_session_id = agent_service.create_session(
+                    agent_id=fortress.id,
+                    context=_build_pvp_context(fortress)
+                )
+                existing.session_id = new_session_id
+                db.commit()
+
             history = [
                 {
                     "role": m.role,
@@ -279,6 +312,15 @@ def start_boss_battle():
         ).first()
 
         if existing:
+            # If the AI session expired in Redis, renew it transparently
+            if not agent_service.session_exists(existing.session_id):
+                new_session_id = agent_service.create_session(
+                    agent_id=boss.id,
+                    context=_build_pve_context(boss)
+                )
+                existing.session_id = new_session_id
+                db.commit()
+
             history = [
                 {
                     "role": m.role,
@@ -456,7 +498,24 @@ def send_message(battle_id):
                 "turns_used": battle.turn_count
             })
 
-        agent_reply = agent_service.send_message(battle.session_id, message)
+        try:
+            agent_reply = agent_service.send_message(battle.session_id, message)
+        except SessionExpiredError:
+            # The Redis session expired due to inactivity; recreate it and retry
+            battle.updated_at = datetime.utcnow()
+            if battle.fortress_id:
+                new_session_id = agent_service.create_session(
+                    agent_id=battle.fortress_id,
+                    context=_build_pvp_context(battle.fortress)
+                )
+            else:
+                new_session_id = agent_service.create_session(
+                    agent_id=battle.boss_id,
+                    context=_build_pve_context(battle.boss)
+                )
+            battle.session_id = new_session_id
+            db.commit()
+            agent_reply = agent_service.send_message(new_session_id, message)
 
         # Persist guardian reply
         guardian_msg = BattleMessage(

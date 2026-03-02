@@ -13,6 +13,11 @@ class AgentServiceError(Exception):
     pass
 
 
+class SessionExpiredError(AgentServiceError):
+    """Raised when the AI session no longer exists in Redis (TTL expired)."""
+    pass
+
+
 # ============================================================
 # Prompt Builder
 # ============================================================
@@ -64,6 +69,10 @@ class AgentService(ABC):
 
     @abstractmethod
     def send_message(self, session_id: str, message: str) -> str:
+        pass
+
+    @abstractmethod
+    def session_exists(self, session_id: str) -> bool:
         pass
 
     @abstractmethod
@@ -129,6 +138,9 @@ class MockAgentService(AgentService):
         session["history"].append({"role": "agent", "content": response})
         return response
 
+    def session_exists(self, session_id: str) -> bool:
+        return session_id in self.sessions
+
     def terminate_session(self, session_id: str) -> None:
         self.sessions.pop(session_id, None)
 
@@ -191,6 +203,17 @@ class HttpAgentService(AgentService):
         except requests.RequestException as e:
             raise AgentServiceError(f"Failed to create session: {str(e)}")
 
+    def session_exists(self, session_id: str) -> bool:
+        try:
+            response = requests.get(
+                f"{self.base_url}/sessions/{session_id}",
+                headers=self.headers,
+                timeout=self.timeout,
+            )
+            return response.status_code == 200
+        except requests.RequestException:
+            return False
+
     def send_message(self, session_id: str, message: str) -> str:
         try:
             response = requests.post(
@@ -200,9 +223,14 @@ class HttpAgentService(AgentService):
                 timeout=self.timeout,
             )
 
+            if response.status_code == 404:
+                raise SessionExpiredError(f"Session {session_id} has expired")
+
             response.raise_for_status()
             return response.json()["response"]
 
+        except SessionExpiredError:
+            raise
         except requests.RequestException as e:
             raise AgentServiceError(f"Failed to send message: {str(e)}")
 
