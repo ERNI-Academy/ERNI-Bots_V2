@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from config import Config
 from sqlalchemy import create_engine, text
 
-engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
+engine = create_engine(Config.DATABASE_URL)
 
 def column_exists(conn, table: str, column: str) -> bool:
     dialect = engine.dialect.name
