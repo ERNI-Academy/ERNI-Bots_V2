@@ -556,7 +556,7 @@ export default function AttackPage() {
                                     <div className="flex items-start gap-2 self-end max-w-[80%]">
                                         <div className="flex flex-col items-end gap-0.5">
                                             <div className="flex items-center gap-2 text-xs text-slate-400 tracking-widest uppercase">
-                                                <span className="text-primary">YOU</span>
+                                                <span className="text-primary">TÚ</span>
                                                 <span>{msg.timestamp}</span>
                                             </div>
                                             <div className="bg-primary/10 border border-primary/30 px-3 py-2 text-primary leading-relaxed">
