@@ -18,6 +18,7 @@ from db.models import (
     PlayerHistoryEntry,
     Boss,
     PlayerBossStats,
+PlayerAssets,
 )
 
 agent_service = get_agent_service()
