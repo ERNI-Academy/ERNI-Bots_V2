@@ -432,7 +432,7 @@ export default function SeasonsPage() {
       </div>
 
       {/* Create / Edit modal */}
-      {(modalTarget === "new" || (modalTarget !== null && modalTarget !== "new")) && (
+      {modalTarget !== null && (
         <SeasonModal
           initial={modalTarget === "new" ? null : (modalTarget as Season)}
           onClose={() => setModalTarget(null)}
