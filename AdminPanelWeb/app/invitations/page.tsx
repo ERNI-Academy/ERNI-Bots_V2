@@ -448,6 +448,7 @@ export default function InvitationsPage() {
   const [error, setError]       = useState<string | null>(null);
   const [page, setPage]         = useState(1);
   const [status, setStatus]     = useState("");
+  const [tagFilter, setTagFilter] = useState("");
   const [search, setSearch]     = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -473,7 +474,7 @@ export default function InvitationsPage() {
     });
   }, []);
 
-  useEffect(() => { setPage(1); }, [debouncedSearch, status, sortKeys]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, status, tagFilter, sortKeys]);
 
   useEffect(() => {
     const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
@@ -486,6 +487,7 @@ export default function InvitationsPage() {
     try {
       const params = new URLSearchParams({ page: String(page), per_page: String(PAGE_SIZE) });
       if (status) params.set("status", status);
+      if (tagFilter) params.set("tag", tagFilter);
       if (debouncedSearch) params.set("q", debouncedSearch);
       params.set("sort_by",  sortKeys.map(k => k.field).join(","));
       params.set("sort_dir", sortKeys.map(k => k.dir).join(","));
@@ -499,7 +501,7 @@ export default function InvitationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, status, debouncedSearch, sortKeys]);
+  }, [page, status, tagFilter, debouncedSearch, sortKeys]);
 
   useEffect(() => { fetchInvitations(); }, [fetchInvitations]);
 
@@ -584,6 +586,18 @@ export default function InvitationsPage() {
                 <option value="claimed">Usadas</option>
                 <option value="inactive">Inactivas</option>
                 <option value="expired">Expiradas</option>
+              </select>
+
+              {/* Tag filter */}
+              <select
+                value={tagFilter}
+                onChange={(e) => { setTagFilter(e.target.value); setPage(1); }}
+                className="rounded border border-[#27272A] bg-[#18181B] py-1.5 pl-3 pr-8 text-sm text-white focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-all"
+              >
+                <option value="">Todos los tags</option>
+                <option value="hc0n">hc0n</option>
+                <option value="bot">bot</option>
+                <option value="invitation">invitation</option>
               </select>
 
               <button

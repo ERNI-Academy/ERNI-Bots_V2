@@ -164,6 +164,7 @@ def list_invitations():
     page       = max(1, int(request.args.get("page", 1)))
     per_page   = min(200, max(1, int(request.args.get("per_page", 50))))
     status_filter = request.args.get("status", "").strip().lower()
+    tag_filter = (request.args.get("tag") or "").strip().lower()
     q          = (request.args.get("q") or "").strip().lower()
     sort_by    = request.args.get("sort_by",  "created_at")
     sort_dir   = request.args.get("sort_dir", "desc")
@@ -196,6 +197,9 @@ def list_invitations():
                 InvitationCode.expires_at != None,   # noqa: E711
                 InvitationCode.expires_at < now,
             )
+
+        if tag_filter:
+            query = query.filter(InvitationCode.tag == tag_filter)
 
         if q:
             from sqlalchemy.orm import joinedload

@@ -180,6 +180,19 @@ def register():
         if inv.current_uses >= inv.max_uses:
             inv.is_active = False   # auto-deactivate when limit reached
 
+        # hCON bonus: grant 100 fragments to players registering with an hc0n code
+        if inv.tag == "hc0n":
+            from db.models import PlayerHistoryEntry
+            HCON_BONUS = 100
+            player.credits += HCON_BONUS
+            db.add(PlayerHistoryEntry(
+                player_id=player.id,
+                type="fragments",
+                amount=HCON_BONUS,
+                reason="hcon_bonus",
+                detail="Ventaja hCON — bonus de 100 fragmentos por código de invitación hc0n",
+            ))
+
         db.commit()
 
         access_token  = create_access_token(identity=player.id)
