@@ -46,6 +46,7 @@ def get_or_create_player_season_stats(db, player_id, season_id):
         )
         db.add(stats)
         db.flush()
+        db.commit()
 
     return stats
 
@@ -66,7 +67,7 @@ def get_or_create_fortress_season_stats(db, fortress_id, season_id):
         )
         db.add(stats)
         db.flush()
-
+        db.commit()
     return stats
 
 
