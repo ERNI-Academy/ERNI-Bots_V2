@@ -187,6 +187,17 @@ export default function Dashboard() {
                               <td className="px-5 py-2 text-right"><div className="ml-auto h-5 w-20 animate-pulse rounded bg-[#27272A]" /></td>
                             </tr>
                           ))
+                        : battles.length === 0
+                        ? (
+                            <tr>
+                              <td colSpan={4} className="px-5 py-16 text-center">
+                                <div className="flex flex-col items-center gap-2">
+                                  <span className="material-symbols-outlined text-[32px] text-[#3F3F46]">swords</span>
+                                  <p className="text-sm text-[#52525B]">No hay batallas recientes</p>
+                                </div>
+                              </td>
+                            </tr>
+                          )
                         : battles.map((row) => {
                             const s = battleStatusConfig[row.status] ?? battleStatusConfig.expired;
                             const time = row.created_at
@@ -250,6 +261,11 @@ export default function Dashboard() {
                         <div className="h-4 w-14 rounded bg-[#27272A] animate-pulse" />
                       </div>
                     ))
+                  ) : leaderboard.length === 0 ? (
+                    <div className="flex h-full flex-col items-center justify-center gap-2 py-16">
+                      <span className="material-symbols-outlined text-[32px] text-[#3F3F46]">leaderboard</span>
+                      <p className="text-sm text-[#52525B]">Sin jugadores en el ranking</p>
+                    </div>
                   ) : (
                     leaderboard.map((entry) => (
                       <div
