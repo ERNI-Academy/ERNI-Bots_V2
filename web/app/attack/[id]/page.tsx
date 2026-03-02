@@ -78,6 +78,7 @@ export default function AttackPage() {
     const [preflight, setPreflight] = useState<"checking" | "ok" | "denied" | "fortress_destroyed">("checking");
     const [username, setUsername] = useState<string | null>(null);
     const [alreadyWon, setAlreadyWon] = useState(false);
+    const [ownerBanned, setOwnerBanned] = useState(false);
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const battleInitialized = useRef(false);
@@ -150,6 +151,8 @@ export default function AttackPage() {
                 if (!res.ok) {
                     if (data.code === "already_won") {
                         setAlreadyWon(true);
+                    } else if (data.code === "owner_banned") {
+                        setOwnerBanned(true);
                     } else {
                         setInitError(data.error ?? "Error al iniciar la batalla");
                     }
@@ -432,6 +435,26 @@ export default function AttackPage() {
                     <Link
                         href="/dashboard"
                         className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-[#00ff41]/40 hover:bg-[#00ff41]/10 transition-colors text-xs uppercase tracking-widest"
+                    >
+                        <span className="material-symbols-outlined text-sm">arrow_back</span>
+                        Volver al mapa
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    if (ownerBanned) {
+        return (
+            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-[#ff0033]`}>
+                <div className="scanlines" />
+                <div className="text-center space-y-3">
+                    <span className="material-symbols-outlined text-4xl">block</span>
+                    <p className="text-sm uppercase tracking-[0.3em]">Fortaleza no disponible</p>
+                    <p className="text-xs text-[#ff0033]/60 tracking-widest">El propietario de esta fortaleza no puede recibir ataques.</p>
+                    <Link
+                        href="/dashboard"
+                        className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-[#ff0033]/40 hover:bg-[#ff0033]/10 transition-colors text-xs uppercase tracking-widest"
                     >
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
                         Volver al mapa

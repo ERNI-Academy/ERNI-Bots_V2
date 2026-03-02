@@ -102,6 +102,9 @@ def start_battle():
         if not fortress:
             return jsonify({"error": "Fortress not found"}), 404
 
+        if fortress.owner and fortress.owner.is_banned:
+            return jsonify({"error": "Esta fortaleza no está disponible", "code": "owner_banned"}), 403
+
         if fortress.owner_id == user_id:
             return jsonify({"error": "Cannot attack your own fortress"}), 403
 
