@@ -12,6 +12,7 @@ interface Fortress {
   name: string;
   owner: string;
   owner_id: string;
+  is_bot: boolean;
   protocol: string | null;
   archetype: string | null;
   personality: string | null;
@@ -39,6 +40,8 @@ interface FortressDetail extends Fortress {
   season_stats: SeasonStat[];
   player_words: PlayerWord[];
 }
+
+type FortressFilter = "all" | "human" | "bot";
 
 const PAGE_SIZE = 20;
 
@@ -94,7 +97,20 @@ function FortressDrawer({
             </div>
             <div>
               <h2 className="text-base font-bold text-white">{fortress.name}</h2>
-              <p className="text-xs text-[#71717A]">@{fortress.owner}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {fortress.is_bot ? (
+                  <span className="inline-flex items-center gap-0.5 rounded border border-violet-500/40 bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-violet-400">
+                    <span className="material-symbols-outlined text-[11px]">smart_toy</span>
+                    Bot
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-0.5 rounded border border-sky-500/40 bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-sky-400">
+                    <span className="material-symbols-outlined text-[11px]">person</span>
+                    Humano
+                  </span>
+                )}
+                <p className="text-xs text-[#71717A]">@{fortress.owner}</p>
+              </div>
             </div>
           </div>
           <button onClick={onClose} className="text-[#71717A] hover:text-white">
@@ -232,6 +248,7 @@ export default function FortressesPage() {
   const [fortresses, setFortresses] = useState<Fortress[]>([]);
   const [filtered, setFiltered]     = useState<Fortress[]>([]);
   const [search, setSearch]         = useState("");
+  const [typeFilter, setTypeFilter] = useState<FortressFilter>("all");
   const [page, setPage]             = useState(1);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
@@ -260,15 +277,16 @@ export default function FortressesPage() {
     setFiltered(
       fortresses.filter(
         (f) =>
-          f.name.toLowerCase().includes(q) ||
+          (typeFilter === "all" || (typeFilter === "bot" ? f.is_bot : !f.is_bot)) &&
+          (f.name.toLowerCase().includes(q) ||
           f.owner.toLowerCase().includes(q) ||
           f.protocol?.toLowerCase().includes(q) ||
           f.archetype?.toLowerCase().includes(q) ||
-          f.protected_word?.toLowerCase().includes(q)
+          f.protected_word?.toLowerCase().includes(q))
       )
     );
     setPage(1);
-  }, [search, fortresses]);
+  }, [search, typeFilter, fortresses]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -284,10 +302,35 @@ export default function FortressesPage() {
               <span className="material-symbols-outlined text-[20px] text-orange-400">fort</span>
               <h2 className="font-[var(--font-display)] text-xl font-semibold text-white">Fortalezas</h2>
               <span className="ml-2 rounded border border-[#27272A] bg-[#18181B] px-2 py-0.5 font-mono text-xs text-[#71717A]">
-                {filtered.length} total
+                {filtered.length} total &nbsp;·&nbsp;
+                <span className="text-sky-400">{fortresses.filter(f => !f.is_bot).length} humanos</span>
+                &nbsp;·&nbsp;
+                <span className="text-violet-400">{fortresses.filter(f => f.is_bot).length} bots</span>
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              {/* Type filter tabs */}
+              <div className="flex rounded border border-[#27272A] overflow-hidden text-xs">
+                {(["all", "human", "bot"] as FortressFilter[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setTypeFilter(t)}
+                    className={`flex items-center gap-1 px-3 py-1.5 transition-colors ${
+                      typeFilter === t
+                        ? t === "bot"
+                          ? "bg-violet-500/20 text-violet-300 border-r border-[#27272A]"
+                          : t === "human"
+                          ? "bg-sky-500/20 text-sky-300 border-r border-[#27272A]"
+                          : "bg-[#27272A] text-white border-r border-[#27272A]"
+                        : "bg-[#18181B] text-[#71717A] hover:text-white border-r border-[#27272A] last:border-r-0"
+                    }`}
+                  >
+                    {t === "bot" && <span className="material-symbols-outlined text-[13px]">smart_toy</span>}
+                    {t === "human" && <span className="material-symbols-outlined text-[13px]">person</span>}
+                    {t === "all" ? "Todas" : t === "human" ? "Humanos" : "Bots"}
+                  </button>
+                ))}
+              </div>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                   <span className="material-symbols-outlined text-[#71717A] text-[18px]">search</span>
@@ -361,7 +404,21 @@ export default function FortressesPage() {
                             <span className="text-sm font-medium text-white">{f.name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.owner}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            {f.is_bot ? (
+                              <span className="inline-flex items-center gap-0.5 rounded border border-violet-500/40 bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-violet-400">
+                                <span className="material-symbols-outlined text-[11px]">smart_toy</span>
+                                Bot
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-0.5 rounded border border-sky-500/40 bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-sky-400">
+                                <span className="material-symbols-outlined text-[11px]">person</span>
+                              </span>
+                            )}
+                            <span className="text-sm text-[#A1A1AA]">{f.owner}</span>
+                          </div>
+                        </td>
                         <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.protocol ?? "—"}</td>
                         <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.archetype ?? "—"}</td>
                         <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.personality ?? "—"}</td>

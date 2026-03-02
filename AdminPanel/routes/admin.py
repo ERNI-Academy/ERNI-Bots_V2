@@ -950,7 +950,12 @@ def stats():
     db = SessionLocal()
     try:
         player_count   = db.query(Player).filter(Player.is_bot == False).count()  # noqa: E712
-        fortress_count = db.query(Fortress).count()
+        fortress_count = (
+            db.query(Fortress)
+            .join(Player, Fortress.owner_id == Player.id)
+            .filter(Player.is_bot == False)  # noqa: E712
+            .count()
+        )
         battle_count   = db.query(Battle).count()
 
         active_season = db.query(Season).filter_by(is_active=True).first()
@@ -995,6 +1000,7 @@ def list_fortresses():
                 "name":                 f.name,
                 "owner":                f.owner.username if f.owner else None,
                 "owner_id":             f.owner_id,
+                "is_bot":               f.owner.is_bot if f.owner else False,
                 "protocol":             f.protocol.name if f.protocol else None,
                 "archetype":            f.archetype.name if f.archetype else None,
                 "personality":          f.personality.name if f.personality else None,
@@ -1051,6 +1057,7 @@ def get_fortress(fortress_id: str):
             "story":                f.story,
             "owner":                f.owner.username if f.owner else None,
             "owner_id":             f.owner_id,
+            "is_bot":               f.owner.is_bot if f.owner else False,
             "protocol":             f.protocol.name if f.protocol else None,
             "archetype":            f.archetype.name if f.archetype else None,
             "personality":          f.personality.name if f.personality else None,
