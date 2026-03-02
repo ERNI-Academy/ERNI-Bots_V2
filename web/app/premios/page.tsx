@@ -101,6 +101,7 @@ export default function PremiosPage() {
                                     El <strong>6 de marzo por la tarde</strong> anunciaremos a los{" "}
                                     <strong>3 ganadores</strong> y realizaremos el sorteo de los premios.
                                     Los ganadores serán contactados por los organizadores a través de correo electrónico.
+                                    Cada premio se asignará a un ganador diferente, por lo que no es posible ganar más de un premio.
                                 </p>
                             </div>
                         </div>
