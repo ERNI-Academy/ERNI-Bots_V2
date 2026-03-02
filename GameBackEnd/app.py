@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from dotenv import load_dotenv
+from datetime import datetime, timezone
 
 load_dotenv()
 
@@ -75,6 +76,45 @@ def create_app():
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=()"
         return response
+
+    # ── Auto-finalize expired seasons ─────────────────────────────────────
+    _last_season_check = {"at": datetime.min.replace(tzinfo=timezone.utc)}
+    _CHECK_INTERVAL_SECONDS = 60
+
+    def _finalize_expired_seasons():
+        """Mark any active season whose end_date is in the past as finalized."""
+        from db import SessionLocal
+        from db.models import Season
+        db = SessionLocal()
+        try:
+            now = datetime.utcnow()
+            expired = (
+                db.query(Season)
+                .filter(
+                    Season.is_active == True,       # noqa: E712
+                    Season.finalized == False,       # noqa: E712
+                    Season.end_date != None,         # noqa: E711
+                    Season.end_date < now,
+                )
+                .all()
+            )
+            for s in expired:
+                s.is_active = False
+                s.finalized = True
+            if expired:
+                db.commit()
+        finally:
+            db.close()
+
+    # Run once at startup
+    _finalize_expired_seasons()
+
+    @app.before_request
+    def _auto_finalize():
+        now = datetime.now(timezone.utc)
+        if (now - _last_season_check["at"]).total_seconds() >= _CHECK_INTERVAL_SECONDS:
+            _last_season_check["at"] = now
+            _finalize_expired_seasons()
 
     # ── Blueprints ─────────────────────────────────────────────────────────
     app.register_blueprint(auth_bp,        url_prefix="/api/v1/auth")

@@ -148,6 +148,7 @@ export default function DashboardPage() {
     const [showSettings, setShowSettings] = useState(false);
     const [seasonStatus, setSeasonStatus] = useState<string>("active");
     const [seasonStartDate, setSeasonStartDate] = useState<string | null>(null);
+    const [seasonEndDate, setSeasonEndDate] = useState<string | null>(null);
 
     async function handleLogout() {
         setShowSettings(false);
@@ -181,6 +182,7 @@ export default function DashboardPage() {
                 setBosses(Array.isArray(bossesRes) ? bossesRes : []);
                 setSeasonStatus((configData as Record<string, string>).season_status ?? "active");
                 setSeasonStartDate((configData as Record<string, string | null>).season_start_date ?? null);
+                setSeasonEndDate((configData as Record<string, string | null>).season_end_date ?? null);
             } finally {
                 setLoading(false);
             }
@@ -665,6 +667,19 @@ export default function DashboardPage() {
                         </div>
                     </div>
                     <div className="flex gap-2">
+                        {!battlesBlocked && seasonEndDate && (() => {
+                            const ms = new Date(seasonEndDate).getTime() - Date.now();
+                            if (ms <= 0) return null;
+                            return (
+                                <div className="hidden md:flex flex-col justify-center space-y-1 border border-[#ff0033]/30 bg-[#ff0033]/5 px-3 py-1 font-mono">
+                                    <span className="text-[9px] text-slate-400 uppercase tracking-widest">FIN DE TEMPORADA</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[#ff0033] text-xs">timer</span>
+                                        <span className="font-black text-[#ff0033] text-sm tracking-widest">{formatCountdown(ms)}</span>
+                                    </div>
+                                </div>
+                            );
+                        })()}
                         <button
                             onClick={() => {
                                 setLoading(true);

@@ -28,13 +28,14 @@ def _get_season_info(db) -> dict:
     """
     active = db.query(Season).filter_by(is_active=True).first()
     if active:
+        end_date = active.end_date.isoformat() if active.end_date else None
         if active.is_frozen:
             start_date = active.start_date.isoformat() if active.start_date else None
-            return {"status": "frozen", "start_date": start_date}
-        return {"status": "active", "start_date": None}
+            return {"status": "frozen", "start_date": start_date, "end_date": end_date}
+        return {"status": "active", "start_date": None, "end_date": end_date}
     from sqlalchemy import exists
     has_finalized = db.query(exists().where(Season.finalized == True)).scalar()  # noqa: E712
-    return {"status": "finalized" if has_finalized else "none", "start_date": None}
+    return {"status": "finalized" if has_finalized else "none", "start_date": None, "end_date": None}
 
 
 @config_bp.get("/")
@@ -51,6 +52,7 @@ def get_public_config():
         season_info = _get_season_info(db)
         result["season_status"] = season_info["status"]
         result["season_start_date"] = season_info["start_date"]
+        result["season_end_date"] = season_info["end_date"]
         return jsonify(result), 200
     finally:
         db.close()
