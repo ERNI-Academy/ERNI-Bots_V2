@@ -652,13 +652,16 @@ function FortressConfigurePage() {
                                                             {archetype.unlock_cost === 0 ? "FREE" : "COMPRADO"}
                                                         </span>
                                                     ) : (
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); buyAsset("archetype", archetype.id); }}
-                                                            disabled={!canAffordBuy || isBuying}
-                                                            className="mt-auto w-full py-1 text-xs font-bold uppercase tracking-wider border border-[#00ffff]/50 text-[#00ffff] hover:bg-[#00ffff]/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                                                        >
-                                                            {isBuying ? "..." : canAffordBuy ? `${archetype.unlock_cost} ⌬` : "BLOQ."}
-                                                        </button>
+                                                        <div className="mt-auto flex flex-col gap-1">
+                                                            <span className="text-xs text-slate-400 font-bold">{archetype.unlock_cost} ⌬</span>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); buyAsset("archetype", archetype.id); }}
+                                                                disabled={!canAffordBuy || isBuying}
+                                                                className="w-full py-1 text-xs font-bold uppercase tracking-wider border border-[#00ffff]/50 text-[#00ffff] hover:bg-[#00ffff]/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                                            >
+                                                                {isBuying ? "..." : canAffordBuy ? "COMPRAR" : "FONDOS INSUF."}
+                                                            </button>
+                                                        </div>
                                                     )}
                                                 </div>
                                             );
@@ -730,17 +733,20 @@ function FortressConfigurePage() {
                                                                         className={`flex items-center gap-3 px-3 py-2.5 border-l-[3px] ${
                                                                             canAffordBuy
                                                                                 ? "bg-black/20 border-slate-600"
-                                                                                : "bg-black/20 border-slate-800 opacity-40"
+                                                                                : "bg-black/20 border-slate-800 opacity-60"
                                                                         }`}
                                                                     >
                                                                         <p className="text-sm leading-snug flex-1 font-medium text-slate-500">{constraint.text}</p>
-                                                                        <button
-                                                                            onClick={() => buyAsset("constraint", constraint.id)}
-                                                                            disabled={!canAffordBuy || isBuying}
-                                                                            className="text-xs font-bold border border-[#ff0033]/50 text-[#ff0033] px-2 py-1 hover:bg-[#ff0033]/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 uppercase tracking-wider"
-                                                                        >
-                                                                            {isBuying ? "..." : canAffordBuy ? `COMPRAR ${constraint.price} ⌬` : `${constraint.price} ⌬`}
-                                                                        </button>
+                                                                        <div className="flex flex-col items-end gap-1 shrink-0">
+                                                                            <span className="text-xs text-slate-400 font-bold">{constraint.price} ⌬</span>
+                                                                            <button
+                                                                                onClick={() => buyAsset("constraint", constraint.id)}
+                                                                                disabled={!canAffordBuy || isBuying}
+                                                                                className="text-xs font-bold border border-[#ff0033]/50 text-[#ff0033] px-2 py-1 hover:bg-[#ff0033]/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer uppercase tracking-wider whitespace-nowrap"
+                                                                            >
+                                                                                {isBuying ? "..." : canAffordBuy ? "COMPRAR" : "FONDOS INSUF."}
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
                                                                 );
                                                             }
@@ -752,7 +758,7 @@ function FortressConfigurePage() {
                                                                         active
                                                                             ? "bg-[#ff0033]/15 border-[#ff0033] cursor-pointer"
                                                                             : locked
-                                                                                ? "bg-black/20 border-slate-800 opacity-35 cursor-not-allowed"
+                                                                                ? "bg-black/20 border-slate-700 cursor-not-allowed"
                                                                                 : "bg-black/30 border-slate-600 hover:border-[#ff0033]/60 hover:bg-[#ff0033]/5 cursor-pointer"
                                                                     }`}
                                                                 >
@@ -761,9 +767,9 @@ function FortressConfigurePage() {
                                                                         checked={active}
                                                                         onChange={() => toggleConstraint(constraint.id)}
                                                                         disabled={locked}
-                                                                        className="w-4 h-4 bg-black border-[#ff0033] text-[#ff0033] focus:ring-[#ff0033] rounded-sm shrink-0 accent-[#ff0033] disabled:opacity-30 disabled:cursor-not-allowed"
+                                                                        className="w-4 h-4 bg-black border-[#ff0033] text-[#ff0033] focus:ring-[#ff0033] rounded-sm shrink-0 accent-[#ff0033] disabled:opacity-40 disabled:cursor-not-allowed"
                                                                     />
-                                                                    <p className={`text-sm leading-snug flex-1 font-medium ${active ? "text-white" : "text-slate-300"}`}>
+                                                                    <p className={`text-sm leading-snug flex-1 font-medium ${active ? "text-white" : locked ? "text-slate-400" : "text-slate-300"}`}>
                                                                         {constraint.text}
                                                                     </p>
                                                                     {constraint.price > 0 && (
