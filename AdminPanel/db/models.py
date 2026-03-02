@@ -310,6 +310,7 @@ class Boss(Base):
     protected_word = Column(String(64), nullable=False)
 
     reward_credits = Column(Integer, default=0)
+    reward_score   = Column(Integer, default=0)
 
     enabled = Column(Boolean, default=True)
     active_at = Column(DateTime, nullable=True)

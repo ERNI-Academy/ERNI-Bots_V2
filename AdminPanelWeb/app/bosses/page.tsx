@@ -12,6 +12,7 @@ interface Boss {
   prompt?: string;
   protected_word?: string;
   reward_credits: number;
+  reward_score?: number;
   enabled: boolean;
   active_at?: string;
 }
@@ -37,6 +38,7 @@ function BossModal({
   const [prompt, setPrompt]               = useState(initial?.prompt ?? "");
   const [protectedWord, setProtectedWord] = useState(initial?.protected_word ?? "");
   const [rewardCredits, setRewardCredits] = useState(String(initial?.reward_credits ?? 100));
+  const [rewardScore, setRewardScore]     = useState(String(initial?.reward_score ?? 0));
   const [enabled, setEnabled]             = useState(initial?.enabled ?? true);
   const [activeAt, setActiveAt]           = useState(
     initial?.active_at ? initial.active_at.slice(0, 16) : ""
@@ -56,6 +58,7 @@ function BossModal({
       prompt: prompt.trim() || null,
       protected_word: protectedWord.trim(),
       reward_credits: parseInt(rewardCredits, 10) || 0,
+      reward_score: parseInt(rewardScore, 10) || 0,
       enabled,
       active_at: activeAt ? `${activeAt}:00` : null,
     };
@@ -122,13 +125,24 @@ function BossModal({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Recompensa</label>
+              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Fragmentos</label>
               <div className="relative">
                 <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
                   <span className="material-symbols-outlined text-[15px] text-amber-400">diamond</span>
                 </span>
                 <input type="number" min={0} value={rewardCredits} onChange={e => setRewardCredits(e.target.value)}
                   className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-10 pr-3 text-sm text-amber-400 font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-all"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Puntos</label>
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                  <span className="material-symbols-outlined text-[15px] text-yellow-400">star</span>
+                </span>
+                <input type="number" min={0} value={rewardScore} onChange={e => setRewardScore(e.target.value)}
+                  className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-10 pr-3 text-sm text-yellow-400 font-mono focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none transition-all"
                 />
               </div>
             </div>
@@ -327,7 +341,8 @@ export default function BossesPage() {
                       <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-[#52525B]">Nombre</th>
                       <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-[#52525B]">Titulo</th>
                       <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-[#52525B]">Ubicacion</th>
-                      <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-[#52525B]">Recompensa</th>
+                      <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-[#52525B]">Fragmentos</th>
+                      <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-[#52525B]">Puntos</th>
                       <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-[#52525B]">Estado</th>
                       <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-[#52525B]">Acciones</th>
                     </tr>
@@ -361,6 +376,12 @@ export default function BossesPage() {
                           <div className="flex items-center justify-end gap-1">
                             <span className="material-symbols-outlined text-[13px] text-amber-400">diamond</span>
                             <span className="font-mono text-xs font-semibold text-amber-400">{boss.reward_credits.toLocaleString()}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="material-symbols-outlined text-[13px] text-yellow-400">star</span>
+                            <span className="font-mono text-xs font-semibold text-yellow-400">{(boss.reward_score ?? 0).toLocaleString()}</span>
                           </div>
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -421,10 +442,17 @@ export default function BossesPage() {
                     </div>
                   ))}
                   <div className="flex items-center gap-2 px-4 py-2.5">
-                    <span className="w-20 shrink-0 text-[#52525B]">Recompensa</span>
+                    <span className="w-20 shrink-0 text-[#52525B]">Fragmentos</span>
                     <div className="flex items-center gap-0.5">
                       <span className="material-symbols-outlined text-[12px] text-amber-400">diamond</span>
                       <span className="font-mono font-semibold text-amber-400">{selected.reward_credits.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2.5">
+                    <span className="w-20 shrink-0 text-[#52525B]">Puntos</span>
+                    <div className="flex items-center gap-0.5">
+                      <span className="material-symbols-outlined text-[12px] text-yellow-400">star</span>
+                      <span className="font-mono font-semibold text-yellow-400">{(selected.reward_score ?? 0).toLocaleString()}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 px-4 py-2.5">

@@ -38,6 +38,7 @@ def _boss_to_dict(boss: Boss) -> dict:
         "prompt":         boss.prompt,
         "protected_word": boss.protected_word,
         "reward_credits": boss.reward_credits,
+        "reward_score":   boss.reward_score,
         "enabled":        boss.enabled,
         "active_at":      boss.active_at.isoformat() + "Z" if boss.active_at else None,
     }
@@ -139,6 +140,7 @@ def create_boss():
             prompt=prompt,
             protected_word=protected_word,
             reward_credits=int(data.get("reward_credits", 0)),
+            reward_score=int(data.get("reward_score", 0)),
             enabled=bool(data.get("enabled", True)),
             active_at=active_at,
         )
@@ -186,6 +188,9 @@ def update_boss(boss_id):
 
         if "reward_credits" in data:
             boss.reward_credits = int(data["reward_credits"])
+
+        if "reward_score" in data:
+            boss.reward_score = int(data["reward_score"])
 
         if "enabled" in data:
             boss.enabled = bool(data["enabled"])
