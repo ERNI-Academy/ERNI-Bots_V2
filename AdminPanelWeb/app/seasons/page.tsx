@@ -276,6 +276,14 @@ export default function SeasonsPage() {
       fn: () => doAction(`/api/admin/seasons/${s.id}/finalize`),
     });
 
+  const askReactivate = (s: Season) =>
+    setConfirmAction({
+      title: `Reactivar "${s.name}"`,
+      message: "Esto reabrirá la temporada y desactivará cualquier otra en curso. ¿Confirmar?",
+      label: "Reactivar",
+      fn: () => doAction(`/api/admin/seasons/${s.id}/reactivate`),
+    });
+
   const askDelete = (s: Season) =>
     setConfirmAction({
       title: `Eliminar "${s.name}"`,
@@ -389,6 +397,16 @@ export default function SeasonsPage() {
                               className="flex h-7 w-7 items-center justify-center rounded text-[#71717A] hover:bg-amber-500/10 hover:text-amber-400 transition-colors"
                             >
                               <span className="material-symbols-outlined text-[16px]">flag</span>
+                            </button>
+                          )}
+                          {/* Reactivate (finalized only) */}
+                          {s.finalized && (
+                            <button
+                              onClick={() => askReactivate(s)}
+                              title="Reactivar temporada"
+                              className="flex h-7 w-7 items-center justify-center rounded text-[#71717A] hover:bg-emerald-500/10 hover:text-emerald-400 transition-colors"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">restart_alt</span>
                             </button>
                           )}
                           {/* Delete */}

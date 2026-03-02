@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BACKEND } from "@/lib/backend";
 
-const ALLOWED_ACTIONS = ["activate", "freeze", "finalize"];
+const ALLOWED_ACTIONS = ["activate", "freeze", "finalize", "reactivate"];
 
 function secret() { return process.env.ADMIN_SECRET ?? null; }
 

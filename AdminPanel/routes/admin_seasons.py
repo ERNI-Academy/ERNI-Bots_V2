@@ -253,6 +253,39 @@ def finalize_season(season_id: str):
 
 
 # ──────────────────────────────────────────────────────────
+# POST /seasons/<id>/reactivate
+# ──────────────────────────────────────────────────────────
+
+@admin_seasons_bp.post("/seasons/<season_id>/reactivate")
+def reactivate_season(season_id: str):
+    """Reopen a finalized season: clears finalized flag and sets it as the only active season."""
+    if not _check_admin():
+        return jsonify({"error": "Forbidden"}), 403
+
+    db = SessionLocal()
+    try:
+        target = db.get(Season, season_id)
+        if not target:
+            return jsonify({"error": "Season not found"}), 404
+        if not target.finalized:
+            return jsonify({"error": "Season is not finalized"}), 409
+
+        # Deactivate all others
+        db.query(Season).update({Season.is_active: False})
+        target.finalized = False
+        target.is_active = True
+        target.is_frozen = False
+        db.commit()
+        db.refresh(target)
+        return jsonify(_season_to_dict(target, db)), 200
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────────────────
 # DELETE /seasons/<id>
 # ──────────────────────────────────────────────────────────
 
