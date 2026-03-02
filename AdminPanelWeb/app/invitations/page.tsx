@@ -68,6 +68,7 @@ interface Invitation {
   expires_at: string | null;
   created_at: string | null;
   created_by: string | null;
+  tag: string | null;
   last_used_at: string | null;
   player: InvitationPlayer | null;
 }
@@ -123,6 +124,7 @@ function GenerateModal({
   const [maxUses, setMaxUses]     = useState("1");
   const [expires, setExpires]     = useState("");
   const [createdBy, setCreatedBy] = useState("admin");
+  const [tag, setTag]             = useState("");
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState<string | null>(null);
   const [codes, setCodes]         = useState<string[]>([]);
@@ -142,7 +144,7 @@ function GenerateModal({
         created_by: createdBy.trim() || "admin",
       };
       if (expires) body.expires = expires;
-
+        if (tag.trim()) body.tag = tag.trim();
       const res  = await fetch("/api/admin/invitations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -319,6 +321,19 @@ function GenerateModal({
                 type="text" maxLength={100}
                 value={createdBy}
                 onChange={(e) => setCreatedBy(e.target.value)}
+                className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white placeholder-[#71717A] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">
+                Tag <span className="text-[#52525B]">(opcional)</span>
+              </label>
+              <input
+                type="text" maxLength={100}
+                placeholder="ej. grupo-a, evento-1..."
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
                 className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white placeholder-[#71717A] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
               />
             </div>
@@ -602,23 +617,24 @@ export default function InvitationsPage() {
                     <SortHeader label="Creado"   field="created_at"   sortKeys={sortKeys} onSort={handleSort} />
                     <SortHeader label="Expira"   field="expires_at"   sortKeys={sortKeys} onSort={handleSort} />
                     <SortHeader label="Etiqueta" field="created_by"   sortKeys={sortKeys} onSort={handleSort} />
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Tag</th>
                     <th className="px-4 py-3 text-right whitespace-nowrap text-xs font-semibold uppercase tracking-wider text-[#71717A]">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center text-sm text-[#71717A]">
+                      <td colSpan={9} className="px-4 py-12 text-center text-sm text-[#71717A]">
                         <span className="material-symbols-outlined animate-spin text-[24px]">progress_activity</span>
                       </td>
                     </tr>
                   ) : error ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center text-sm text-red-400">{error}</td>
+                      <td colSpan={9} className="px-4 py-12 text-center text-sm text-red-400">{error}</td>
                     </tr>
                   ) : data?.items.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center text-sm text-[#71717A]">
+                      <td colSpan={9} className="px-4 py-12 text-center text-sm text-[#71717A]">
                         No se encontraron invitaciones
                       </td>
                     </tr>
@@ -739,6 +755,17 @@ export default function InvitationsPage() {
                           {/* Created by */}
                           <td className="px-4 py-3 text-sm text-[#71717A]">
                             {inv.created_by ?? "—"}
+                          </td>
+
+                          {/* Tag */}
+                          <td className="px-4 py-3">
+                            {inv.tag ? (
+                              <span className="inline-flex items-center rounded border border-violet-500/40 bg-violet-500/10 px-2 py-0.5 font-mono text-xs text-violet-300">
+                                {inv.tag}
+                              </span>
+                            ) : (
+                              <span className="text-[#52525B] text-sm">—</span>
+                            )}
                           </td>
 
                           {/* Actions */}

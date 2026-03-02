@@ -115,6 +115,7 @@ def create_invitations():
     try:
         for _ in range(count):
             plain = _gen_code()
+            tag_value = str(data.get("tag", ""))[:100] or None
             inv = InvitationCode(
                 code=plain,
                 is_active=True,
@@ -122,6 +123,7 @@ def create_invitations():
                 current_uses=0,
                 expires_at=expires_at,
                 created_by=created_by,
+                tag=tag_value,
             )
             db.add(inv)
             plain_codes.append(plain)
@@ -248,6 +250,7 @@ def list_invitations():
                 "expires_at":   inv.expires_at.isoformat() if inv.expires_at else None,
                 "created_at":   inv.created_at.isoformat() if inv.created_at else None,
                 "created_by":   inv.created_by,
+                "tag":          inv.tag,
                 "last_used_at": inv.last_used_at.isoformat() if inv.last_used_at else None,
                 "player": {
                     "id":       inv.player.id,
@@ -290,6 +293,8 @@ def update_invitation(inv_id: str):
             if not new_code:
                 return jsonify({"error": "El código no puede estar vacío"}), 400
             inv.code = new_code
+        if "tag" in data:
+            inv.tag = str(data["tag"])[:100] or None
         db.commit()
 
         now = datetime.utcnow()

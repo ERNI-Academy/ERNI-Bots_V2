@@ -107,7 +107,7 @@ export default function AboutPage() {
             </header>
 
             <div className="flex-1 overflow-y-auto">
-            <div className="relative max-w-4xl mx-auto p-4 md:p-8">
+                <div className="relative max-w-4xl mx-auto p-4 md:p-8">
 
                 {/* ── Hero ── */}
                 <div className="mb-12">
@@ -233,7 +233,7 @@ export default function AboutPage() {
                     </div>
                 </div>
 
-            </div>
+                </div>
             </div>
         </div>
     );

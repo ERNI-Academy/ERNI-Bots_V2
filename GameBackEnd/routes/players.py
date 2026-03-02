@@ -425,6 +425,7 @@ def create_my_invitation():
             max_uses=1,
             current_uses=0,
             created_by=player_id,
+            tag="invitation",
         )
         db.add(inv)
         db.commit()

@@ -26,7 +26,9 @@ echo "[startup] Running migrations..."
 # python scripts/migrate_player_ban.py
 # python scripts/migrate_is_bot.py
 # python scripts/migrate_boss_reward_score.py || { echo "[startup] Migration failed, aborting."; exit 1; }
-python scripts/migrate_boss_decay_config.py || { echo "[startup] Migration failed, aborting."; exit 1; }
+# python scripts/migrate_boss_decay_config.py || { echo "[startup] Migration failed, aborting."; exit 1; }
+python scripts/migrate_invitation_tag.py || { echo "[startup] Migration failed, aborting."; exit 1; }
+python scripts/migrate_tag_bots.py || { echo "[startup] Migration failed, aborting."; exit 1; }
 echo "[startup] Migrations completed."
 
 # Run seed only when SEED_DB=true is explicitly set (e.g. via Azure App Settings on first deploy)

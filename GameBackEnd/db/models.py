@@ -355,6 +355,7 @@ class InvitationCode(Base):
     # Audit
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(String(100), nullable=True)
+    tag        = Column(String(100), nullable=True)
     last_used_at = Column(DateTime, nullable=True)
     last_used_ip = Column(String(45), nullable=True)  # supports IPv6
 
