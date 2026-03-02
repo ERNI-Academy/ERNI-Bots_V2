@@ -240,6 +240,7 @@ def list_invitations():
 
             return {
                 "id":           inv.id,
+                "code":         inv.code,
                 "status":       tag,
                 "is_active":    inv.is_active,
                 "max_uses":     inv.max_uses,
