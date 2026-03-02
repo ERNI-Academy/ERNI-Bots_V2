@@ -334,8 +334,8 @@ export default function SeasonsPage() {
               No hay temporadas. Crea la primera.
             </div>
           ) : (
-            <div className="overflow-hidden rounded-lg border border-[#27272A]">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto rounded-lg border border-[#27272A]">
+              <table className="w-full min-w-[700px] text-sm">
                 <thead className="border-b border-[#27272A] bg-[#18181B]">
                   <tr>
                     {["Nombre", "Estado", "Inicio", "Fin", "Jugadores", "Fortalezas", "Acciones"].map(h => (
