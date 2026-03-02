@@ -203,17 +203,15 @@ function LoginContent() {
             </form>
 
             {/* Terminal Footer Status */}
-            <div className="flex justify-between items-end text-xs sm:text-xs font-mono pt-2 sm:pt-4">
-              <div className="flex items-center gap-1 sm:gap-2 opacity-40">
-                <span className="w-1 sm:w-1.5 h-1 sm:h-1.5 bg-primary rounded-full animate-ping"></span>
-                <span className="hidden sm:inline">UPLINK_STATUS: SEEKING_PEERS...</span>
-                <span className="sm:hidden">SEEKING...</span>
-              </div>
+            <div className="flex justify-between items-end text-xs sm:text-xs font-mono pt-2 sm:pt-4">             
               <div className="flex items-center gap-3">
                 <Link href="/about" className="text-[#00ffff] hover:text-primary transition-colors uppercase tracking-widest">
                   &gt; QUIÉNES_SOMOS
                 </Link>
-                <span className="opacity-40">REV_104.B9</span>
+                <span className="opacity-40">|</span>
+                <Link href="/premios" className="text-[#ffcc00] hover:text-primary transition-colors uppercase tracking-widest">
+                  &gt; PREMIOS
+                </Link>
               </div>
             </div>
           </div>

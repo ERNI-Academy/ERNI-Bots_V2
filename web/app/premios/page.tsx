@@ -88,7 +88,7 @@ export default function PremiosPage() {
                 </div>
                 <div className="flex items-center gap-2 md:gap-4">
                     <Link
-                        href="/dashboard"
+                        href="/"
                         className="flex items-center gap-1 px-3 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary transition-colors font-mono text-xs uppercase tracking-widest"
                     >
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
