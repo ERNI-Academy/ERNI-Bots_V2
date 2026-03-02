@@ -229,7 +229,9 @@ class Battle(Base):
     turn_count = Column(Integer, default=0)
     max_turns = Column(Integer, default=15)
     # Secret word the attacker must guess — snapshot at battle creation.
-    secret_word = Column(String(100), nullable=True)
+    secret_word  = Column(String(100), nullable=True)
+    # The word the player submitted when making their single guess attempt.
+    player_guess = Column(String(200), nullable=True)
     attacker = relationship("Player", back_populates="battles")
     fortress = relationship("Fortress", back_populates="battles")
     boss = relationship("Boss", foreign_keys=[boss_id])

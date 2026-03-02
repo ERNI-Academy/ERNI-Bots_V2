@@ -604,6 +604,9 @@ def guess_word(battle_id):
         # Use the word that was snapshotted when the battle started
         protected_word = battle.secret_word
 
+        # Record the player's guess attempt regardless of outcome
+        battle.player_guess = guess
+
         if is_pve:
             boss = db.query(Boss).filter_by(id=battle.boss_id).first()
             if not boss:

@@ -935,6 +935,7 @@ def list_battles():
                 "turn_count":     b.turn_count,
                 "max_turns":      b.max_turns,
                 "secret_word":    b.secret_word,
+                "player_guess":   b.player_guess,
             }
 
         return jsonify({
@@ -994,6 +995,7 @@ def get_battle_detail(battle_id):
             "turn_count":     b.turn_count,
             "max_turns":      b.max_turns,
             "secret_word":    b.secret_word,
+            "player_guess":   b.player_guess,
             "messages":       messages,
         })
     finally:

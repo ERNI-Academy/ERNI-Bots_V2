@@ -17,6 +17,7 @@ interface Battle {
   turn_count: number;
   max_turns: number;
   secret_word: string | null;
+  player_guess: string | null;
 }
 
 interface Message {
@@ -200,6 +201,7 @@ export default function BattlesPage() {
                         <th className="px-5 py-3 font-medium">Objetivo</th>
                         <th className="px-5 py-3 font-medium">Defensor</th>
                         <th className="px-5 py-3 font-medium">Palabra</th>
+                        <th className="px-5 py-3 font-medium">Intento</th>
                         <th className="px-5 py-3 font-medium text-center">Tipo</th>
                         <th className="px-5 py-3 font-medium text-center">Turnos</th>
                         <th className="px-5 py-3 font-medium text-center">Estado</th>
@@ -210,7 +212,7 @@ export default function BattlesPage() {
                       {loading
                         ? Array.from({ length: PER_PAGE }).map((_, i) => (
                             <tr key={i} className="h-12">
-                              {Array.from({ length: 9 }).map((_, j) => (
+                              {Array.from({ length: 10 }).map((_, j) => (
                                 <td key={j} className="px-5 py-3">
                                   <div className="h-3 w-full max-w-[100px] animate-pulse rounded bg-[#27272A]" />
                                 </td>
@@ -272,6 +274,23 @@ export default function BattlesPage() {
                                     <span className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 font-mono text-xs font-semibold tracking-wide text-amber-300">
                                       <span className="material-symbols-outlined text-[12px]">key</span>
                                       {b.secret_word}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[#3F3F46]">—</span>
+                                  )}
+                                </td>
+                                {/* Intento del jugador */}
+                                <td className="px-5 py-2">
+                                  {b.player_guess ? (
+                                    <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-xs font-semibold tracking-wide ${
+                                      b.status === "won"
+                                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                                        : "border-red-500/30 bg-red-500/10 text-red-300"
+                                    }`}>
+                                      <span className="material-symbols-outlined text-[12px]">
+                                        {b.status === "won" ? "check_circle" : "cancel"}
+                                      </span>
+                                      {b.player_guess}
                                     </span>
                                   ) : (
                                     <span className="text-[#3F3F46]">—</span>
@@ -442,11 +461,27 @@ export default function BattlesPage() {
                   </div>
                   {/* Palabra secreta */}
                   {detail.secret_word && (
-                    <div className="col-span-2 flex flex-col gap-1">
+                    <div className="flex flex-col gap-1">
                       <span className="font-mono text-[10px] uppercase tracking-wider text-[#71717A]">Palabra secreta</span>
                       <span className="inline-flex w-fit items-center gap-1.5 rounded border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 font-mono text-sm font-bold tracking-widest text-amber-300">
                         <span className="material-symbols-outlined text-[16px]">key</span>
                         {detail.secret_word}
+                      </span>
+                    </div>
+                  )}
+                  {/* Intento del jugador */}
+                  {detail.player_guess && (
+                    <div className="flex flex-col gap-1">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-[#71717A]">Intento</span>
+                      <span className={`inline-flex w-fit items-center gap-1.5 rounded border px-3 py-1.5 font-mono text-sm font-bold tracking-widest ${
+                        detail.status === "won"
+                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                          : "border-red-500/30 bg-red-500/10 text-red-300"
+                      }`}>
+                        <span className="material-symbols-outlined text-[16px]">
+                          {detail.status === "won" ? "check_circle" : "cancel"}
+                        </span>
+                        {detail.player_guess}
                       </span>
                     </div>
                   )}
