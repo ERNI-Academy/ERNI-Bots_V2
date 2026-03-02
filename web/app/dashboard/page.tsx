@@ -142,6 +142,7 @@ export default function DashboardPage() {
     const [activityFeed, setActivityFeed] = useState<ActivityEntry[]>([]);
     const [bosses, setBosses] = useState<BossEntry[]>([]);
     const [tick, setTick] = useState(0);
+    const [showSettings, setShowSettings] = useState(false);
 
     async function loadFeed() {
         try {
@@ -277,20 +278,48 @@ export default function DashboardPage() {
                         >
                             <span className="material-symbols-outlined text-xs md:text-sm">menu_book</span>
                         </Link>
-                        <Link
-                            href="/about"
-                            className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
-                            title="Quiénes Somos"
-                        >
-                            <span className="material-symbols-outlined text-xs md:text-sm">people</span>
-                        </Link>
-                        <button
-                            onClick={() => router.push("/login")}
-                            className="p-1 md:p-2 border border-[#ff0033]/30 hover:bg-[#ff0033]/20 text-[#ff0033] transition-colors cursor-pointer"
-                            title="Salir"
-                        >
-                            <span className="material-symbols-outlined text-xs md:text-sm">power_settings_new</span>
-                        </button>
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowSettings(s => !s)}
+                                className="p-1 md:p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
+                                title="Ajustes"
+                            >
+                                <span className="material-symbols-outlined text-xs md:text-sm">settings</span>
+                            </button>
+                            {showSettings && (
+                                <>
+                                    {/* Backdrop to close */}
+                                    <div className="fixed inset-0 z-[90]" onClick={() => setShowSettings(false)} />
+                                    {/* Dropdown */}
+                                    <div className="absolute right-0 top-full mt-2 w-52 bg-[#0a0a0f] border border-primary/40 shadow-[0_0_24px_rgba(0,0,0,0.9)] z-[100] py-1 font-mono text-xs">
+                                        <Link
+                                            href="/invitations"
+                                            onClick={() => setShowSettings(false)}
+                                            className="flex items-center gap-3 px-4 py-2.5 text-primary hover:bg-primary/20 transition-colors uppercase tracking-widest cursor-pointer"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">mail</span>
+                                            Invitaciones
+                                        </Link>
+                                        <Link
+                                            href="/about"
+                                            onClick={() => setShowSettings(false)}
+                                            className="flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/15 transition-colors uppercase tracking-widest cursor-pointer"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">people</span>
+                                            Quiénes Somos
+                                        </Link>
+                                        <div className="border-t border-white/20 my-1" />
+                                        <button
+                                            onClick={() => { setShowSettings(false); router.push("/login"); }}
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-[#ff0033] hover:bg-[#ff0033]/20 transition-colors uppercase tracking-widest cursor-pointer"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">power_settings_new</span>
+                                            Salir
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             </header>
