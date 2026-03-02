@@ -14,6 +14,7 @@ const navItems: { label: string; icon: string; href: string; disabled?: boolean 
   { label: "Batallas",      icon: "swords",      href: "/battles" },
   { label: "Palabras",      icon: "key",         href: "/words" },
   { label: "Invitaciones",  icon: "mail",        href: "/invitations" },
+  { label: "Configuración", icon: "settings",    href: "/config" },
 ];
 
 interface AdminSidebarProps {
@@ -100,10 +101,6 @@ export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarPr
 
         {/* Footer */}
         <div className="mt-auto flex flex-col gap-0.5 border-t border-[#27272A] pt-4">
-          <span className="flex cursor-not-allowed items-center gap-3 rounded px-3 py-2 opacity-30">
-            <span className="material-symbols-outlined text-[20px] text-[#71717A]">settings</span>
-            <span className="text-sm font-medium font-[var(--font-display)] text-[#71717A]">Configuración</span>
-          </span>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 rounded px-3 py-2 text-red-400/80 hover:bg-red-400/10 hover:text-red-400 transition-all"

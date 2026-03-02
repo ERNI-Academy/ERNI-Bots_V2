@@ -28,6 +28,7 @@ echo "[startup] Running migrations..."
 # python scripts/migrate_boss_reward_score.py || { echo "[startup] Migration failed, aborting."; exit 1; }
 # python scripts/migrate_boss_decay_config.py || { echo "[startup] Migration failed, aborting."; exit 1; }
 # python scripts/migrate_invitation_tag.py || { echo "[startup] Migration failed, aborting."; exit 1; }
+python scripts/migrate_app_config.py || { echo "[startup] Migration failed, aborting."; exit 1; }
 # python scripts/migrate_tag_bots.py || { echo "[startup] Migration failed, aborting."; exit 1; }
 echo "[startup] Migrations completed."
 

@@ -25,6 +25,7 @@ from routes.constraints import constraints_bp
 from routes.words import words_bp
 from routes.personalities import personalities_bp
 from routes.store import store_bp
+from routes.admin_config import admin_config_bp
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -89,6 +90,7 @@ def create_app():
     app.register_blueprint(admin_protocols_bp,    url_prefix="/api/v1/admin")
     app.register_blueprint(admin_constraints_bp,  url_prefix="/api/v1/admin")
     app.register_blueprint(admin_words_bp,         url_prefix="/api/v1/admin")
+    app.register_blueprint(admin_config_bp,        url_prefix="/api/v1/admin")
     app.register_blueprint(archetypes_bp,         url_prefix="/api/v1/archetypes")
     app.register_blueprint(protocols_bp,   url_prefix="/api/v1/protocols")
 

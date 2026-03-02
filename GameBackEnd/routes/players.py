@@ -18,6 +18,7 @@ from db.models import (
     PlayerBossStats,
     PlayerHistoryEntry,
     InvitationCode,
+    AppConfig,
 )
 
 players_bp = Blueprint("players", __name__)
@@ -408,6 +409,11 @@ def create_my_invitation():
     player_id = get_jwt_identity()
     db = SessionLocal()
     try:
+        # Check global feature flag for player-generated invitations
+        cfg = db.get(AppConfig, "player_invitations_enabled")
+        if cfg is not None and cfg.value.lower() != "true":
+            return jsonify({"error": "La generación de invitaciones por jugadores está deshabilitada"}), 403
+
         existing_count = (
             db.query(func.count(InvitationCode.id))
             .filter(InvitationCode.created_by == player_id)

@@ -14,6 +14,7 @@ function RegisterContent() {
     const [loading, setLoading] = useState(false);
     const [generatingCode, setGeneratingCode] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [invitationsEnabled, setInvitationsEnabled] = useState(true);
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -28,6 +29,14 @@ function RegisterContent() {
         setMounted(true);
         const codeFromUrl = searchParams.get("code");
         if (codeFromUrl) setInvitationCode(codeFromUrl);
+
+        // Fetch feature flags
+        fetch("/api/config")
+            .then((r) => r.json())
+            .then((cfg) => {
+                if (cfg.invitations_enabled === false) setInvitationsEnabled(false);
+            })
+            .catch(() => { /* default stays true */ });
     }, [searchParams]);
 
     const handleGenerateCode = async () => {
@@ -220,7 +229,7 @@ function RegisterContent() {
                                         disabled={!!searchParams.get("code")}
                                         required
                                     />
-                                    {!searchParams.get("code") && (
+                                    {!searchParams.get("code") && invitationsEnabled && (
                                         <button
                                             type="button"
                                             onClick={handleGenerateCode}

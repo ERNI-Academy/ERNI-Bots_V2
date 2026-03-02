@@ -594,3 +594,21 @@ class PlayerHistoryEntry(Base):
 
 Index("idx_player_history_player", PlayerHistoryEntry.player_id)
 Index("idx_player_history_created", PlayerHistoryEntry.created_at.desc())
+
+
+# ==========================
+# APP CONFIG
+# ==========================
+
+class AppConfig(Base):
+    """
+    Generic key-value configuration store.
+    Keys are short strings (e.g. 'invitations_enabled').
+    Values are stored as strings; callers cast as needed ('true'/'false' for bools).
+    """
+    __tablename__ = "app_config"
+
+    key = Column(String(100), primary_key=True)
+    value = Column(Text, nullable=False)
+    description = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

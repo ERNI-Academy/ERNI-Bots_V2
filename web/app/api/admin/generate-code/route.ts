@@ -9,6 +9,22 @@ export async function POST() {
       return NextResponse.json({ error: "ADMIN_SECRET no configurado en el servidor" }, { status: 503 });
     }
 
+    // Check feature flag before generating
+    try {
+      const cfgRes = await fetch(`${BACKEND}/api/v1/config/`);
+      if (cfgRes.ok) {
+        const cfg = await cfgRes.json();
+        if (cfg.invitations_enabled === false) {
+          return NextResponse.json(
+            { error: "La generación de invitaciones está deshabilitada" },
+            { status: 403 }
+          );
+        }
+      }
+    } catch {
+      // If config check fails, allow the request (fail open)
+    }
+
     console.log("[generate-code] Llamando a backend:", `${BACKEND}/api/v1/admin/invitations`);
 
     let backendRes: Response;
