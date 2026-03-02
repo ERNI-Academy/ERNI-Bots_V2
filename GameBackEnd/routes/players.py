@@ -220,6 +220,7 @@ def get_active_bosses():
             "location": boss.location,
             "story": boss.story,
             "reward_credits": boss.reward_credits,
+            "reward_score": boss.reward_score,
             "active_at": boss.active_at.isoformat() + "Z" if boss.active_at else None,
         })
 

@@ -69,6 +69,7 @@ interface BossEntry {
     title: string;
     location: string;
     reward_credits: number;
+    reward_score: number;
     active_at: string | null;
 }
 
@@ -498,8 +499,10 @@ export default function DashboardPage() {
                                                 <div className="text-[11px] text-[#a78bfa] mt-0.5">{boss.title}</div>
                                             </div>
                                             <div className="shrink-0 text-right">
-                                                <div className="text-base font-black text-[#ffd700] leading-tight">+{boss.reward_credits}</div>
+                                                <div className="text-base font-black text-[#ffd700] leading-tight">+{boss.reward_score}</div>
                                                 <div className="text-[9px] text-[#ffd700]/60 uppercase tracking-widest">puntos</div>
+                                                <div className="text-sm font-bold text-[#00ffff] leading-tight mt-0.5">+{boss.reward_credits}</div>
+                                                <div className="text-[9px] text-[#00ffff]/60 uppercase tracking-widest">fragmentos</div>
                                             </div>
                                         </div>
                                         {/* Action */}
