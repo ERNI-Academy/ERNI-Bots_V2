@@ -149,7 +149,6 @@ def start_battle():
                 "fortress": {
                     "id": fortress.id,
                     "name": fortress.name,
-                    "story": fortress.story,
                     "personality": fortress.personality.name,
                     "owner": fortress.owner.username,
                     "defeats": fortress_stats.defeat_count,
