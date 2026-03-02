@@ -311,6 +311,14 @@ export default function DashboardPage() {
                                             <span className="material-symbols-outlined text-sm">people</span>
                                             Quiénes Somos
                                         </Link>
+                                        <Link
+                                            href="/premios"
+                                            onClick={() => setShowSettings(false)}
+                                            className="flex items-center gap-3 px-4 py-2.5 text-[#ffcc00] hover:bg-[#ffcc00]/10 transition-colors uppercase tracking-widest cursor-pointer"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">trophy</span>
+                                            Premios
+                                        </Link>
                                         <div className="border-t border-white/20 my-1" />
                                         <button
                                             onClick={() => { setShowSettings(false); router.push("/login"); }}
