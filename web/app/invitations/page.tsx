@@ -173,6 +173,15 @@ export default function InvitationsPage() {
                         Una vez que alguien lo utilice al registrarse, aparecerá aquí como reclamado.
                     </p>
 
+                    {/* Referral bonus callout */}
+                    <div className="flex items-start gap-2 border border-[#00ff41]/30 bg-[#00ff41]/5 px-3 py-2">
+                        <span className="material-symbols-outlined text-[#00ff41] text-base shrink-0 mt-0.5">toll</span>
+                        <p className="text-xs text-[#00ff41] leading-relaxed">
+                            <span className="font-bold uppercase tracking-wider">+20 fragmentos</span> por cada jugador que se registre con tu código.
+                            Los fragmentos se acreditan automáticamente en el momento del registro.
+                        </p>
+                    </div>
+
                     {/* Quota bar */}
                     {data && (
                         <div className="space-y-1">

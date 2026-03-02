@@ -193,6 +193,21 @@ def register():
                 detail="Ventaja hCON — bonus de 100 fragmentos por código de invitación hc0n",
             ))
 
+        # Referral bonus: grant 20 fragments to the inviter when a player-generated code is used
+        if inv.tag == "invitation" and inv.created_by:
+            from db.models import PlayerHistoryEntry
+            inviter = db.query(Player).filter_by(id=inv.created_by).first()
+            if inviter:
+                REFERRAL_BONUS = 20
+                inviter.credits += REFERRAL_BONUS
+                db.add(PlayerHistoryEntry(
+                    player_id=inviter.id,
+                    type="fragments",
+                    amount=REFERRAL_BONUS,
+                    reason="referral_bonus",
+                    detail=f"Bonus de referido — {username} se registró con tu código de invitación",
+                ))
+
         db.commit()
 
         access_token  = create_access_token(identity=player.id)
