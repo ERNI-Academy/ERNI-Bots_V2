@@ -176,7 +176,7 @@ class MockAgentService(AgentService):
 
 class HttpAgentService(AgentService):
 
-    def __init__(self, base_url: str, timeout: int = 10):
+    def __init__(self, base_url: str, timeout: int = 100):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.internal_key = os.getenv("AGENT_INTERNAL_KEY")
