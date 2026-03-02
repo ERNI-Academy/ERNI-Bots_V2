@@ -210,8 +210,7 @@ def get_active_bosses():
             boss_id=boss.id
         ).first()
 
-        if boss_stats and boss_stats.defeated:
-            continue
+        defeated = bool(boss_stats and boss_stats.defeated)
 
         result.append({
             "type": "boss",
@@ -223,6 +222,7 @@ def get_active_bosses():
             "reward_credits": boss.reward_credits,
             "reward_score": boss.reward_score,
             "active_at": boss.active_at.isoformat() + "Z" if boss.active_at else None,
+            "defeated": defeated,
         })
 
     db.close()

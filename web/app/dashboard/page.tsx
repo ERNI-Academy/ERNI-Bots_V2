@@ -73,6 +73,7 @@ interface BossEntry {
     reward_credits: number;
     reward_score: number;
     active_at: string | null;
+    defeated: boolean;
 }
 
 function formatCountdown(ms: number): string {
@@ -546,24 +547,40 @@ export default function DashboardPage() {
                                 const remaining = boss.active_at ? Math.max(0, new Date(boss.active_at).getTime() - Date.now()) : 0;
                                 const noFortress = !player?.has_fortress;
                                 const fortressDestroyed = player?.fortress?.status === "destroyed";
-                                const canAttackBoss = !noFortress && !fortressDestroyed && !battlesBlocked;
+                                const canAttackBoss = !noFortress && !fortressDestroyed && !battlesBlocked && !boss.defeated;
                                 return (
-                                    <div key={boss.boss_id} className={`border p-3 space-y-2.5 ${available ? "border-[#8b5cf6]/50 bg-[#8b5cf6]/8" : "border-[#8b5cf6]/20 bg-[#8b5cf6]/4"}`}>
+                                    <div key={boss.boss_id} className={`border p-3 space-y-2.5 ${
+                                        boss.defeated
+                                            ? "border-[#8b5cf6]/15 bg-[#8b5cf6]/4 opacity-60"
+                                            : available
+                                                ? "border-[#8b5cf6]/50 bg-[#8b5cf6]/8"
+                                                : "border-[#8b5cf6]/20 bg-[#8b5cf6]/4"
+                                    }`}>
                                         {/* Name + reward */}
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="min-w-0">
-                                                <div className="text-sm font-bold text-white leading-tight">{boss.name}</div>
+                                                <div className="text-sm font-bold text-white leading-tight flex items-center gap-1.5">
+                                                    {boss.defeated && <span className="material-symbols-outlined text-[#c084fc] text-sm">check_circle</span>}
+                                                    {boss.name}
+                                                </div>
                                                 <div className="text-[11px] text-[#a78bfa] mt-0.5">{boss.title}</div>
                                             </div>
-                                            <div className="shrink-0 text-right">
-                                                <div className="text-base font-black text-[#ffd700] leading-tight">+{boss.reward_score}</div>
-                                                <div className="text-[9px] text-[#ffd700]/60 uppercase tracking-widest">puntos</div>
-                                                <div className="text-sm font-bold text-[#00ffff] leading-tight mt-0.5">+{boss.reward_credits}</div>
-                                                <div className="text-[9px] text-[#00ffff]/60 uppercase tracking-widest">fragmentos</div>
-                                            </div>
+                                            {!boss.defeated && (
+                                                <div className="shrink-0 text-right">
+                                                    <div className="text-base font-black text-[#ffd700] leading-tight">+{boss.reward_score}</div>
+                                                    <div className="text-[9px] text-[#ffd700]/60 uppercase tracking-widest">puntos</div>
+                                                    <div className="text-sm font-bold text-[#00ffff] leading-tight mt-0.5">+{boss.reward_credits}</div>
+                                                    <div className="text-[9px] text-[#00ffff]/60 uppercase tracking-widest">fragmentos</div>
+                                                </div>
+                                            )}
                                         </div>
                                         {/* Action */}
-                                        {available ? (
+                                        {boss.defeated ? (
+                                            <div className="flex items-center justify-center gap-2 w-full bg-[#c084fc]/5 border border-[#c084fc]/20 text-[#c084fc]/60 text-xs font-bold uppercase tracking-widest py-1.5 cursor-default">
+                                                <span className="material-symbols-outlined text-xs">verified</span>
+                                                Neutralizado
+                                            </div>
+                                        ) : available ? (
                                             canAttackBoss ? (
                                                 <Link
                                                     href={`/attack/boss/${boss.boss_id}`}
