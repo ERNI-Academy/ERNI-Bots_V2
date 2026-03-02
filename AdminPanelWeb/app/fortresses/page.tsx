@@ -39,6 +39,16 @@ interface FortressDetail extends Fortress {
   story: string | null;
   season_stats: SeasonStat[];
   player_words: PlayerWord[];
+  protocol_id: string | null;
+  archetype_id: string | null;
+  personality_id: string | null;
+}
+
+interface CatalogItem { id: string; name: string; }
+interface Catalog {
+  protocols: CatalogItem[];
+  archetypes: CatalogItem[];
+  personalities: CatalogItem[];
 }
 
 type FortressFilter = "all" | "human" | "bot";
@@ -73,7 +83,7 @@ function FortressDrawer({
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadDetail = useCallback(() => {
     setLoading(true);
     setError(null);
     fetch(`/api/admin/fortresses/${fortress.id}`)
@@ -81,6 +91,8 @@ function FortressDrawer({
       .then((d) => { setDetail(d); setLoading(false); })
       .catch(() => { setError("Error al cargar el detalle"); setLoading(false); });
   }, [fortress.id]);
+
+  useEffect(() => { loadDetail(); }, [loadDetail]);
 
   return (
     <>
@@ -117,8 +129,6 @@ function FortressDrawer({
             <span className="material-symbols-outlined text-[22px]">close</span>
           </button>
         </div>
-
-        {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {loading ? (
             <div className="flex items-center justify-center py-16">
@@ -240,7 +250,195 @@ function FortressDrawer({
           ) : null}
         </div>
       </aside>
+
     </>
+  );
+}
+
+// ───────────────────────────────────────────────────────────────
+// Edit Fortress Modal
+// ───────────────────────────────────────────────────────────────
+
+function EditFortressModal({
+  detail,
+  onClose,
+  onSaved,
+}: {
+  detail: FortressDetail;
+  onClose: () => void;
+  onSaved: (updated: Partial<Fortress & FortressDetail>) => void;
+}) {
+  const [name,          setName]          = useState(detail.name);
+  const [story,         setStory]         = useState(detail.story ?? "");
+  const [protectedWord, setProtectedWord] = useState(detail.protected_word ?? "");
+  const [protocolId,    setProtocolId]    = useState(detail.protocol_id ?? "");
+  const [archetypeId,   setArchetypeId]   = useState(detail.archetype_id ?? "");
+  const [personalityId, setPersonalityId] = useState(detail.personality_id ?? "");
+
+  const [catalog,  setCatalog]  = useState<Catalog | null>(null);
+  const [saving,   setSaving]   = useState(false);
+  const [error,    setError]    = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/fortresses/catalog")
+      .then(r => r.json())
+      .then(d => setCatalog(d))
+      .catch(() => setError("No se pudo cargar el catálogo"));
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+
+    const payload: Record<string, string> = {};
+    if (name          !== detail.name)           payload.name           = name.trim();
+    if (story         !== (detail.story ?? ""))  payload.story          = story.trim();
+    if (protectedWord !== (detail.protected_word ?? "")) payload.protected_word = protectedWord.trim();
+    if (protocolId    !== (detail.protocol_id ?? ""))    payload.protocol_id    = protocolId;
+    if (archetypeId   !== (detail.archetype_id ?? ""))   payload.archetype_id   = archetypeId;
+    if (personalityId !== (detail.personality_id ?? "")) payload.personality_id = personalityId;
+
+    if (Object.keys(payload).length === 0) { onClose(); return; }
+
+    try {
+      const res  = await fetch(`/api/admin/fortresses/${detail.id}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(data.error ?? `Error ${res.status}`); }
+      else {
+        onSaved({
+          name:                 data.name,
+          story:                data.story,
+          protected_word:       data.protected_word,
+          protocol:             data.protocol,
+          protocol_id:          data.protocol_id,
+          archetype:            data.archetype,
+          archetype_id:         data.archetype_id,
+          personality:          data.personality,
+          personality_id:       data.personality_id,
+          last_reconfigured_at: data.last_reconfigured_at,
+        });
+      }
+    } catch { setError("Error de conexión"); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-lg rounded-lg border border-[#27272A] bg-[#09090B] shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[#27272A] px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/10">
+              <span className="material-symbols-outlined text-[18px] text-orange-400">edit</span>
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white">Editar fortaleza</h2>
+              <p className="font-mono text-[10px] text-[#52525B]">{detail.id.slice(0, 16)}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-[#71717A] hover:text-white">
+            <span className="material-symbols-outlined text-[22px]">close</span>
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto max-h-[70vh]">
+          {error && (
+            <div className="rounded border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">{error}</div>
+          )}
+
+          {/* Name */}
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Nombre</label>
+            <input
+              required value={name} onChange={e => setName(e.target.value)}
+              maxLength={100}
+              className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white font-mono placeholder-[#71717A] focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all"
+            />
+          </div>
+
+          {/* Story */}
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Historia</label>
+            <textarea
+              value={story} onChange={e => setStory(e.target.value)}
+              rows={4}
+              className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white font-mono placeholder-[#71717A] focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all resize-none"
+            />
+          </div>
+
+          {/* Protected word */}
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Palabra secreta</label>
+            <input
+              required value={protectedWord} onChange={e => setProtectedWord(e.target.value.toUpperCase())}
+              maxLength={64}
+              className="w-full rounded border border-orange-500/30 bg-[#18181B] px-3 py-2 text-sm font-mono uppercase text-orange-300 placeholder-[#71717A] focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all"
+            />
+            {detail.player_words.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {detail.player_words.map(w => (
+                  <button
+                    key={w.id}
+                    type="button"
+                    onClick={() => setProtectedWord(w.word.toUpperCase())}
+                    className={`rounded border px-2 py-0.5 font-mono text-xs transition-colors ${
+                      protectedWord.toUpperCase() === w.word.toUpperCase()
+                        ? "border-orange-500/50 bg-orange-500/20 text-orange-300"
+                        : "border-[#27272A] bg-[#18181B] text-[#71717A] hover:border-[#3F3F46] hover:text-white"
+                    }`}
+                  >
+                    {w.word}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Protocol / Archetype / Personality */}
+          <div className="grid grid-cols-1 gap-4">
+            {([
+              { label: "Protocolo",   value: protocolId,    set: setProtocolId,    items: catalog?.protocols    ?? [] },
+              { label: "Arquetipo",   value: archetypeId,   set: setArchetypeId,   items: catalog?.archetypes   ?? [] },
+              { label: "Personalidad",value: personalityId, set: setPersonalityId, items: catalog?.personalities ?? [] },
+            ] as { label: string; value: string; set: (v: string) => void; items: CatalogItem[] }[]).map(({ label, value, set, items }) => (
+              <div key={label}>
+                <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">{label}</label>
+                <select
+                  value={value}
+                  onChange={e => set(e.target.value)}
+                  className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all"
+                >
+                  {items.length === 0 && <option value="">Cargando...</option>}
+                  {items.map(i => (
+                    <option key={i.id} value={i.id}>{i.name}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose}
+              className="rounded border border-[#27272A] bg-[#18181B] px-4 py-2 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" disabled={saving || !catalog}
+              className="flex items-center gap-2 rounded border border-orange-500/50 bg-orange-500/10 px-4 py-2 text-sm font-semibold text-orange-300 hover:bg-orange-500/20 disabled:opacity-50 transition-colors">
+              {saving && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+              Guardar cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 
@@ -252,7 +450,25 @@ export default function FortressesPage() {
   const [page, setPage]             = useState(1);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
-  const [selected, setSelected]     = useState<Fortress | null>(null);
+  const [selected,    setSelected]    = useState<Fortress | null>(null);
+  const [editTarget,  setEditTarget]  = useState<FortressDetail | null>(null);
+  const [editLoading, setEditLoading] = useState<string | null>(null);
+
+  async function openEdit(e: React.MouseEvent, f: Fortress) {
+    e.stopPropagation();
+    setEditLoading(f.id);
+    try {
+      const res  = await fetch(`/api/admin/fortresses/${f.id}`);
+      const data: FortressDetail = await res.json();
+      setEditTarget(data);
+    } finally {
+      setEditLoading(null);
+    }
+  }
+
+  const patchFortress = useCallback((id: string, patch: Partial<Fortress>) => {
+    setFortresses(fs => fs.map(f => f.id === id ? { ...f, ...patch } : f));
+  }, []);
 
   const fetchFortresses = useCallback(async () => {
     setLoading(true);
@@ -368,22 +584,23 @@ export default function FortressesPage() {
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Palabra secreta</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Creada</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Últ. reconfig.</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-[#71717A]">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center text-sm text-[#71717A]">
+                      <td colSpan={9} className="px-4 py-12 text-center text-sm text-[#71717A]">
                         <span className="material-symbols-outlined animate-spin text-[24px]">progress_activity</span>
                       </td>
                     </tr>
                   ) : error ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center text-sm text-red-400">{error}</td>
+                      <td colSpan={9} className="px-4 py-12 text-center text-sm text-red-400">{error}</td>
                     </tr>
                   ) : paginated.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center text-sm text-[#71717A]">
+                      <td colSpan={9} className="px-4 py-12 text-center text-sm text-[#71717A]">
                         No se encontraron fortalezas
                       </td>
                     </tr>
@@ -434,6 +651,19 @@ export default function FortressesPage() {
                         </td>
                         <td className="px-4 py-3 font-mono text-sm text-[#71717A]">{fmt(f.created_at)}</td>
                         <td className="px-4 py-3 font-mono text-sm text-[#71717A]">{fmt(f.last_reconfigured_at)}</td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            onClick={(e) => openEdit(e, f)}
+                            title="Editar fortaleza"
+                            disabled={editLoading === f.id}
+                            className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] bg-[#18181B] text-[#71717A] hover:border-orange-500/50 hover:bg-orange-500/10 hover:text-orange-400 disabled:opacity-40 transition-colors mx-auto"
+                          >
+                            {editLoading === f.id
+                              ? <span className="material-symbols-outlined animate-spin text-[15px]">progress_activity</span>
+                              : <span className="material-symbols-outlined text-[15px]">edit</span>
+                            }
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -486,6 +716,16 @@ export default function FortressesPage() {
         <FortressDrawer
           fortress={selected}
           onClose={() => setSelected(null)}
+        />
+      )}
+      {editTarget && (
+        <EditFortressModal
+          detail={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSaved={(updated) => {
+            patchFortress(editTarget.id, updated);
+            setEditTarget(null);
+          }}
         />
       )}
     </AdminLayout>

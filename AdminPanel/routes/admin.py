@@ -1122,6 +1122,35 @@ def list_fortresses():
         db.close()
 
 
+# ──────────────────────────────────────────────────────────
+# GET /fortresses/catalog
+# ──────────────────────────────────────────────────────────
+
+@admin_bp.get("/fortresses/catalog")
+def get_fortress_catalog():
+    """Return all protocols, archetypes and personalities to populate fortress edit dropdowns."""
+    if not _check_admin():
+        return jsonify({"error": "Forbidden"}), 403
+
+    db = SessionLocal()
+    try:
+        protocols    = db.query(Protocol).order_by(Protocol.name).all()
+        archetypes   = db.query(Archetype).order_by(Archetype.name).all()
+        personalities = db.query(Personality).order_by(Personality.name).all()
+
+        return jsonify({
+            "protocols":    [{"id": p.id, "name": p.name} for p in protocols],
+            "archetypes":   [{"id": a.id, "name": a.name} for a in archetypes],
+            "personalities": [{"id": p.id, "name": p.name} for p in personalities],
+        })
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────────────────
+# GET /fortresses/<fortress_id>
+# ──────────────────────────────────────────────────────────
+
 @admin_bp.get("/fortresses/<fortress_id>")
 def get_fortress(fortress_id: str):
     """Fortress detail: season stats + owner's available player words."""
@@ -1168,13 +1197,91 @@ def get_fortress(fortress_id: str):
             "owner_id":             f.owner_id,
             "is_bot":               f.owner.is_bot if f.owner else False,
             "protocol":             f.protocol.name if f.protocol else None,
+            "protocol_id":          f.protocol_id,
             "archetype":            f.archetype.name if f.archetype else None,
+            "archetype_id":         f.archetype_id,
             "personality":          f.personality.name if f.personality else None,
+            "personality_id":       f.personality_id,
             "protected_word":       f.protected_word,
             "created_at":           f.created_at.isoformat() + "Z" if f.created_at else None,
             "last_reconfigured_at": f.last_reconfigured_at.isoformat() + "Z" if f.last_reconfigured_at else None,
             "season_stats":         stats_list,
             "player_words":         words_list,
         })
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────────────────
+# PATCH /fortresses/<fortress_id>
+# ──────────────────────────────────────────────────────────
+
+@admin_bp.route("/fortresses/<fortress_id>", methods=["PATCH"])
+def update_fortress(fortress_id: str):
+    """Update fortress fields: name, story, protected_word, protocol_id, archetype_id, personality_id."""
+    if not _check_admin():
+        return jsonify({"error": "Forbidden"}), 403
+
+    data = request.get_json(silent=True) or {}
+
+    db = SessionLocal()
+    try:
+        f = db.query(Fortress).filter_by(id=fortress_id).first()
+        if not f:
+            return jsonify({"error": "Fortress not found"}), 404
+
+        if "name" in data:
+            name = str(data["name"]).strip()
+            if not name or len(name) > 100:
+                return jsonify({"error": "Invalid name (1-100 chars)"}), 400
+            f.name = name
+
+        if "story" in data:
+            f.story = str(data["story"]).strip()
+
+        if "protected_word" in data:
+            word = str(data["protected_word"]).strip().upper()
+            if not word or len(word) > 64:
+                return jsonify({"error": "Invalid protected_word (1-64 chars)"}), 400
+            f.protected_word = word
+
+        if "protocol_id" in data:
+            if not db.query(Protocol).filter_by(id=data["protocol_id"]).first():
+                return jsonify({"error": "Protocol not found"}), 404
+            f.protocol_id = data["protocol_id"]
+
+        if "archetype_id" in data:
+            if not db.query(Archetype).filter_by(id=data["archetype_id"]).first():
+                return jsonify({"error": "Archetype not found"}), 404
+            f.archetype_id = data["archetype_id"]
+
+        if "personality_id" in data:
+            if not db.query(Personality).filter_by(id=data["personality_id"]).first():
+                return jsonify({"error": "Personality not found"}), 404
+            f.personality_id = data["personality_id"]
+
+        f.last_reconfigured_at = datetime.utcnow()
+        db.commit()
+        db.refresh(f)
+
+        logger.info("admin: updated fortress id=%.8s", fortress_id)
+        return jsonify({
+            "id":                   f.id,
+            "name":                 f.name,
+            "story":                f.story,
+            "protected_word":       f.protected_word,
+            "protocol":             f.protocol.name if f.protocol else None,
+            "protocol_id":          f.protocol_id,
+            "archetype":            f.archetype.name if f.archetype else None,
+            "archetype_id":         f.archetype_id,
+            "personality":          f.personality.name if f.personality else None,
+            "personality_id":       f.personality_id,
+            "last_reconfigured_at": f.last_reconfigured_at.isoformat() + "Z",
+        })
+
+    except Exception:
+        db.rollback()
+        logger.exception("admin: update_fortress failed")
+        return jsonify({"error": "Internal server error"}), 500
     finally:
         db.close()

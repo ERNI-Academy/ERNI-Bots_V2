@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { BACKEND } from "@/lib/backend";
 
 export async function GET(
@@ -16,6 +16,31 @@ export async function GET(
     const res = await fetch(`${BACKEND}/api/v1/admin/fortresses/${id}`, {
       headers: { "X-Admin-Secret": secret },
       cache: "no-store",
+    });
+    const data = await res.json().catch(() => ({}));
+    return NextResponse.json(data, { status: res.status });
+  } catch {
+    return NextResponse.json({ error: "Backend no disponible" }, { status: 502 });
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
+  const secret = process.env.ADMIN_SECRET;
+  if (!secret) {
+    return NextResponse.json({ error: "ADMIN_SECRET no configurado" }, { status: 503 });
+  }
+
+  const { id } = await params;
+
+  try {
+    const body = await request.json();
+    const res = await fetch(`${BACKEND}/api/v1/admin/fortresses/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "X-Admin-Secret": secret },
+      body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => ({}));
     return NextResponse.json(data, { status: res.status });
