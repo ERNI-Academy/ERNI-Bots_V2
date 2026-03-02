@@ -147,6 +147,14 @@ export default function DashboardPage() {
     const [tick, setTick] = useState(0);
     const [showSettings, setShowSettings] = useState(false);
 
+    async function handleLogout() {
+        setShowSettings(false);
+        try {
+            await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+        } catch { /* silencioso */ }
+        router.push("/login");
+    }
+
     async function loadFeed() {
         try {
             const res = await fetch("/api/feed", { credentials: "include", cache: "no-store" });
@@ -321,7 +329,7 @@ export default function DashboardPage() {
                                         </Link>
                                         <div className="border-t border-white/20 my-1" />
                                         <button
-                                            onClick={() => { setShowSettings(false); router.push("/login"); }}
+                                            onClick={handleLogout}
                                             className="w-full flex items-center gap-3 px-4 py-2.5 text-[#ff0033] hover:bg-[#ff0033]/20 transition-colors uppercase tracking-widest cursor-pointer"
                                         >
                                             <span className="material-symbols-outlined text-sm">power_settings_new</span>
