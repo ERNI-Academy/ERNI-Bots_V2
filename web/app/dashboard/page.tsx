@@ -666,12 +666,13 @@ export default function DashboardPage() {
                             </span>
                         </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2">
+                        {/* Countdown row — mobile only (desktop version is inside the buttons row) */}
                         {!battlesBlocked && seasonEndDate && (() => {
                             const ms = new Date(seasonEndDate).getTime() - Date.now();
                             if (ms <= 0) return null;
                             return (
-                                <div className="hidden md:flex flex-col justify-center space-y-1 border border-[#ff0033]/30 bg-[#ff0033]/5 px-3 py-1 font-mono">
+                                <div className="flex md:hidden items-center justify-between border border-[#ff0033]/30 bg-[#ff0033]/5 px-3 py-1.5 font-mono">
                                     <span className="text-[9px] text-slate-400 uppercase tracking-widest">FIN DE TEMPORADA</span>
                                     <div className="flex items-center gap-1.5">
                                         <span className="material-symbols-outlined text-[#ff0033] text-xs">timer</span>
@@ -680,23 +681,38 @@ export default function DashboardPage() {
                                 </div>
                             );
                         })()}
-                        <button
-                            onClick={() => {
-                                setLoading(true);
-                                fetchMatchmakingFortresses()
-                                    .then(f => { setFortresses(f); setMarkerPos(generateSpreadPositions(f.length)); })
-                                    .finally(() => setLoading(false));
-                            }}
-                            className="flex-1 md:flex-none bg-primary/10 border border-primary/40 text-xs px-4 py-2 text-primary hover:bg-primary/30 transition-colors uppercase cursor-pointer"
-                        >
-                            RE-ESCANEAR FORTALEZAS
-                        </button>
-                        <Link
-                            href="/history"
-                            className="flex-1 md:flex-none bg-[#ff0033]/10 border border-[#ff0033]/40 text-xs px-4 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase text-center"
-                        >
-                            HISTORIAL DE PUNTOS
-                        </Link>
+                        <div className="flex gap-2">
+                            {!battlesBlocked && seasonEndDate && (() => {
+                                const ms = new Date(seasonEndDate).getTime() - Date.now();
+                                if (ms <= 0) return null;
+                                return (
+                                    <div className="hidden md:flex flex-col justify-center space-y-1 border border-[#ff0033]/30 bg-[#ff0033]/5 px-3 py-1 font-mono">
+                                        <span className="text-[9px] text-slate-400 uppercase tracking-widest">FIN DE TEMPORADA</span>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="material-symbols-outlined text-[#ff0033] text-xs">timer</span>
+                                            <span className="font-black text-[#ff0033] text-sm tracking-widest">{formatCountdown(ms)}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                            <button
+                                onClick={() => {
+                                    setLoading(true);
+                                    fetchMatchmakingFortresses()
+                                        .then(f => { setFortresses(f); setMarkerPos(generateSpreadPositions(f.length)); })
+                                        .finally(() => setLoading(false));
+                                }}
+                                className="flex-1 md:flex-none bg-primary/10 border border-primary/40 text-xs px-4 py-2 text-primary hover:bg-primary/30 transition-colors uppercase cursor-pointer"
+                            >
+                                RE-ESCANEAR FORTALEZAS
+                            </button>
+                            <Link
+                                href="/history"
+                                className="flex-1 md:flex-none bg-[#ff0033]/10 border border-[#ff0033]/40 text-xs px-4 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase text-center"
+                            >
+                                HISTORIAL DE PUNTOS
+                            </Link>
+                        </div>
                     </div>
                 </aside>
             </div>
