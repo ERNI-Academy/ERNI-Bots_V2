@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import random
 import secrets
@@ -39,14 +40,21 @@ def get_or_create_player_season_stats(db, player_id, season_id):
     ).first()
 
     if not stats:
-        stats = PlayerSeasonStats(
-            player_id=player_id,
-            season_id=season_id,
-            score=0
-        )
-        db.add(stats)
-        db.flush()
-        db.commit()
+        try:
+            stats = PlayerSeasonStats(
+                player_id=player_id,
+                season_id=season_id,
+                score=0
+            )
+            db.add(stats)
+            db.flush()
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            stats = db.query(PlayerSeasonStats).filter_by(
+                player_id=player_id,
+                season_id=season_id
+            ).first()
 
     return stats
 
@@ -58,16 +66,23 @@ def get_or_create_fortress_season_stats(db, fortress_id, season_id):
     ).first()
 
     if not stats:
-        stats = FortressSeasonStats(
-            fortress_id=fortress_id,
-            season_id=season_id,
-            defeat_count=0,
-            attack_count=0,
-            status="active"
-        )
-        db.add(stats)
-        db.flush()
-        db.commit()
+        try:
+            stats = FortressSeasonStats(
+                fortress_id=fortress_id,
+                season_id=season_id,
+                defeat_count=0,
+                attack_count=0,
+                status="active"
+            )
+            db.add(stats)
+            db.flush()
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            stats = db.query(FortressSeasonStats).filter_by(
+                fortress_id=fortress_id,
+                season_id=season_id
+            ).first()
     return stats
 
 
@@ -91,6 +106,7 @@ def get_profile():
         db.close()
         return jsonify({"error": "No active season"}), 400
 
+    print(f"[get_profile] Player {player.username} (ID: {player.id}) is fetching profile for season '{season.name}' (ID: {season.id})")
     stats = get_or_create_player_season_stats(db, user_id, season.id)
 
     # Ranking dinámico

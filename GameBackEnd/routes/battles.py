@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import random
 
@@ -67,14 +68,20 @@ def get_or_create_player_season_stats(db, player_id, season_id):
     ).first()
 
     if not stats:
-        stats = PlayerSeasonStats(
-            id=generate_uuid(),
-            player_id=player_id,
-            season_id=season_id,
-            score=0
-        )
-        db.add(stats)
-        db.flush()
+        try:
+            with db.begin_nested():
+                stats = PlayerSeasonStats(
+                    id=generate_uuid(),
+                    player_id=player_id,
+                    season_id=season_id,
+                    score=0
+                )
+                db.add(stats)
+        except IntegrityError:
+            stats = db.query(PlayerSeasonStats).filter_by(
+                player_id=player_id,
+                season_id=season_id
+            ).first()
 
     return stats
 
@@ -86,18 +93,24 @@ def get_or_create_fortress_season_stats(db, fortress_id, season_id):
     ).first()
 
     if not stats:
-        stats = FortressSeasonStats(
-            id=generate_uuid(),
-            fortress_id=fortress_id,
-            season_id=season_id,
-            defeat_count=0,
-            attack_count=0,
-            status="active",
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
-        )
-        db.add(stats)
-        db.flush()
+        try:
+            with db.begin_nested():
+                stats = FortressSeasonStats(
+                    id=generate_uuid(),
+                    fortress_id=fortress_id,
+                    season_id=season_id,
+                    defeat_count=0,
+                    attack_count=0,
+                    status="active",
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow()
+                )
+                db.add(stats)
+        except IntegrityError:
+            stats = db.query(FortressSeasonStats).filter_by(
+                fortress_id=fortress_id,
+                season_id=season_id
+            ).first()
 
     return stats
 
