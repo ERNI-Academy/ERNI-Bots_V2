@@ -643,7 +643,7 @@ export default function InvitationsPage() {
                     <SortHeader label="Usos"     field="current_uses" sortKeys={sortKeys} onSort={handleSort} align="left" />
                     <SortHeader label="Creado"   field="created_at"   sortKeys={sortKeys} onSort={handleSort} />
                     <SortHeader label="Expira"   field="expires_at"   sortKeys={sortKeys} onSort={handleSort} />
-                    <SortHeader label="Etiqueta" field="created_by"   sortKeys={sortKeys} onSort={handleSort} />
+                    <SortHeader label="Creador" field="created_by"   sortKeys={sortKeys} onSort={handleSort} />
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Tag</th>
                     <th className="px-4 py-3 text-right whitespace-nowrap text-xs font-semibold uppercase tracking-wider text-[#71717A]">Acciones</th>
                   </tr>
@@ -781,15 +781,39 @@ export default function InvitationsPage() {
 
                           {/* Created by */}
                           <td className="px-4 py-3 text-sm text-[#71717A]">
-                            {inv.created_by ?? "—"}
+                            {inv.created_by ? (
+                              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(inv.created_by) ? (
+                                <a
+                                  href={`/players/${inv.created_by}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center gap-1 font-mono text-xs text-blue-300 hover:text-blue-200 hover:underline transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[12px]">person</span>
+                                  {inv.created_by.slice(0, 8)}…
+                                </a>
+                              ) : (
+                                inv.created_by
+                              )
+                            ) : "—"}
                           </td>
 
                           {/* Tag */}
                           <td className="px-4 py-3">
                             {inv.tag ? (
-                              <span className="inline-flex items-center rounded border border-violet-500/40 bg-violet-500/10 px-2 py-0.5 font-mono text-xs text-violet-300">
-                                {inv.tag}
-                              </span>
+                              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(inv.tag) ? (
+                                <a
+                                  href={`/players/${inv.tag}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center gap-1 rounded border border-blue-500/40 bg-blue-500/10 px-2 py-0.5 font-mono text-xs text-blue-300 hover:border-blue-400/60 hover:text-blue-200 transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[11px]">person</span>
+                                  {inv.tag.slice(0, 8)}…
+                                </a>
+                              ) : (
+                                <span className="inline-flex items-center rounded border border-violet-500/40 bg-violet-500/10 px-2 py-0.5 font-mono text-xs text-violet-300">
+                                  {inv.tag}
+                                </span>
+                              )
                             ) : (
                               <span className="text-[#52525B] text-sm">—</span>
                             )}

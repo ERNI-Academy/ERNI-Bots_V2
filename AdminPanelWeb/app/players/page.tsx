@@ -679,6 +679,15 @@ export default function PlayersPage() {
                             {/* Acciones */}
                             <td className="px-5 py-2">
                               <div className="flex items-center justify-center gap-1.5">
+                                {/* Detail */}
+                                <a
+                                  href={`/players/${p.id}`}
+                                  title="Ver detalle"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] bg-[#18181B] text-[#71717A] hover:border-blue-500/50 hover:bg-blue-500/10 hover:text-blue-400 transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[15px]">person_search</span>
+                                </a>
                                 {/* Edit */}
                                 <button
                                   onClick={() => setEditTarget(p)}
