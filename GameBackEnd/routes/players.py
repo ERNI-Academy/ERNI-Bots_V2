@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import random
@@ -24,6 +24,8 @@ from db.models import (
     InvitationCode,
     AppConfig,
 )
+from db import engine as db_engine
+from utils import generate_uuid
 
 players_bp = Blueprint("players", __name__)
 
@@ -37,62 +39,58 @@ def get_active_season(db):
 
 
 def get_or_create_player_season_stats(db, player_id, season_id):
+    """Atomically ensure a PlayerSeasonStats row exists and return it."""
+    is_postgres = db_engine.dialect.name == "postgresql"
+    new_id = generate_uuid()
+    if is_postgres:
+        sql = text("""
+            INSERT INTO player_season_stats (id, player_id, season_id, score)
+            VALUES (:id, :player_id, :season_id, 0)
+            ON CONFLICT (player_id, season_id) DO NOTHING
+        """)
+    else:
+        sql = text("""
+            INSERT OR IGNORE INTO player_season_stats (id, player_id, season_id, score)
+            VALUES (:id, :player_id, :season_id, 0)
+        """)
+    try:
+        db.execute(sql, {"id": new_id, "player_id": player_id, "season_id": season_id})
+    except Exception as exc:
+        logger.exception("[get_or_create_player_season_stats] INSERT failed for player=%s season=%s: %s", player_id, season_id, exc)
+        db.rollback()
     stats = db.query(PlayerSeasonStats).filter_by(
-        player_id=player_id,
-        season_id=season_id
+        player_id=player_id, season_id=season_id
     ).first()
-
-    if not stats:
-        try:
-            with db.begin_nested():
-                stats = PlayerSeasonStats(
-                    player_id=player_id,
-                    season_id=season_id,
-                    score=0
-                )
-                db.add(stats)
-                db.flush()
-        except IntegrityError:
-            logger.warning("[get_or_create_player_season_stats] IntegrityError for player=%s season=%s, re-querying", player_id, season_id)
-            stats = db.query(PlayerSeasonStats).filter_by(
-                player_id=player_id,
-                season_id=season_id
-            ).first()
-        except Exception as exc:
-            logger.exception("[get_or_create_player_season_stats] Unexpected error for player=%s season=%s: %s", player_id, season_id, exc)
-            raise
-
+    if stats is None:
+        logger.error("[get_or_create_player_season_stats] Record still missing after INSERT for player=%s season=%s", player_id, season_id)
     return stats
 
 
 def get_or_create_fortress_season_stats(db, fortress_id, season_id):
+    """Atomically ensure a FortressSeasonStats row exists and return it."""
+    is_postgres = db_engine.dialect.name == "postgresql"
+    new_id = generate_uuid()
+    if is_postgres:
+        sql = text("""
+            INSERT INTO fortress_season_stats (id, fortress_id, season_id, defeat_count, attack_count, status, created_at, updated_at)
+            VALUES (:id, :fortress_id, :season_id, 0, 0, 'active', NOW(), NOW())
+            ON CONFLICT (fortress_id, season_id) DO NOTHING
+        """)
+    else:
+        sql = text("""
+            INSERT OR IGNORE INTO fortress_season_stats (id, fortress_id, season_id, defeat_count, attack_count, status, created_at, updated_at)
+            VALUES (:id, :fortress_id, :season_id, 0, 0, 'active', :now, :now)
+        """)
+    try:
+        db.execute(sql, {"id": new_id, "fortress_id": fortress_id, "season_id": season_id, "now": datetime.utcnow().isoformat()})
+    except Exception as exc:
+        logger.exception("[get_or_create_fortress_season_stats] INSERT failed for fortress=%s season=%s: %s", fortress_id, season_id, exc)
+        db.rollback()
     stats = db.query(FortressSeasonStats).filter_by(
-        fortress_id=fortress_id,
-        season_id=season_id
+        fortress_id=fortress_id, season_id=season_id
     ).first()
-
-    if not stats:
-        try:
-            with db.begin_nested():
-                stats = FortressSeasonStats(
-                    fortress_id=fortress_id,
-                    season_id=season_id,
-                    defeat_count=0,
-                    attack_count=0,
-                    status="active"
-                )
-                db.add(stats)
-                db.flush()
-        except IntegrityError:
-            logger.warning("[get_or_create_fortress_season_stats] IntegrityError for fortress=%s season=%s, re-querying", fortress_id, season_id)
-            stats = db.query(FortressSeasonStats).filter_by(
-                fortress_id=fortress_id,
-                season_id=season_id
-            ).first()
-        except Exception as exc:
-            logger.exception("[get_or_create_fortress_season_stats] Unexpected error for fortress=%s season=%s: %s", fortress_id, season_id, exc)
-            raise
-
+    if stats is None:
+        logger.error("[get_or_create_fortress_season_stats] Record still missing after INSERT for fortress=%s season=%s", fortress_id, season_id)
     return stats
 
 
