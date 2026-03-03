@@ -4,6 +4,9 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import random
+import logging
+
+logger = logging.getLogger(__name__)
 
 from utils import generate_uuid
 from services.agent_service import get_agent_service, SessionExpiredError
@@ -77,11 +80,16 @@ def get_or_create_player_season_stats(db, player_id, season_id):
                     score=0
                 )
                 db.add(stats)
+                db.flush()  # trigger INSERT within the savepoint
         except IntegrityError:
+            logger.warning("[battles] IntegrityError creating player_season_stats for player=%s season=%s, re-querying", player_id, season_id)
             stats = db.query(PlayerSeasonStats).filter_by(
                 player_id=player_id,
                 season_id=season_id
             ).first()
+        except Exception as exc:
+            logger.exception("[battles] Unexpected error creating player_season_stats for player=%s season=%s: %s", player_id, season_id, exc)
+            raise
 
     return stats
 
@@ -106,11 +114,16 @@ def get_or_create_fortress_season_stats(db, fortress_id, season_id):
                     updated_at=datetime.utcnow()
                 )
                 db.add(stats)
+                db.flush()  # trigger INSERT within the savepoint
         except IntegrityError:
+            logger.warning("[battles] IntegrityError creating fortress_season_stats for fortress=%s season=%s, re-querying", fortress_id, season_id)
             stats = db.query(FortressSeasonStats).filter_by(
                 fortress_id=fortress_id,
                 season_id=season_id
             ).first()
+        except Exception as exc:
+            logger.exception("[battles] Unexpected error creating fortress_season_stats for fortress=%s season=%s: %s", fortress_id, season_id, exc)
+            raise
 
     return stats
 

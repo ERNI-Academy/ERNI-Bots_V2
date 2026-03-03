@@ -6,6 +6,9 @@ from datetime import datetime
 import random
 import secrets
 import string
+import logging
+
+logger = logging.getLogger(__name__)
 
 from db import SessionLocal
 from db.models import (
@@ -41,20 +44,23 @@ def get_or_create_player_season_stats(db, player_id, season_id):
 
     if not stats:
         try:
-            stats = PlayerSeasonStats(
-                player_id=player_id,
-                season_id=season_id,
-                score=0
-            )
-            db.add(stats)
-            db.flush()
-            db.commit()
+            with db.begin_nested():
+                stats = PlayerSeasonStats(
+                    player_id=player_id,
+                    season_id=season_id,
+                    score=0
+                )
+                db.add(stats)
+                db.flush()
         except IntegrityError:
-            db.rollback()
+            logger.warning("[get_or_create_player_season_stats] IntegrityError for player=%s season=%s, re-querying", player_id, season_id)
             stats = db.query(PlayerSeasonStats).filter_by(
                 player_id=player_id,
                 season_id=season_id
             ).first()
+        except Exception as exc:
+            logger.exception("[get_or_create_player_season_stats] Unexpected error for player=%s season=%s: %s", player_id, season_id, exc)
+            raise
 
     return stats
 
@@ -67,22 +73,26 @@ def get_or_create_fortress_season_stats(db, fortress_id, season_id):
 
     if not stats:
         try:
-            stats = FortressSeasonStats(
-                fortress_id=fortress_id,
-                season_id=season_id,
-                defeat_count=0,
-                attack_count=0,
-                status="active"
-            )
-            db.add(stats)
-            db.flush()
-            db.commit()
+            with db.begin_nested():
+                stats = FortressSeasonStats(
+                    fortress_id=fortress_id,
+                    season_id=season_id,
+                    defeat_count=0,
+                    attack_count=0,
+                    status="active"
+                )
+                db.add(stats)
+                db.flush()
         except IntegrityError:
-            db.rollback()
+            logger.warning("[get_or_create_fortress_season_stats] IntegrityError for fortress=%s season=%s, re-querying", fortress_id, season_id)
             stats = db.query(FortressSeasonStats).filter_by(
                 fortress_id=fortress_id,
                 season_id=season_id
             ).first()
+        except Exception as exc:
+            logger.exception("[get_or_create_fortress_season_stats] Unexpected error for fortress=%s season=%s: %s", fortress_id, season_id, exc)
+            raise
+
     return stats
 
 
@@ -96,50 +106,56 @@ def get_profile():
     user_id = get_jwt_identity()
     db = SessionLocal()
 
-    player = db.query(Player).filter_by(id=user_id).first()
-    if not player:
-        db.close()
-        return jsonify({"error": "Player not found"}), 404
+    try:
+        player = db.query(Player).filter_by(id=user_id).first()
+        if not player:
+            return jsonify({"error": "Player not found"}), 404
 
-    season = get_active_season(db)
-    if not season:
-        db.close()
-        return jsonify({"error": "No active season"}), 400
+        season = get_active_season(db)
+        if not season:
+            return jsonify({"error": "No active season"}), 400
 
-    print(f"[get_profile] Player {player.username} (ID: {player.id}) is fetching profile for season '{season.name}' (ID: {season.id})")
-    stats = get_or_create_player_season_stats(db, user_id, season.id)
+        print(f"[get_profile] Player {player.username} (ID: {player.id}) is fetching profile for season '{season.name}' (ID: {season.id})")
+        stats = get_or_create_player_season_stats(db, user_id, season.id)
+        db.commit()  # persist newly created stats if any
 
-    # Ranking dinámico
-    higher_count = db.query(PlayerSeasonStats).filter(
-        PlayerSeasonStats.season_id == season.id,
-        PlayerSeasonStats.score > stats.score
-    ).count()
+        # Ranking dinámico
+        higher_count = db.query(PlayerSeasonStats).filter(
+            PlayerSeasonStats.season_id == season.id,
+            PlayerSeasonStats.score > stats.score
+        ).count()
 
-    rank = higher_count + 1
+        rank = higher_count + 1
 
-    response = {
-        "id": player.id,
-        "username": player.username,
-        "email": player.email,
-        "credits": player.credits,
-        "energy": player.energy,
-        "season_score": stats.score,
-        "rank": rank,
-        "has_fortress": player.fortress is not None,
-    }
-
-    if player.fortress:
-        fortress_stats = get_or_create_fortress_season_stats(db, player.fortress.id, season.id)
-        response["fortress"] = {
-            "id": player.fortress.id,
-            "name": player.fortress.name,
-            "defeat_count": fortress_stats.defeat_count,
-            "attack_count": fortress_stats.attack_count,
-            "status": fortress_stats.status,  # active | destroyed
+        response = {
+            "id": player.id,
+            "username": player.username,
+            "email": player.email,
+            "credits": player.credits,
+            "energy": player.energy,
+            "season_score": stats.score,
+            "rank": rank,
+            "has_fortress": player.fortress is not None,
         }
 
-    db.close()
-    return jsonify(response)
+        if player.fortress:
+            fortress_stats = get_or_create_fortress_season_stats(db, player.fortress.id, season.id)
+            db.commit()  # persist newly created fortress stats if any
+            response["fortress"] = {
+                "id": player.fortress.id,
+                "name": player.fortress.name,
+                "defeat_count": fortress_stats.defeat_count,
+                "attack_count": fortress_stats.attack_count,
+                "status": fortress_stats.status,  # active | destroyed
+            }
+
+        return jsonify(response)
+    except Exception as exc:
+        logger.exception("[get_profile] Unhandled error for user=%s: %s", user_id, exc)
+        db.rollback()
+        raise
+    finally:
+        db.close()
     
     
 # ==========================
@@ -202,48 +218,52 @@ def get_active_bosses():
     user_id = get_jwt_identity()
     db = SessionLocal()
 
-    season = get_active_season(db)
-    if not season:
+    try:
+        season = get_active_season(db)
+        if not season:
+            return jsonify({"error": "No active season"}), 400
+
+        get_or_create_player_season_stats(db, user_id, season.id)
+        db.commit()  # persist newly created stats if any
+
+        bosses = (
+            db.query(Boss)
+            .filter(Boss.enabled == True)
+            .order_by(Boss.active_at.asc().nullsfirst())
+            .all()
+        )
+
+        result = []
+
+        for boss in bosses:
+
+            boss_stats = db.query(PlayerBossStats).filter_by(
+                player_id=user_id,
+                boss_id=boss.id
+            ).first()
+
+            defeated = bool(boss_stats and boss_stats.defeated)
+
+            result.append({
+                "type": "boss",
+                "boss_id": boss.id,
+                "name": boss.name,
+                "title": boss.title,
+                "location": boss.location,
+                "story": boss.story,
+                "reward_credits": boss.reward_credits,
+                "reward_score": boss.reward_score,
+                "active_at": boss.active_at.isoformat() + "Z" if boss.active_at else None,
+                "defeated": defeated,
+            })
+
+        return jsonify(result)
+    except Exception as exc:
+        logger.exception("[get_active_bosses] Unhandled error for user=%s: %s", user_id, exc)
+        db.rollback()
+        raise
+    finally:
         db.close()
-        return jsonify({"error": "No active season"}), 400
-
-    current_stats = get_or_create_player_season_stats(
-        db, user_id, season.id
-    )
-
-    bosses = (
-        db.query(Boss)
-        .filter(Boss.enabled == True)
-        .order_by(Boss.active_at.asc().nullsfirst())
-        .all()
-    )
-
-    result = []
-
-    for boss in bosses:
-
-        boss_stats = db.query(PlayerBossStats).filter_by(
-            player_id=user_id,
-            boss_id=boss.id
-        ).first()
-
-        defeated = bool(boss_stats and boss_stats.defeated)
-
-        result.append({
-            "type": "boss",
-            "boss_id": boss.id,
-            "name": boss.name,
-            "title": boss.title,
-            "location": boss.location,
-            "story": boss.story,
-            "reward_credits": boss.reward_credits,
-            "reward_score": boss.reward_score,
-            "active_at": boss.active_at.isoformat() + "Z" if boss.active_at else None,
-            "defeated": defeated,
-        })
-
-    db.close()
-    return jsonify(result)
 
 # ==========================
 # MATCHMAKING
@@ -255,125 +275,132 @@ def matchmaking():
     user_id = get_jwt_identity()
     db = SessionLocal()
 
-    season = get_active_season(db)
-    if not season:
-        db.close()
-        return jsonify({"error": "No active season"}), 400
+    try:
+        season = get_active_season(db)
+        if not season:
+            return jsonify({"error": "No active season"}), 400
 
-    if season.is_frozen or season.finalized:
-        db.close()
-        return jsonify([]), 200
+        if season.is_frozen or season.finalized:
+            return jsonify([]), 200
 
-    current_player = db.query(Player).filter_by(id=user_id).first()
-    current_stats = get_or_create_player_season_stats(
-        db, user_id, season.id
-    )
-
-    MIN_RESULTS = 6
-    INITIAL_DELTA = 100
-
-    # Fortalezas ya vencidas esta season Y que no han sido reconfiguradas desde la victoria
-    defeated_fortress_ids = (
-        db.query(Battle.fortress_id)
-        .join(Fortress, Fortress.id == Battle.fortress_id)
-        .filter(
-            Battle.attacker_id == user_id,
-            Battle.status == "won",
-            Battle.updated_at >= Fortress.last_reconfigured_at
+        current_player = db.query(Player).filter_by(id=user_id).first()
+        current_stats = get_or_create_player_season_stats(
+            db, user_id, season.id
         )
-        .all()
-    )
+        db.commit()  # persist newly created stats if any
 
-    defeated_fortress_ids = [f[0] for f in defeated_fortress_ids]
+        MIN_RESULTS = 6
+        INITIAL_DELTA = 100
 
-    # Read app config: are bot fortresses enabled?
-    cfg_bots = db.get(AppConfig, "bot_fortresses_enabled")
-    bot_fortresses_enabled = cfg_bots is None or cfg_bots.value.lower() == "true"
-
-    delta = INITIAL_DELTA
-    results = []
-
-    while len(results) < MIN_RESULTS:
-
-        min_score = current_stats.score - delta
-        max_score = current_stats.score + delta
-
-        query = (
-            db.query(Player, Fortress)
-            .join(Fortress, Fortress.owner_id == Player.id)
-            .join(PlayerSeasonStats,
-                  PlayerSeasonStats.player_id == Player.id)
-            .filter(Player.id != user_id)
-            .filter(Player.is_banned == False)  # noqa: E712
-            .filter(PlayerSeasonStats.season_id == season.id)
-            .filter(PlayerSeasonStats.score.between(min_score, max_score))
-            .filter(~Fortress.id.in_(defeated_fortress_ids))
+        # Fortalezas ya vencidas esta season Y que no han sido reconfiguradas desde la victoria
+        defeated_fortress_ids = (
+            db.query(Battle.fortress_id)
+            .join(Fortress, Fortress.id == Battle.fortress_id)
+            .filter(
+                Battle.attacker_id == user_id,
+                Battle.status == "won",
+                Battle.updated_at >= Fortress.last_reconfigured_at
+            )
+            .all()
         )
 
-        if not bot_fortresses_enabled:
-            query = query.filter(Player.is_bot == False)  # noqa: E712
+        defeated_fortress_ids = [f[0] for f in defeated_fortress_ids]
 
-        rows = query.all()
+        # Read app config: are bot fortresses enabled?
+        cfg_bots = db.get(AppConfig, "bot_fortresses_enabled")
+        bot_fortresses_enabled = cfg_bots is None or cfg_bots.value.lower() == "true"
 
-        # Filtrar dinámicamente por estado estacional
-        filtered = []
-        for player, fortress in rows:
+        delta = INITIAL_DELTA
+        results = []
 
-            f_stats = get_or_create_fortress_season_stats(
-                db, fortress.id, season.id
+        while len(results) < MIN_RESULTS:
+
+            min_score = current_stats.score - delta
+            max_score = current_stats.score + delta
+
+            query = (
+                db.query(Player, Fortress)
+                .join(Fortress, Fortress.owner_id == Player.id)
+                .join(PlayerSeasonStats,
+                      PlayerSeasonStats.player_id == Player.id)
+                .filter(Player.id != user_id)
+                .filter(Player.is_banned == False)  # noqa: E712
+                .filter(PlayerSeasonStats.season_id == season.id)
+                .filter(PlayerSeasonStats.score.between(min_score, max_score))
+                .filter(~Fortress.id.in_(defeated_fortress_ids))
             )
 
-            if f_stats.status == "destroyed":
-                continue
+            if not bot_fortresses_enabled:
+                query = query.filter(Player.is_bot == False)  # noqa: E712
 
-            filtered.append((player, fortress, f_stats))
+            rows = query.all()
 
-       # Orden con presión dinámica + randomización suave
-        def ranking_key(x):
-            player, fortress, f_stats = x
+            # Filtrar dinámicamente por estado estacional
+            filtered = []
+            for player, fortress in rows:
 
-            score_distance = abs(
-                player.season_stats[0].score - current_stats.score
-            )
+                f_stats = get_or_create_fortress_season_stats(
+                    db, fortress.id, season.id
+                )
 
-            pressure_component = (
-                f_stats.defeat_count * 2
-                - f_stats.attack_count
-            )
+                if f_stats.status == "destroyed":
+                    continue
 
-            # Ruido pequeño controlado
-            noise = random.uniform(0, 5)
+                filtered.append((player, fortress, f_stats))
 
-            return score_distance + pressure_component + noise
+           # Orden con presión dinámica + randomización suave
+            def ranking_key(x):
+                player, fortress, f_stats = x
+
+                score_distance = abs(
+                    player.season_stats[0].score - current_stats.score
+                )
+
+                pressure_component = (
+                    f_stats.defeat_count * 2
+                    - f_stats.attack_count
+                )
+
+                # Ruido pequeño controlado
+                noise = random.uniform(0, 5)
+
+                return score_distance + pressure_component + noise
 
 
-        filtered.sort(key=ranking_key)
+            filtered.sort(key=ranking_key)
 
-        results = filtered[:MIN_RESULTS]
+            results = filtered[:MIN_RESULTS]
 
-        if len(results) >= MIN_RESULTS:
-            break
+            if len(results) >= MIN_RESULTS:
+                break
 
-        delta *= 2
+            delta *= 2
 
-        if delta > 10000:
-            break
+            if delta > 10000:
+                break
 
-    response = []
+        db.commit()  # persist any fortress season stats created during matchmaking
 
-    for player, fortress, f_stats in results:
-        response.append({
-            "username": player.username,
-            "season_score": player.season_stats[0].score,
-            "fortress_id": fortress.id,
-            "fortress_name": fortress.name,
-            "defeats": f_stats.defeat_count,
-            "attacks": f_stats.attack_count,
-            "fortress_description": fortress.story
-        })
+        response = []
 
-    db.close()
-    return jsonify(response)
+        for player, fortress, f_stats in results:
+            response.append({
+                "username": player.username,
+                "season_score": player.season_stats[0].score,
+                "fortress_id": fortress.id,
+                "fortress_name": fortress.name,
+                "defeats": f_stats.defeat_count,
+                "attacks": f_stats.attack_count,
+                "fortress_description": fortress.story
+            })
+
+        return jsonify(response)
+    except Exception as exc:
+        logger.exception("[matchmaking] Unhandled error for user=%s: %s", user_id, exc)
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 
 # ==========================
