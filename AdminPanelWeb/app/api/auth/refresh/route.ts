@@ -16,7 +16,10 @@ export async function GET(request: NextRequest) {
   const next = request.nextUrl.searchParams.get("next") ?? "/dashboard";
 
   if (!refreshToken) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+    return NextResponse.redirect(url);
   }
 
   try {
@@ -27,14 +30,20 @@ export async function GET(request: NextRequest) {
 
     if (!backendRes.ok) {
       // Refresh token invalid/revoked/expired → force re-login
-      const response = NextResponse.redirect(new URL("/login", request.url));
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.search = "";
+      const response = NextResponse.redirect(url);
       response.cookies.set("refresh-token", "", { maxAge: 0, path: "/" });
       return response;
     }
 
     const data = await backendRes.json();
 
-    const response = NextResponse.redirect(new URL(next, request.url));
+    const url = request.nextUrl.clone();
+    url.pathname = next;
+    url.search = "";
+    const response = NextResponse.redirect(url);
     response.cookies.set("auth-token", data.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -45,6 +54,9 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+    return NextResponse.redirect(url);
   }
 }

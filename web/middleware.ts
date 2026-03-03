@@ -19,13 +19,17 @@ export function middleware(request: NextRequest) {
   if (!authToken) {
     // Si hay refresh token, intentar renovar el access token y continuar.
     if (refreshToken) {
-      const refreshUrl = new URL("/api/auth/refresh", request.url);
+      const refreshUrl = request.nextUrl.clone();
+      refreshUrl.pathname = "/api/auth/refresh";
+      refreshUrl.search = "";
       refreshUrl.searchParams.set("next", pathname);
       return NextResponse.redirect(refreshUrl);
     }
 
     // Sin ningún token → login
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.search = "";
     const code = request.nextUrl.searchParams.get("code");
     if (code) loginUrl.searchParams.set("code", code);
     return NextResponse.redirect(loginUrl);
@@ -33,7 +37,9 @@ export function middleware(request: NextRequest) {
 
   // Usuario autenticado en la raíz → ir al dashboard
   if (pathname === "/") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const dashUrl = request.nextUrl.clone();
+    dashUrl.pathname = "/dashboard";
+    return NextResponse.redirect(dashUrl);
   }
 
   return NextResponse.next();
