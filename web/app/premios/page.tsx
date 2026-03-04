@@ -102,6 +102,7 @@ export default function PremiosPage() {
                                     <strong>3 ganadores</strong> y realizaremos el sorteo de los premios.
                                     Los ganadores serán contactados por los organizadores a través de correo electrónico.
                                     Cada premio se asignará a un ganador diferente, por lo que no es posible ganar más de un premio.
+                                    Los premios se entregarán el día 6 de marzo a las 19:30 en el track de Securiters.
                                 </p>
                             </div>
                         </div>
