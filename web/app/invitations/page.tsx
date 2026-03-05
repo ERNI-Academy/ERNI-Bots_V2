@@ -146,7 +146,11 @@ export default function InvitationsPage() {
                             INVITACIONES<span className="hidden md:inline">_v2.0.0</span>
                         </h1>
                         <div className="text-xs text-[#00ff41] uppercase tracking-widest">
-                            {data ? `${data.total} / ${data.max} GENERADAS // BETTERASK.ERNI` : "CARGANDO_MÓDULOS..."}
+                            {data
+                                ? data.unlimited
+                                    ? `${data.total} GENERADAS // BETTERASK.ERNI`
+                                    : `${data.total} / ${data.max} GENERADAS // BETTERASK.ERNI`
+                                : "CARGANDO_MÓDULOS..."}
                         </div>
                     </div>
                 </div>
@@ -168,10 +172,21 @@ export default function InvitationsPage() {
                 {/* Intro + create button */}
                 <div className="border border-primary/20 bg-primary/5 p-4 mb-6 space-y-3">
                     <p className="text-xs text-slate-300 leading-relaxed">
-                        Puedes generar hasta{" "}
-                        <span className="text-primary font-bold">{MAX_INVITATIONS} códigos de invitación</span>{" "}
-                        para reclutar a otros jugadores. Cada código es de un único uso.
-                        Una vez que alguien lo utilice al registrarse, aparecerá aquí como reclamado.
+                        {data?.unlimited ? (
+                            <>
+                                Como administrador, puedes generar{" "}
+                                <span className="text-primary font-bold">invitaciones ilimitadas</span>.
+                                Cada código es de un único uso.
+                                Una vez que alguien lo utilice al registrarse, aparecerá aquí como reclamado.
+                            </>
+                        ) : (
+                            <>
+                                Puedes generar hasta{" "}
+                                <span className="text-primary font-bold">{MAX_INVITATIONS} códigos de invitación</span>{" "}
+                                para reclutar a otros jugadores. Cada código es de un único uso.
+                                Una vez que alguien lo utilice al registrarse, aparecerá aquí como reclamado.
+                            </>
+                        )}
                     </p>
 
                     {/* Referral bonus callout */}
@@ -184,7 +199,7 @@ export default function InvitationsPage() {
                     </div>
 
                     {/* Quota bar */}
-                    {data && (
+                    {data && !data.unlimited && (
                         <div className="space-y-1">
                             <div className="flex justify-between text-[10px] text-slate-500 uppercase tracking-widest">
                                 <span>Cuota utilizada</span>
@@ -193,7 +208,7 @@ export default function InvitationsPage() {
                             <div className="h-1.5 w-full bg-white/5 border border-white/10">
                                 <div
                                     className="h-full bg-primary transition-all"
-                                    style={{ width: `${(data.total / data.max) * 100}%` }}
+                                    style={{ width: `${(data.total / data.max!) * 100}%` }}
                                 />
                             </div>
                         </div>
@@ -207,7 +222,7 @@ export default function InvitationsPage() {
                         <span className="material-symbols-outlined text-sm">
                             {creating ? "hourglass_empty" : "add_circle"}
                         </span>
-                        {creating ? "Generando..." : remaining > 0 ? `Generar invitación (${remaining} restantes)` : "Límite alcanzado"}
+                        {creating ? "Generando..." : data?.unlimited ? "Generar invitación" : remaining > 0 ? `Generar invitación (${remaining} restantes)` : "Límite alcanzado"}
                     </button>
                 </div>
 
