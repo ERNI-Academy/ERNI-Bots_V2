@@ -450,7 +450,7 @@ export default function PlayersPage() {
   const [search, setSearch]       = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [bannedFilter, setBannedFilter]       = useState<"" | "true" | "false">("")
-  const [botFilter,    setBotFilter]           = useState<"" | "true" | "false">("")
+  const [roleFilter,   setRoleFilter]          = useState<"" | "bot" | "admin" | "player">("")
   const [sortKeys, setSortKeys] = useState<SortKey[]>([{ field: "created_at", dir: "desc" }]);;
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState<string | null>(null);
@@ -466,7 +466,7 @@ export default function PlayersPage() {
   }, [search]);
 
   // Reset to page 1 on filter/sort change
-  useEffect(() => { setPage(1); }, [debouncedSearch, bannedFilter, botFilter, sortKeys]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, bannedFilter, roleFilter, sortKeys]);
 
   const handleSort = useCallback((field: SortField, shift: boolean) => {
     setSortKeys(prev => {
@@ -496,7 +496,9 @@ export default function PlayersPage() {
     });
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (bannedFilter)    params.set("banned", bannedFilter);
-    if (botFilter)       params.set("is_bot", botFilter);
+    if (roleFilter === "bot")    { params.set("is_bot", "true"); }
+    if (roleFilter === "admin")  { params.set("is_admin", "true"); }
+    if (roleFilter === "player") { params.set("is_bot", "false"); params.set("is_admin", "false"); }
     params.set("sort_by",  sortKeys.map(k => k.field).join(","));
     params.set("sort_dir", sortKeys.map(k => k.dir).join(","));
 
@@ -511,7 +513,7 @@ export default function PlayersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, bannedFilter, botFilter, sortKeys]);
+  }, [page, debouncedSearch, bannedFilter, roleFilter, sortKeys]);
 
   useEffect(() => { fetchPlayers(); }, [fetchPlayers]);
 
@@ -560,13 +562,14 @@ export default function PlayersPage() {
                 <option value="true">Baneados</option>
               </select>
               <select
-                value={botFilter}
-                onChange={(e) => setBotFilter(e.target.value as "" | "true" | "false")}
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value as "" | "bot" | "admin" | "player")}
                 className="rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 font-mono text-sm text-white focus:border-blue-500 focus:outline-none"
               >
-                <option value="">Todos (bot/humano)</option>
-                <option value="false">Solo humanos</option>
-                <option value="true">Solo bots</option>
+                <option value="">Todos los roles</option>
+                <option value="bot">Solo bots</option>
+                <option value="admin">Solo admins</option>
+                <option value="player">Solo players</option>
               </select>
               <button
                 onClick={fetchPlayers}

@@ -367,6 +367,7 @@ def list_users():
         search    – partial match on username or email
         banned    – "true" | "false" to filter by ban status
         is_bot    – "true" | "false" to filter by bot status
+        is_admin  – "true" | "false" to filter by admin status
         sort_by   – column to sort by: username | email | credits | created_at | season_score (default: created_at)
         sort_dir  – asc | desc (default: desc)
         page      – 1-based page number (default 1)
@@ -378,10 +379,11 @@ def list_users():
     page     = max(int(request.args.get("page", 1)), 1)
     per_page_raw = int(request.args.get("per_page", 20))
     per_page = None if per_page_raw == 0 else min(per_page_raw, 100)
-    search   = request.args.get("search", "").strip()
-    banned   = request.args.get("banned")
-    is_bot   = request.args.get("is_bot")
-    sort_by  = request.args.get("sort_by",  "created_at")
+    search        = request.args.get("search", "").strip()
+    banned        = request.args.get("banned")
+    is_bot        = request.args.get("is_bot")
+    is_admin_filter = request.args.get("is_admin")
+    sort_by       = request.args.get("sort_by",  "created_at")
     sort_dir = request.args.get("sort_dir", "desc")
 
     db = SessionLocal()
@@ -413,6 +415,11 @@ def list_users():
             query = query.filter(Player.is_bot == True)      # noqa: E712
         elif is_bot == "false":
             query = query.filter(Player.is_bot == False)     # noqa: E712
+
+        if is_admin_filter == "true":
+            query = query.filter(Player.is_admin == True)    # noqa: E712
+        elif is_admin_filter == "false":
+            query = query.filter(Player.is_admin == False)   # noqa: E712
 
         total = query.count()
 
