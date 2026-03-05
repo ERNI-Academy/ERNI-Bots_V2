@@ -21,8 +21,9 @@ interface Invitation {
 interface InvitationsData {
     invitations: Invitation[];
     total: number;
-    remaining: number;
-    max: number;
+    remaining: number | null;
+    max: number | null;
+    unlimited: boolean;
 }
 
 function formatDate(iso: string | null): string {
@@ -113,7 +114,7 @@ export default function InvitationsPage() {
         }
     }
 
-    const remaining = data?.remaining ?? 0;
+    const remaining = data?.unlimited ? Infinity : (data?.remaining ?? 0);
     const canCreate = !loading && !creating && remaining > 0;
 
     return (

@@ -420,6 +420,9 @@ def list_my_invitations():
     player_id = get_jwt_identity()
     db = SessionLocal()
     try:
+        player = db.query(Player).filter_by(id=player_id).first()
+        is_admin = player.is_admin if player else False
+
         invitations = (
             db.query(InvitationCode)
             .filter(InvitationCode.created_by == player_id)
@@ -448,8 +451,9 @@ def list_my_invitations():
         return jsonify({
             "invitations": result,
             "total":       len(result),
-            "remaining":   max(0, MAX_PLAYER_INVITATIONS - len(result)),
-            "max":         MAX_PLAYER_INVITATIONS,
+            "remaining":   None if is_admin else max(0, MAX_PLAYER_INVITATIONS - len(result)),
+            "max":         None if is_admin else MAX_PLAYER_INVITATIONS,
+            "unlimited":   is_admin,
         })
     finally:
         db.close()
@@ -458,24 +462,28 @@ def list_my_invitations():
 @players_bp.post("/me/invitations")
 @jwt_required()
 def create_my_invitation():
-    """Generate a new invitation code (max MAX_PLAYER_INVITATIONS per player)."""
+    """Generate a new invitation code (max MAX_PLAYER_INVITATIONS per player; unlimited for admins)."""
     player_id = get_jwt_identity()
     db = SessionLocal()
     try:
+        player = db.query(Player).filter_by(id=player_id).first()
+        is_admin = player.is_admin if player else False
+
         # Check global feature flag for player-generated invitations
         cfg = db.get(AppConfig, "player_invitations_enabled")
         if cfg is not None and cfg.value.lower() != "true":
             return jsonify({"error": "La generación de invitaciones por jugadores está deshabilitada"}), 403
 
-        existing_count = (
-            db.query(func.count(InvitationCode.id))
-            .filter(InvitationCode.created_by == player_id)
-            .scalar()
-        )
-        if existing_count >= MAX_PLAYER_INVITATIONS:
-            return jsonify({
-                "error": f"Has alcanzado el límite de {MAX_PLAYER_INVITATIONS} invitaciones"
-            }), 409
+        if not is_admin:
+            existing_count = (
+                db.query(func.count(InvitationCode.id))
+                .filter(InvitationCode.created_by == player_id)
+                .scalar()
+            )
+            if existing_count >= MAX_PLAYER_INVITATIONS:
+                return jsonify({
+                    "error": f"Has alcanzado el límite de {MAX_PLAYER_INVITATIONS} invitaciones"
+                }), 409
 
         plain = _gen_invite_code()
         inv = InvitationCode(
