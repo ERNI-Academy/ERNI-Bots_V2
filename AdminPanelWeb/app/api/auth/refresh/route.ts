@@ -3,6 +3,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { BACKEND } from "@/lib/backend";
 
 /**
+ * Build an absolute URL using X-Forwarded-Host / X-Forwarded-Proto headers so
+ * that redirects work correctly behind Azure App Service's reverse proxy.
+ * Falls back to nextUrl values when running locally without a proxy.
+ */
+function buildRedirectUrl(request: NextRequest, pathname: string): URL {
+  const proto =
+    request.headers.get("x-forwarded-proto")?.split(",")[0].trim() ??
+    request.nextUrl.protocol.replace(":", "");
+  const host =
+    request.headers.get("x-forwarded-host")?.split(",")[0].trim() ??
+    request.headers.get("host") ??
+    request.nextUrl.host;
+  return new URL(pathname, `${proto}://${host}`);
+}
+
+/**
  * GET /api/auth/refresh?next=<path>
  *
  * Called by the middleware when the auth-token cookie is absent/missing
@@ -16,10 +32,7 @@ export async function GET(request: NextRequest) {
   const next = request.nextUrl.searchParams.get("next") ?? "/dashboard";
 
   if (!refreshToken) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = "";
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(buildRedirectUrl(request, "/login"));
   }
 
   try {
@@ -30,20 +43,14 @@ export async function GET(request: NextRequest) {
 
     if (!backendRes.ok) {
       // Refresh token invalid/revoked/expired → force re-login
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.search = "";
-      const response = NextResponse.redirect(url);
+      const response = NextResponse.redirect(buildRedirectUrl(request, "/login"));
       response.cookies.set("refresh-token", "", { maxAge: 0, path: "/" });
       return response;
     }
 
     const data = await backendRes.json();
 
-    const url = request.nextUrl.clone();
-    url.pathname = next;
-    url.search = "";
-    const response = NextResponse.redirect(url);
+    const response = NextResponse.redirect(buildRedirectUrl(request, next));
     response.cookies.set("auth-token", data.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -54,9 +61,6 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = "";
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(buildRedirectUrl(request, "/login"));
   }
 }

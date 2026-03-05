@@ -3,7 +3,7 @@ const nextConfig = {
   output: 'standalone', // Genera servidor autónomo para Azure App Service
   // Necesario para que request.nextUrl use X-Forwarded-Host en route handlers (Azure App Service)
   experimental: {
-    trustHost: true,
+    trustHostHeader: true,
   },
   // Configuración de imágenes para Azure App Service
   images: {
