@@ -616,6 +616,8 @@ def guess_word(battle_id):
 
         if battle.status != "active":
             return jsonify({"error": "Battle already finished"}), 400
+        if battle.turn_count<1:
+            return jsonify({"result": "defense", "reason": "wrong_guess"})
 
         # ── Resolve protected word and target entity ──────────────────────
         is_pve = battle.type == "pve"
