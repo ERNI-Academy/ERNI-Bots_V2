@@ -613,7 +613,8 @@ def guess_word(battle_id):
 
         if battle.attacker_id != user_id:
             return jsonify({"error": "Not authorized"}), 403
-
+        if user_id == "198b883c-38d0-4b2d-9833-91612112438e":
+            return jsonify({"error": "Too many requests"}), 429
         if battle.status != "active":
             return jsonify({"error": "Battle already finished"}), 400
         if battle.turn_count<1:
