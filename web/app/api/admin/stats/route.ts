@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { BACKEND } from "@/lib/backend";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
 export async function GET(request: NextRequest) {
   const secret = request.headers.get("X-Admin-Secret");
@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     backendRes = await fetch(`${BACKEND}/api/v1/admin/stats`, {
       method: "GET",
       headers: {
+        ...forwardedFor(request),
         "X-Admin-Secret": secret,
       },
     });

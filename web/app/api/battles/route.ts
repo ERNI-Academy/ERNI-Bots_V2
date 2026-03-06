@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { BACKEND } from "@/lib/backend";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
 export async function POST(request: NextRequest) {
   const token = request.cookies.get("auth-token")?.value;
@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
     backendRes = await fetch(`${BACKEND}/api/v1/battles`, {
       method: "POST",
       headers: {
+        ...forwardedFor(request),
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },

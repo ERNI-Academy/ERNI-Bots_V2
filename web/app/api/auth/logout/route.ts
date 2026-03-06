@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { BACKEND } from "@/lib/backend";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
 export async function POST(request: NextRequest) {
   const token        = request.cookies.get("auth-token")?.value;
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     try {
       await fetch(`${BACKEND}/api/v1/auth/logout`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { ...forwardedFor(request), Authorization: `Bearer ${token}` },
       });
     } catch { /* silencioso */ }
   }
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     try {
       await fetch(`${BACKEND}/api/v1/auth/revoke-refresh`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${refreshToken}` },
+        headers: { ...forwardedFor(request), Authorization: `Bearer ${refreshToken}` },
       });
     } catch { /* silencioso */ }
   }

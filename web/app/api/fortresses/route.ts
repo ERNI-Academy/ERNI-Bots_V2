@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BACKEND } from "@/lib/backend";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
 // POST /api/fortresses - create a new fortress
 export async function POST(request: NextRequest) {
@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
     backendRes = await fetch(`${BACKEND}/api/v1/fortresses`, {
       method: "POST",
       headers: {
+        ...forwardedFor(request),
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },

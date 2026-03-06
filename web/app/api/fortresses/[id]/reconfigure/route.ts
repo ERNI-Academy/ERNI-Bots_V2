@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BACKEND } from "@/lib/backend";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
 // PUT /api/fortresses/[id]/reconfigure
 export async function PUT(
@@ -25,6 +25,7 @@ export async function PUT(
     backendRes = await fetch(`${BACKEND}/api/v1/fortresses/reconfigure`, {
       method: "PUT",
       headers: {
+        ...forwardedFor(request),
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },

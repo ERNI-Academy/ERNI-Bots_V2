@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { BACKEND } from "@/lib/backend";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
 /**
  * Build an absolute URL using X-Forwarded-Host / X-Forwarded-Proto headers so
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
   try {
     const backendRes = await fetch(`${BACKEND}/api/v1/auth/refresh`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${refreshToken}` },
+      headers: { ...forwardedFor(request), Authorization: `Bearer ${refreshToken}` },
     });
 
     if (!backendRes.ok) {

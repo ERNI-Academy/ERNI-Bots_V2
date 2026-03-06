@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { BACKEND } from "@/lib/backend";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   try {
     backendRes = await fetch(`${BACKEND}/api/v1/auth/register`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { ...forwardedFor(request), "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
   } catch {

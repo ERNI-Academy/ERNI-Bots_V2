@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { BACKEND } from "@/lib/backend";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
 export async function POST(request: NextRequest) {
   const secret = request.headers.get("X-Admin-Secret");
@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
     backendRes = await fetch(`${BACKEND}/api/v1/admin/invitations`, {
       method: "POST",
       headers: {
+        ...forwardedFor(request),
         "Content-Type": "application/json",
         "X-Admin-Secret": secret,
       },

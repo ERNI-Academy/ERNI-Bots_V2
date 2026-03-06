@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BACKEND } from "@/lib/backend";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
 function authHeaders(token: string) {
   return {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const res = await fetch(`${BACKEND}/api/v1/players/me/invitations`, {
-      headers: authHeaders(token),
+      headers: { ...authHeaders(token), ...forwardedFor(request) },
     });
     const data = await res.json().catch(() => ({}));
     return NextResponse.json(data, { status: res.status });
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
   try {
     const res = await fetch(`${BACKEND}/api/v1/players/me/invitations`, {
       method: "POST",
-      headers: authHeaders(token),
+      headers: { ...authHeaders(token), ...forwardedFor(request) },
     });
     const data = await res.json().catch(() => ({}));
     return NextResponse.json(data, { status: res.status });

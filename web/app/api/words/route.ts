@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BACKEND } from "@/lib/backend";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get("auth-token")?.value;
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   let backendRes: Response;
   try {
     backendRes = await fetch(`${BACKEND}/api/v1/words`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { ...forwardedFor(request), Authorization: `Bearer ${token}` },
     });
   } catch {
     return NextResponse.json({ error: "Servicio no disponible" }, { status: 503 });

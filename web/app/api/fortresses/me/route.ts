@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BACKEND } from "@/lib/backend";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
 // GET /api/fortresses/me - fetch current player's fortress
 export async function GET(request: NextRequest) {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   let backendRes: Response;
   try {
     backendRes = await fetch(`${BACKEND}/api/v1/fortresses/me`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { ...forwardedFor(request), Authorization: `Bearer ${token}` },
     });
   } catch {
     return NextResponse.json({ error: "Servicio no disponible" }, { status: 503 });

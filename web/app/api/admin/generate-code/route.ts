@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
-import { BACKEND } from "@/lib/backend";
+import { NextRequest, NextResponse } from "next/server";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const secret = process.env.ADMIN_SECRET;
     if (!secret) {
@@ -32,6 +32,7 @@ export async function POST() {
       backendRes = await fetch(`${BACKEND}/api/v1/admin/invitations`, {
         method: "POST",
         headers: {
+          ...forwardedFor(request),
           "Content-Type": "application/json",
           "X-Admin-Secret": secret,
         },

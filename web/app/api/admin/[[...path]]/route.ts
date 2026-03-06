@@ -15,7 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { BACKEND } from "@/lib/backend";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
 async function proxy(
   request: NextRequest,
@@ -33,6 +33,7 @@ async function proxy(
 
   const forwardHeaders: Record<string, string> = {
     "X-Admin-Secret": secret,
+    ...forwardedFor(request),
   };
 
   const contentType = request.headers.get("Content-Type");

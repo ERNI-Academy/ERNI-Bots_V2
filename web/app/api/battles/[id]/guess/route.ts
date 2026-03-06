@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { BACKEND } from "@/lib/backend";
+import { BACKEND, forwardedFor } from "@/lib/backend";
 
 export async function POST(
   request: NextRequest,
@@ -25,6 +25,7 @@ export async function POST(
     backendRes = await fetch(`${BACKEND}/api/v1/battles/${id}/guess`, {
       method: "POST",
       headers: {
+        ...forwardedFor(request),
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
