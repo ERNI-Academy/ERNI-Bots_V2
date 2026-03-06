@@ -577,6 +577,7 @@ export default function FortressesPage() {
                 <thead>
                   <tr className="border-b border-[#27272A] bg-[#18181B]">
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Nombre</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">ID</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Dueño</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Protocolo</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Arquetipo</th>
@@ -590,17 +591,17 @@ export default function FortressesPage() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={9} className="px-4 py-12 text-center text-sm text-[#71717A]">
+                          <td colSpan={10} className="px-4 py-12 text-center text-sm text-[#71717A]">
                         <span className="material-symbols-outlined animate-spin text-[24px]">progress_activity</span>
                       </td>
                     </tr>
                   ) : error ? (
                     <tr>
-                      <td colSpan={9} className="px-4 py-12 text-center text-sm text-red-400">{error}</td>
+                      <td colSpan={10} className="px-4 py-12 text-center text-sm text-red-400">{error}</td>
                     </tr>
                   ) : paginated.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-4 py-12 text-center text-sm text-[#71717A]">
+                      <td colSpan={10} className="px-4 py-12 text-center text-sm text-[#71717A]">
                         No se encontraron fortalezas
                       </td>
                     </tr>
@@ -620,6 +621,15 @@ export default function FortressesPage() {
                             </div>
                             <span className="text-sm font-medium text-white">{f.name}</span>
                           </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className="cursor-pointer font-mono text-xs text-[#52525B] hover:text-[#A1A1AA] transition-colors"
+                            title={f.id}
+                            onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(f.id); }}
+                          >
+                            {f.id.slice(0, 8)}…
+                          </span>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">

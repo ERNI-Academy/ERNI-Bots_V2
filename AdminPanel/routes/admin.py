@@ -661,16 +661,17 @@ def get_player_activity(player_id):
 
 @admin_bp.patch("/users/<player_id>")
 def update_user(player_id):
-    """Partial update of player fields: credits, energy, username, email, is_admin, is_bot.
+    """Partial update of player fields: credits, energy, username, email, is_admin, is_bot, season_score.
 
     Body (all optional):
         {
-            "username": "new_name",
-            "email":    "new@email.com",
-            "credits":  500,
-            "energy":   80,
-            "is_admin": true,
-            "is_bot":   false
+            "username":     "new_name",
+            "email":        "new@email.com",
+            "credits":      500,
+            "energy":       80,
+            "is_admin":     true,
+            "is_bot":       false,
+            "season_score": 1234
         }
     """
     if not _check_admin():
@@ -722,6 +723,25 @@ def update_user(player_id):
 
         if "is_bot" in data:
             player.is_bot = bool(data["is_bot"])
+
+        if "season_score" in data:
+            new_score = int(data["season_score"])
+            if new_score < 0:
+                return jsonify({"error": "season_score cannot be negative"}), 400
+            active_season = db.query(Season).filter_by(is_active=True).first()
+            if active_season:
+                stats = db.query(PlayerSeasonStats).filter_by(
+                    player_id=player_id,
+                    season_id=active_season.id,
+                ).first()
+                if stats:
+                    stats.score = new_score
+                else:
+                    db.add(PlayerSeasonStats(
+                        player_id=player_id,
+                        season_id=active_season.id,
+                        score=new_score,
+                    ))
 
         db.commit()
         return jsonify({"message": "Player updated", "id": player.id})

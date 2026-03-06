@@ -93,24 +93,26 @@ function EditPlayerModal({
   onClose: () => void;
   onSaved: (updated: Partial<Player>) => void;
 }) {
-  const [username, setUsername] = useState(player.username);
-  const [email, setEmail]       = useState(player.email);
-  const [credits, setCredits]   = useState(String(player.credits));
-  const [isAdmin, setIsAdmin]   = useState(player.is_admin);
-  const [isBot,   setIsBot]     = useState(player.is_bot);
-  const [saving, setSaving]     = useState(false);
-  const [error, setError]       = useState<string | null>(null);
+  const [username,    setUsername]    = useState(player.username);
+  const [email,       setEmail]       = useState(player.email);
+  const [credits,     setCredits]     = useState(String(player.credits));
+  const [seasonScore, setSeasonScore] = useState(String(player.season_score ?? 0));
+  const [isAdmin,     setIsAdmin]     = useState(player.is_admin);
+  const [isBot,       setIsBot]       = useState(player.is_bot);
+  const [saving,      setSaving]      = useState(false);
+  const [error,       setError]       = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setError(null);
     const payload: Record<string, unknown> = {};
-    if (username !== player.username) payload.username = username.trim();
-    if (email    !== player.email)    payload.email    = email.trim();
-    if (credits  !== String(player.credits)) payload.credits = parseInt(credits, 10);
-    if (isAdmin  !== player.is_admin) payload.is_admin = isAdmin;
-    if (isBot    !== player.is_bot)   payload.is_bot   = isBot;
+    if (username    !== player.username)              payload.username     = username.trim();
+    if (email       !== player.email)                 payload.email        = email.trim();
+    if (credits     !== String(player.credits))       payload.credits      = parseInt(credits, 10);
+    if (seasonScore !== String(player.season_score ?? 0)) payload.season_score = parseInt(seasonScore, 10);
+    if (isAdmin     !== player.is_admin)              payload.is_admin     = isAdmin;
+    if (isBot       !== player.is_bot)                payload.is_bot       = isBot;
     if (Object.keys(payload).length === 0) { onClose(); return; }
     try {
       const res  = await fetch(`/api/admin/users/${player.id}`, {
@@ -122,11 +124,12 @@ function EditPlayerModal({
       if (!res.ok) { setError(data.error ?? `Error ${res.status}`); }
       else {
         onSaved({
-          username: (payload.username as string)  ?? player.username,
-          email:    (payload.email    as string)  ?? player.email,
-          credits:  (payload.credits  as number)  ?? player.credits,
-          is_admin: (payload.is_admin as boolean) ?? player.is_admin,
-          is_bot:   (payload.is_bot   as boolean) ?? player.is_bot,
+          username:     (payload.username     as string)  ?? player.username,
+          email:        (payload.email        as string)  ?? player.email,
+          credits:      (payload.credits      as number)  ?? player.credits,
+          season_score: (payload.season_score as number)  ?? player.season_score,
+          is_admin:     (payload.is_admin     as boolean) ?? player.is_admin,
+          is_bot:       (payload.is_bot       as boolean) ?? player.is_bot,
         });
         onClose();
       }
@@ -208,7 +211,7 @@ function EditPlayerModal({
                 className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white font-mono placeholder-[#71717A] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
               />
             </div>
-            <div className="col-span-2">
+            <div>
               <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Creditos</label>
               <div className="relative">
                 <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
@@ -217,6 +220,18 @@ function EditPlayerModal({
                 <input
                   type="number" min={0} value={credits} onChange={e => setCredits(e.target.value)}
                   className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-10 pr-3 text-sm text-amber-400 font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-all"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Puntos (temporada activa)</label>
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                  <span className="material-symbols-outlined text-[15px] text-emerald-400">star</span>
+                </span>
+                <input
+                  type="number" min={0} value={seasonScore} onChange={e => setSeasonScore(e.target.value)}
+                  className="w-full rounded border border-[#27272A] bg-[#18181B] py-2 pl-10 pr-3 text-sm text-emerald-400 font-mono focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition-all"
                 />
               </div>
             </div>
