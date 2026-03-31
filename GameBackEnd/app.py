@@ -3,6 +3,7 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from dotenv import load_dotenv
 from datetime import datetime, timezone
+import os
 
 load_dotenv()
 
@@ -25,6 +26,7 @@ from routes.personalities import personalities_bp
 from routes.store import store_bp
 from routes.config import config_bp
 from routes.prizes import prizes_bp
+from routes.onboarding import onboarding_bp
 
 
 def create_app():
@@ -135,6 +137,7 @@ def create_app():
     app.register_blueprint(store_bp,          url_prefix="/api/v1/store")
     app.register_blueprint(config_bp,         url_prefix="/api/v1/config")
     app.register_blueprint(prizes_bp,          url_prefix="/api/v1/prizes")
+    app.register_blueprint(onboarding_bp,      url_prefix="/api/v1/onboarding")
     return app
 
 
@@ -142,4 +145,5 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    port = int(os.getenv("PORT", 5000))
+    app.run(debug=False, port=port)

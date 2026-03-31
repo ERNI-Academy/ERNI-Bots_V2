@@ -2,19 +2,33 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Rutas que no requieren autenticación
-const publicPaths = ["/login", "/register", "/about", "/premios"];
+const publicPaths = ["/login", "/register", "/about", "/premios", "/onboarding"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Si es una ruta pública, permitir acceso
-  if (publicPaths.some((path) => pathname.startsWith(path))) {
+  // Onboarding siempre accesible
+  if (pathname.startsWith("/onboarding")) {
     return NextResponse.next();
   }
 
   // Verificar si hay un token de autenticación en las cookies
   const authToken    = request.cookies.get("auth-token");
   const refreshToken = request.cookies.get("refresh-token");
+
+  // Gate de onboarding: sin cookie de onboarding Y sin auth → redirigir a /onboarding
+  const onboardingCompleted = request.cookies.get("onboarding-completed");
+  if (!onboardingCompleted && !authToken && !refreshToken) {
+    const onboardingUrl = request.nextUrl.clone();
+    onboardingUrl.pathname = "/onboarding";
+    onboardingUrl.search = "";
+    return NextResponse.redirect(onboardingUrl);
+  }
+
+  // Si es una ruta pública, permitir acceso
+  if (publicPaths.some((path) => pathname.startsWith(path))) {
+    return NextResponse.next();
+  }
 
   if (!authToken) {
     // Si hay refresh token, intentar renovar el access token y continuar.
