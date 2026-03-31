@@ -197,6 +197,15 @@ export default function InitialChallengePage() {
                     </div>
                   </div>
                 ))}
+                {sending && (
+                  <div className="flex justify-start">
+                    <div className="px-4 py-3 bg-primary/10 border border-primary/20 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary/70 animate-bounce [animation-delay:0ms]"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary/70 animate-bounce [animation-delay:150ms]"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary/70 animate-bounce [animation-delay:300ms]"></span>
+                    </div>
+                  </div>
+                )}
                 <div ref={chatEndRef} />
               </div>
 
