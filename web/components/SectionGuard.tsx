@@ -2,33 +2,28 @@ interface SectionGuardProps {
   powerFragments: number;
   hasItems: boolean;
   children: React.ReactNode;
+  "data-tour"?: string;
 }
 
 const UNLOCK_THRESHOLD = 100;
 
-export default function SectionGuard({ powerFragments, hasItems, children }: SectionGuardProps) {
+export default function SectionGuard({ powerFragments, hasItems, children, "data-tour": dataTour }: SectionGuardProps) {
   const isUnlocked = powerFragments >= UNLOCK_THRESHOLD || hasItems;
   const isBypass = hasItems && powerFragments < UNLOCK_THRESHOLD;
 
   return (
-    <div className="relative h-auto">
-      <div
-        className={`flex flex-col gap-4 md:gap-6 ${
-          isUnlocked ? "" : "blur-md grayscale pointer-events-none select-none"
-        }`}
-      >
-        {children}
-      </div>
-
-      {!isUnlocked && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-950/60 transition-opacity duration-500">
-          <span className="material-symbols-outlined text-4xl text-amber-500 mb-3 animate-pulse">
+    <div className="relative h-auto" data-tour={dataTour}>
+      {isUnlocked ? (
+        children
+      ) : (
+        <div className="border border-gray-800 rounded-xl bg-gray-900/50 p-6 md:p-8 flex flex-col items-center justify-center text-center gap-3 transition-opacity duration-500">
+          <span className="material-symbols-outlined text-4xl text-amber-500 animate-pulse">
             lock
           </span>
-          <h3 className="text-amber-500 font-bold text-sm uppercase tracking-widest mb-2">
+          <h3 className="text-amber-500 font-bold text-sm uppercase tracking-widest">
             SISTEMAS RESTRINGIDOS
           </h3>
-          <p className="text-sm font-mono tracking-tighter text-center px-8 text-gray-300 max-w-sm leading-relaxed">
+          <p className="text-sm font-mono tracking-tighter text-gray-300 max-w-sm leading-relaxed px-4">
             Se requieren{" "}
             <span className="text-primary font-bold">{UNLOCK_THRESHOLD} Fragmentos de Poder</span>{" "}
             o tecnología compatible detectada.

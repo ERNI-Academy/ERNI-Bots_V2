@@ -34,31 +34,13 @@ const TOUR_STEPS: TourStep[] = [
         icon: "theater_comedy",
     },
     {
-        target: "tour-cfg-protocol",
-        title: "Protocolo Base",
+        target: "tour-cfg-advanced",
+        title: "Sistemas Avanzados",
         description:
-            "El protocolo define las instrucciones base de tu IA defensora. Algunos requieren comprarlos con Fragmentos de Lógica.",
+            "Aquí podrás definir comportamientos avanzados: protocolo, arquetipo y restricciones de tu IA. Se desbloquean al conseguir 100 Fragmentos de Poder o al adquirir tecnología en la tienda.",
         side: "left",
         mobileSide: "bottom",
-        icon: "extension",
-    },
-    {
-        target: "tour-cfg-archetype",
-        title: "Arquetipo",
-        description:
-            "El arquetipo es el 'cerebro' de tu IA: define su estilo de respuesta y personalidad táctica frente al atacante.",
-        side: "left",
-        mobileSide: "bottom",
-        icon: "psychology",
-    },
-    {
-        target: "tour-cfg-constraints",
-        title: "Restricciones",
-        description:
-            "Añade hasta 3 restricciones adicionales que limiten cómo puede actuar la IA del atacante. Son tu segunda línea de defensa.",
-        side: "left",
-        mobileSide: "bottom",
-        icon: "settings",
+        icon: "lock",
     },
     {
         target: "tour-cfg-deploy",

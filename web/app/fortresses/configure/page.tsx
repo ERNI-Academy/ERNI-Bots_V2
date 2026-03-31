@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import FortressConfigTour from "./FortressConfigTour";
+import FortressAdvancedTour from "./FortressAdvancedTour";
 import SectionGuard from "@/components/SectionGuard";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -208,6 +209,7 @@ function FortressConfigurePage() {
     const isEditMode = existingFortress !== null;
 
     const hasItems = (ownedProtocols.size + ownedArchetypes.size + ownedConstraints.size) > 0;
+    const advancedUnlocked = (player?.credits ?? 0) >= 100 || hasItems;
 
     const MAX_CONSTRAINTS = 3;
 
@@ -525,7 +527,7 @@ function FortressConfigurePage() {
                     <div className="flex flex-col gap-4 md:gap-6 w-full md:w-2/3">
 
                         {/* ── ADVANCED SECTIONS (locked until threshold) ── */}
-                        <SectionGuard powerFragments={player?.credits ?? 0} hasItems={hasItems}>
+                        <SectionGuard powerFragments={player?.credits ?? 0} hasItems={hasItems} data-tour="tour-cfg-advanced">
 
                         {/* ── PROTOCOLO BASE ── */}
                         <section className="panel-float">
@@ -847,6 +849,7 @@ function FortressConfigurePage() {
 
             {/* ─── STATUS BAR ─── */}
             <FortressConfigTour username={player?.username ?? null} />
+            <FortressAdvancedTour username={player?.username ?? null} isUnlocked={advancedUnlocked} />
             <footer className="border-t border-primary/15 bg-black/80 px-4 md:px-6 py-2 flex justify-between items-center text-xs text-primary font-mono tracking-widest shrink-0">
                 <div className="flex gap-4 md:gap-6">
                     <span>LATENCIA: 14MS</span>
