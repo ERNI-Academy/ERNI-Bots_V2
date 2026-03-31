@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import FortressConfigTour from "./FortressConfigTour";
+import SectionGuard from "@/components/SectionGuard";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -206,8 +207,7 @@ function FortressConfigurePage() {
 
     const isEditMode = existingFortress !== null;
 
-    const ADVANCED_UNLOCK_THRESHOLD = 100;
-    const advancedUnlocked = (player?.credits ?? 0) >= ADVANCED_UNLOCK_THRESHOLD;
+    const hasItems = (ownedProtocols.size + ownedArchetypes.size + ownedConstraints.size) > 0;
 
     const MAX_CONSTRAINTS = 3;
 
@@ -525,8 +525,7 @@ function FortressConfigurePage() {
                     <div className="flex flex-col gap-4 md:gap-6 w-full md:w-2/3">
 
                         {/* ── ADVANCED SECTIONS (locked until threshold) ── */}
-                        <div className="relative">
-                            <div className={`flex flex-col gap-4 md:gap-6 ${advancedUnlocked ? "" : "opacity-30 pointer-events-none select-none grayscale"}`}>
+                        <SectionGuard powerFragments={player?.credits ?? 0} hasItems={hasItems}>
 
                         {/* ── PROTOCOLO BASE ── */}
                         <section className="panel-float">
@@ -799,22 +798,7 @@ function FortressConfigurePage() {
                             </div>
                         </section>
 
-                            </div>
-                            {/* Lock overlay */}
-                            {!advancedUnlocked && (
-                                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-950/85 backdrop-blur-sm transition-opacity duration-500">
-                                    <span className="material-symbols-outlined text-4xl text-amber-500 mb-3">lock</span>
-                                    <h3 className="text-amber-500 font-bold text-sm uppercase tracking-widest mb-2">
-                                        SISTEMAS AVANZADOS BLOQUEADOS
-                                    </h3>
-                                    <p className="text-gray-300 text-sm text-center max-w-xs leading-relaxed px-4">
-                                        Tu Guardián aún es débil. Vuelve cuando consigas al menos{" "}
-                                        <span className="text-primary font-bold">{ADVANCED_UNLOCK_THRESHOLD} Fragmentos de Poder</span>{" "}
-                                        para modificar su comportamiento a un nivel superior y acceder a sistemas de defensa avanzados.
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                        </SectionGuard>
 
                         {/* ── ACTIONS ── */}
                         <div className="panel-float p-4 flex justify-end">
