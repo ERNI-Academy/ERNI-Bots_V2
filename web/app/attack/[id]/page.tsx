@@ -364,7 +364,7 @@ export default function AttackPage() {
     // Preflight loading / denied screen
     if (preflight === "checking") {
         return (
-            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-primary`}>
+            <div className={`${spaceMono.className} h-screen w-screen bg-surface flex items-center justify-center text-primary`}>
                 <div className="scanlines" />
                 <div className="text-center space-y-3">
                     <span className="material-symbols-outlined text-4xl animate-pulse">lock</span>
@@ -376,12 +376,12 @@ export default function AttackPage() {
 
     if (preflight === "denied") {
         return (
-            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-[#ff0033]`}>
+            <div className={`${spaceMono.className} h-screen w-screen bg-surface flex items-center justify-center text-blood-red`}>
                 <div className="scanlines" />
                 <div className="text-center space-y-3">
                     <span className="material-symbols-outlined text-4xl">block</span>
                     <p className="text-xs uppercase tracking-[0.3em]">Acceso denegado</p>
-                    <Link href="/dashboard" className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-[#ff0033]/40 hover:bg-[#ff0033]/10 transition-colors text-xs uppercase tracking-widest">
+                    <Link href="/dashboard" className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-blood-red/40 hover:bg-blood-red/10 transition-colors text-xs uppercase tracking-widest">
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
                         Volver al mapa
                     </Link>
@@ -392,7 +392,7 @@ export default function AttackPage() {
 
     if (preflight === "fortress_destroyed") {
         return (
-            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-[#ff0033]`}>
+            <div className={`${spaceMono.className} h-screen w-screen bg-surface flex items-center justify-center text-blood-red`}>
                 <div className="scanlines" />
                 <div className="text-center space-y-4 p-6 max-w-sm">
                     <span className="material-symbols-outlined text-5xl">crisis_alert</span>
@@ -403,7 +403,7 @@ export default function AttackPage() {
                     <div className="flex flex-col gap-2 pt-2">
                         <Link
                             href="/fortresses/configure"
-                            className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-[#ff0033] bg-[#ff0033]/10 hover:bg-[#ff0033]/20 transition-colors text-xs uppercase tracking-widest"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-blood-red bg-blood-red/10 hover:bg-blood-red/20 transition-colors text-xs uppercase tracking-widest"
                         >
                             <span className="material-symbols-outlined text-sm">construction</span>
                             Reconstruir fortaleza
@@ -424,7 +424,7 @@ export default function AttackPage() {
     // Error screen
     if (alreadyWon) {
         return (
-            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-[#00ff41]`}>
+            <div className={`${spaceMono.className} h-screen w-screen bg-surface flex items-center justify-center text-matrix-green`}>
                 <div className="scanlines" />
                 <div className="text-center space-y-3 max-w-sm px-6">
                     <span className="material-symbols-outlined text-5xl">emoji_events</span>
@@ -434,7 +434,7 @@ export default function AttackPage() {
                     </p>
                     <Link
                         href="/dashboard"
-                        className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-[#00ff41]/40 hover:bg-[#00ff41]/10 transition-colors text-xs uppercase tracking-widest"
+                        className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-matrix-green/40 hover:bg-matrix-green/10 transition-colors text-xs uppercase tracking-widest"
                     >
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
                         Volver al mapa
@@ -446,15 +446,15 @@ export default function AttackPage() {
 
     if (ownerBanned) {
         return (
-            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-[#ff0033]`}>
+            <div className={`${spaceMono.className} h-screen w-screen bg-surface flex items-center justify-center text-blood-red`}>
                 <div className="scanlines" />
                 <div className="text-center space-y-3">
                     <span className="material-symbols-outlined text-4xl">block</span>
                     <p className="text-sm uppercase tracking-[0.3em]">Fortaleza no disponible</p>
-                    <p className="text-xs text-[#ff0033]/60 tracking-widest">El propietario de esta fortaleza no puede recibir ataques.</p>
+                    <p className="text-xs text-blood-red/60 tracking-widest">El propietario de esta fortaleza no puede recibir ataques.</p>
                     <Link
                         href="/dashboard"
-                        className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-[#ff0033]/40 hover:bg-[#ff0033]/10 transition-colors text-xs uppercase tracking-widest"
+                        className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-blood-red/40 hover:bg-blood-red/10 transition-colors text-xs uppercase tracking-widest"
                     >
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
                         Volver al mapa
@@ -466,14 +466,14 @@ export default function AttackPage() {
 
     if (initError) {
         return (
-            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-[#ff0033]`}>
+            <div className={`${spaceMono.className} h-screen w-screen bg-surface flex items-center justify-center text-blood-red`}>
                 <div className="scanlines" />
                 <div className="text-center space-y-3">
                     <span className="material-symbols-outlined text-4xl">error</span>
                     <p className="text-xs uppercase tracking-[0.3em]">{initError}</p>
                     <Link
                         href="/dashboard"
-                        className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-[#ff0033]/40 hover:bg-[#ff0033]/10 transition-colors text-xs uppercase tracking-widest"
+                        className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-blood-red/40 hover:bg-blood-red/10 transition-colors text-xs uppercase tracking-widest"
                     >
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
                         Volver al mapa
@@ -484,7 +484,7 @@ export default function AttackPage() {
     }
 
     return (
-        <div className={`${spaceMono.className} fixed inset-0 flex flex-col bg-[#050505] text-white overflow-hidden`}>
+        <div className={`${spaceMono.className} fixed inset-0 flex flex-col bg-surface text-white overflow-hidden`}>
             {/* CRT scanlines */}
             <div className="scanlines" />
 
@@ -510,9 +510,9 @@ export default function AttackPage() {
             <div className="fixed bottom-4 right-4 size-16 border-b border-r border-primary/30 pointer-events-none" />
 
             {/* ── HEADER ── */}
-            <header className="flex items-center justify-between border-b border-primary/20 bg-[#050505]/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 shrink-0">
+            <header className="flex items-center justify-between border-b border-primary/20 bg-surface/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 shrink-0">
                 <div className="flex items-center gap-2 md:gap-4">
-                    <span className="material-symbols-outlined text-xl md:text-2xl text-[#ff0033]">gps_fixed</span>
+                    <span className="material-symbols-outlined text-xl md:text-2xl text-blood-red">gps_fixed</span>
                     <div className="flex flex-col">
                         <h1 className="text-white text-xs font-mono font-bold leading-tight tracking-wider uppercase">
                             {battle ? battle.fortressName : "ASALTO_TÁCTICO_v2.1"}
@@ -524,7 +524,7 @@ export default function AttackPage() {
                 </div>
                 <div className="flex items-center gap-2 md:gap-4">
                     {battleResult === "won" && (
-                        <span className="text-xs font-bold px-3 py-1 border border-[#00ff41] text-[#00ff41] bg-[#00ff41]/10 tracking-widest animate-pulse uppercase">
+                        <span className="text-xs font-bold px-3 py-1 border border-matrix-green text-matrix-green bg-matrix-green/10 tracking-widest animate-pulse uppercase">
                             VICTORIA
                         </span>
                     )}
@@ -547,7 +547,7 @@ export default function AttackPage() {
             <div className="flex flex-1 overflow-hidden gap-0 md:gap-4 px-4 md:px-8 py-4">
 
                 {/* ── CHAT PANEL ── */}
-                <div data-tour="tour-attack-chat" className="flex-1 flex flex-col border border-primary/20 bg-[#050505]/60 overflow-hidden">
+                <div data-tour="tour-attack-chat" className="flex-1 flex flex-col border border-primary/20 bg-surface/60 overflow-hidden">
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4 font-mono text-sm">
                         {messages.map((msg) => (
@@ -570,27 +570,27 @@ export default function AttackPage() {
                                 )}
                                 {msg.role === "system" && (
                                     <div className="flex items-start gap-2 max-w-[85%]">
-                                        <span className="material-symbols-outlined text-[#00ff41] text-base mt-0.5">
+                                        <span className="material-symbols-outlined text-matrix-green text-base mt-0.5">
                                             terminal
                                         </span>
                                         <div className="flex flex-col gap-0.5">
                                             <div className="text-xs text-slate-400 tracking-widest uppercase">
-                                                <span className="text-[#00ff41]">SYS</span> · {msg.timestamp}
+                                                <span className="text-matrix-green">SYS</span> · {msg.timestamp}
                                             </div>
-                                            <div className="text-[#00ff41] leading-relaxed">{msg.text}</div>
+                                            <div className="text-matrix-green leading-relaxed">{msg.text}</div>
                                         </div>
                                     </div>
                                 )}
                                 {msg.role === "guardian" && (
                                     <div className="flex items-start gap-2 max-w-[85%]">
-                                        <span className="material-symbols-outlined text-[#ff0033] text-base mt-3">
+                                        <span className="material-symbols-outlined text-blood-red text-base mt-3">
                                             security
                                         </span>
                                         <div className="flex flex-col gap-0.5">
                                             <div className="text-xs text-slate-400 tracking-widest uppercase">
-                                                <span className="text-[#ff0033]">GUARDIÁN DE &quot;{battle?.fortressName ?? "?"}&quot;</span> · {msg.timestamp}
+                                                <span className="text-blood-red">GUARDIÁN DE &quot;{battle?.fortressName ?? "?"}&quot;</span> · {msg.timestamp}
                                             </div>
-                                            <div className="bg-[#ff0033]/15 border border-[#ff0033]/50 px-3 py-2 text-[#ff8080] leading-relaxed">
+                                            <div className="bg-blood-red/15 border border-blood-red/50 px-3 py-2 text-[#ff8080] leading-relaxed">
                                                 {msg.text}
                                             </div>
                                         </div>
@@ -598,7 +598,7 @@ export default function AttackPage() {
                                 )}
                                 {msg.role === "result" && (() => {
                                     const isWon = msg.variant === "won";
-                                    const color = isWon ? "#00ff41" : "#ff0033";
+                                    const color = isWon ? "var(--color-matrix-green)" : "var(--color-blood-red)";
                                     const icon = isWon ? "emoji_events" : "shield";
                                     return (
                                         <div className="flex items-start gap-2 max-w-[85%]">
@@ -619,7 +619,7 @@ export default function AttackPage() {
 
                         {/* Thinking indicator */}
                         {isThinking && (
-                            <div className="flex items-center gap-2 text-[#ff0033] font-mono text-xs tracking-widest uppercase">
+                            <div className="flex items-center gap-2 text-blood-red font-mono text-xs tracking-widest uppercase">
                                 <span className="material-symbols-outlined text-sm animate-pulse">security</span>
                                 <span className="animate-pulse">GUARDIÁN PROCESANDO RESPUESTA...</span>
                             </div>
@@ -630,13 +630,13 @@ export default function AttackPage() {
 
                     {/* Guess panel */}
                     {showGuessPanel && (
-                        <div className="shrink-0 border-t border-[#ffd700]/20 p-3 bg-[#ffd700]/5">
-                            <div className="text-xs text-[#ffd700] font-mono uppercase tracking-[0.2em] mb-2">
+                        <div className="shrink-0 border-t border-loot-gold/20 p-3 bg-loot-gold/5">
+                            <div className="text-xs text-loot-gold font-mono uppercase tracking-[0.2em] mb-2">
                                 Adivinar palabra secreta:
                             </div>
                             <div className="flex gap-2">
                                 <input
-                                    className="flex-1 bg-black/40 border border-[#ffd700]/30 focus:border-[#ffd700]/60 focus:outline-none text-sm text-slate-100 font-mono px-3 py-2"
+                                    className="flex-1 bg-black/40 border border-loot-gold/30 focus:border-loot-gold/60 focus:outline-none text-base md:text-sm text-slate-100 font-mono px-3 py-2"
                                     placeholder="Introduce la palabra secreta..."
                                     value={guessInput}
                                     onChange={(e) => setGuessInput(e.target.value)}
@@ -647,7 +647,7 @@ export default function AttackPage() {
                                 <button
                                     onClick={handleGuess}
                                     disabled={!guessInput.trim() || isGuessing || !!battleResult}
-                                    className="px-4 py-2 bg-[#ffd700]/10 border border-[#ffd700]/40 text-[#ffd700] hover:bg-[#ffd700]/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-xs uppercase tracking-widest"
+                                    className="px-4 py-2 bg-loot-gold/10 border border-loot-gold/40 text-loot-gold hover:bg-loot-gold/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-xs uppercase tracking-widest"
                                 >
                                     {isGuessing ? "Verificando..." : "Confirmar"}
                                 </button>
@@ -657,7 +657,7 @@ export default function AttackPage() {
 
                     {/* Turn counter */}
                     {battle && !battleResult && (
-                        <div data-tour="tour-attack-turns" className="shrink-0 border-t border-primary/10 px-4 py-1.5 flex items-center justify-between bg-[#050505]/60 font-mono">
+                        <div data-tour="tour-attack-turns" className="shrink-0 border-t border-primary/10 px-4 py-1.5 flex items-center justify-between bg-surface/60 font-mono">
                             <span className="text-xs text-slate-500 uppercase tracking-widest">Mensajes enviados</span>
                             <div className="flex items-center gap-2">
                                 <div className="flex gap-0.5">
@@ -667,7 +667,7 @@ export default function AttackPage() {
                                             className={`w-3 h-1.5 ${
                                                 i < turnCount
                                                     ? turnCount >= MAX_TURNS - 2
-                                                        ? "bg-[#ff0033] shadow-[0_0_4px_#ff0033]"
+                                                        ? "bg-blood-red shadow-[0_0_4px_theme(--color-blood-red)]"
                                                         : "bg-primary"
                                                     : "bg-white/10"
                                             }`}
@@ -675,7 +675,7 @@ export default function AttackPage() {
                                     ))}
                                 </div>
                                 <span className={`text-xs font-bold tabular-nums ${
-                                    turnCount >= MAX_TURNS - 2 ? "text-[#ff0033]" : "text-primary"
+                                    turnCount >= MAX_TURNS - 2 ? "text-blood-red" : "text-primary"
                                 }`}>
                                     {turnCount}/{MAX_TURNS}
                                 </span>
@@ -684,7 +684,7 @@ export default function AttackPage() {
                     )}
 
                     {/* Input bar */}
-                    <div className="shrink-0 border-t border-primary/20 p-3 flex gap-2 bg-[#050505]/80">
+                    <div className="shrink-0 border-t border-primary/20 p-3 flex gap-2 bg-surface/80">
                         <button
                             data-tour="tour-attack-guess"
                             onClick={() => setShowGuessPanel(prev => !prev)}
@@ -692,16 +692,16 @@ export default function AttackPage() {
                             title="Adivinar la palabra secreta"
                             className={`shrink-0 px-3 py-2 border text-xs transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
                                 showGuessPanel
-                                    ? "bg-[#ffd700]/20 border-[#ffd700]/60 text-[#ffd700]"
-                                    : "border-[#ffd700]/30 text-[#ffd700] hover:bg-[#ffd700]/10"
+                                    ? "bg-loot-gold/20 border-loot-gold/60 text-loot-gold"
+                                    : "border-loot-gold/30 text-loot-gold hover:bg-loot-gold/10"
                             }`}
                         >
                             <span className="material-symbols-outlined text-base">key</span>
                         </button>
                         <div className="flex-1 flex items-center gap-2 bg-black/40 border border-primary/20 focus-within:border-primary/50 px-3 py-2">
-                            <span className="text-[#00ffff] font-mono text-xs shrink-0">&gt;_</span>
+                            <span className="text-primary font-mono text-xs shrink-0">&gt;_</span>
                             <input
-                                className="flex-1 bg-transparent text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-500 tracking-wide"
+                                className="flex-1 bg-transparent text-base md:text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-500 tracking-wide"
                                 placeholder={battle ? "Introduce tu vector de ataque..." : "Conectando con el guardián..."}
                                 value={input}
                                 ref={inputRef}
@@ -733,7 +733,7 @@ export default function AttackPage() {
                         <button
                             onClick={handleSend}
                             disabled={!input.trim() || isThinking || !battle || !!battleResult}
-                            className="shrink-0 px-4 py-2 bg-[#ff0033]/10 border border-[#ff0033]/40 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="shrink-0 px-4 py-2 bg-blood-red/10 border border-blood-red/40 text-blood-red hover:bg-blood-red/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                             <span className="material-symbols-outlined text-base">send</span>
                         </button>
@@ -741,11 +741,11 @@ export default function AttackPage() {
                 </div>
 
                 {/* ── INTEL SIDEBAR (desktop only) ── */}
-                <aside data-tour="tour-attack-intel" className="hidden md:flex w-60 flex-col shrink-0 border border-primary/20 bg-[#050505]/60 overflow-hidden">
+                <aside data-tour="tour-attack-intel" className="hidden md:flex w-60 flex-col shrink-0 border border-primary/20 bg-surface/60 overflow-hidden">
                     {/* Sidebar header */}
                     <div className="flex items-center gap-2 border-b border-primary/20 px-4 py-3">
-                        <span className="material-symbols-outlined text-[#ffd700] text-sm">radar</span>
-                        <span className="text-xs font-bold text-[#ffd700] uppercase tracking-[0.2em]">Intel del objetivo</span>
+                        <span className="material-symbols-outlined text-loot-gold text-sm">radar</span>
+                        <span className="text-xs font-bold text-loot-gold uppercase tracking-[0.2em]">Intel del objetivo</span>
                     </div>
 
                     <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar space-y-4 font-mono text-xs">
@@ -758,10 +758,10 @@ export default function AttackPage() {
                         <div className="space-y-3 border-b border-primary/10 pb-4">
                             {[
                                 { label: "Fortaleza", value: battle?.fortressName ?? "—", color: "text-white" },
-                                { label: "Comandante", value: battle?.fortressOwner ?? "—", color: "text-[#ffd700]" },
-                                { label: "Derrotas", value: battle != null ? `${battle.fortressDefeats}` : "—", color: battle && battle.fortressDefeats > 0 ? "text-[#00ff41]" : "text-slate-300" },
+                                { label: "Comandante", value: battle?.fortressOwner ?? "—", color: "text-loot-gold" },
+                                { label: "Derrotas", value: battle != null ? `${battle.fortressDefeats}` : "—", color: battle && battle.fortressDefeats > 0 ? "text-matrix-green" : "text-slate-300" },
                                 { label: "Ataques recibidos", value: battle != null ? `${battle.fortressAttacks}` : "—", color: "text-slate-300" },
-                                { label: "Estado batalla", value: battleResult === "won" ? "VICTORIA" : "ACTIVA", color: battleResult === "won" ? "text-[#00ff41]" : "text-slate-300" },
+                                { label: "Estado batalla", value: battleResult === "won" ? "VICTORIA" : "ACTIVA", color: battleResult === "won" ? "text-matrix-green" : "text-slate-300" },
                             ].map(({ label, value, color }) => (
                                 <div key={label} className="flex flex-col gap-0.5">
                                     <span className="text-slate-400 uppercase tracking-[0.2em]">{label}</span>
@@ -784,8 +784,8 @@ export default function AttackPage() {
                             disabled={!battle || !!battleResult}
                             className={`w-full text-xs px-3 py-2 border transition-colors uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed ${
                                 showGuessPanel
-                                    ? "bg-[#ffd700]/20 border-[#ffd700]/60 text-[#ffd700]"
-                                    : "border-[#ffd700]/30 text-[#ffd700] hover:bg-[#ffd700]/10"
+                                    ? "bg-loot-gold/20 border-loot-gold/60 text-loot-gold"
+                                    : "border-loot-gold/30 text-loot-gold hover:bg-loot-gold/10"
                             }`}
                         >
                             <span className="material-symbols-outlined text-xs">key</span>
@@ -858,7 +858,7 @@ export default function AttackPage() {
             )}
 
             {/* ── MOBILE status / key bar ── */}
-            <footer className="md:hidden shrink-0 border-t border-primary/20 bg-[#050505]/80 px-4 py-3 flex items-center justify-between">
+            <footer className="md:hidden shrink-0 border-t border-primary/20 bg-surface/80 px-4 py-3 flex items-center justify-between">
                 <span className="text-xs font-mono text-slate-400 uppercase tracking-widest">
                     {battleResult === "won" ? "VICTORIA — Redirigiendo..." : "Batalla activa"}
                 </span>
@@ -871,7 +871,7 @@ export default function AttackPage() {
                     >
                         <span className="material-symbols-outlined text-base">history</span>
                         {sentMessages.length > 0 && (
-                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary text-[#050505] text-[8px] font-bold rounded-full flex items-center justify-center">
+                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary text-surface text-[8px] font-bold rounded-full flex items-center justify-center">
                                 {sentMessages.length > 9 ? "9+" : sentMessages.length}
                             </span>
                         )}
@@ -879,7 +879,7 @@ export default function AttackPage() {
                     <button
                         onClick={() => setShowGuessPanel(prev => !prev)}
                         disabled={!battle || !!battleResult}
-                        className="text-[#ffd700] transition-colors disabled:opacity-30"
+                        className="text-loot-gold transition-colors disabled:opacity-30"
                         title="Adivinar secreto"
                     >
                         <span className="material-symbols-outlined text-base">key</span>

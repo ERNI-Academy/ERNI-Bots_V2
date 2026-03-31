@@ -219,7 +219,7 @@ export default function InitialChallengePage() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Escribe tu prompt..."
-                    className="flex-1 bg-transparent py-3 text-sm font-mono text-gray-200 placeholder:text-primary/20 focus:outline-none"
+                    className="flex-1 bg-transparent py-3 text-base sm:text-sm font-mono text-gray-200 placeholder:text-primary/20 focus:outline-none"
                     autoFocus
                   />
                   <button
@@ -250,7 +250,7 @@ export default function InitialChallengePage() {
                         value={codeInput}
                         onChange={(e) => setCodeInput(e.target.value)}
                         placeholder="CÓDIGO_DE_ACCESO..."
-                        className="flex-1 bg-transparent py-3 text-sm font-mono text-gray-200 placeholder:text-primary/20 focus:outline-none uppercase tracking-widest"
+                        className="flex-1 bg-transparent py-3 text-base sm:text-sm font-mono text-gray-200 placeholder:text-primary/20 focus:outline-none uppercase tracking-widest"
                         autoFocus
                         suppressHydrationWarning
                       />

@@ -99,7 +99,7 @@ export default function HistoryPage() {
 
     return (
         <div
-            className={`${spaceMono.className} fixed inset-0 flex flex-col bg-[#050505] text-primary overflow-hidden`}
+            className={`${spaceMono.className} fixed inset-0 flex flex-col bg-surface text-primary overflow-hidden`}
         >
             {/* CRT scanlines */}
             <div className="scanlines" />
@@ -126,7 +126,7 @@ export default function HistoryPage() {
             <div className="fixed bottom-4 right-4 size-16 border-b border-r border-primary/30 pointer-events-none" />
 
             {/* ─── HEADER ─── */}
-            <header className="flex items-center justify-between border-b border-primary/20 bg-[#050505]/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 sticky top-0 shrink-0">
+            <header className="flex items-center justify-between border-b border-primary/20 bg-surface/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 sticky top-0 shrink-0">
                 <div className="flex items-center gap-2 md:gap-4">
                     <span className="material-symbols-outlined text-xl md:text-2xl text-primary">history</span>
                     <div className="flex flex-col">
@@ -180,7 +180,7 @@ export default function HistoryPage() {
             {/* ─── LIST ─── */}
             <main className="flex-1 min-h-0 overflow-hidden px-4 md:px-8">
                 {loading ? (
-                    <div className="flex items-center justify-center h-40 text-[#00ffff] text-xs animate-pulse uppercase tracking-widest">
+                    <div className="flex items-center justify-center h-40 text-primary text-xs animate-pulse uppercase tracking-widest">
                         CARGANDO REGISTROS...
                     </div>
                 ) : error ? (
@@ -205,12 +205,12 @@ export default function HistoryPage() {
                             const isPositive = entry.amount >= 0;
 
                             const typeBadgeClass = isPoints
-                                ? "border-[#ffd700]/50 text-[#ffd700]"
+                                ? "border-loot-gold/50 text-loot-gold"
                                 : "border-primary/50 text-primary";
 
                             const amountClass = isPositive
-                                ? isPoints ? "text-[#ffd700]" : "text-primary"
-                                : "text-[#ff0033]";
+                                ? isPoints ? "text-loot-gold" : "text-primary"
+                                : "text-blood-red";
 
                             return (
                                 <div
@@ -270,7 +270,7 @@ export default function HistoryPage() {
                     >
                         <span className="material-symbols-outlined text-sm">chevron_left</span>
                     </button>
-                    <span className="text-xs font-mono tracking-widest text-[#00ffff] min-w-[5rem] text-center">
+                    <span className="text-xs font-mono tracking-widest text-primary min-w-[5rem] text-center">
                         {loading ? "…" : totalPages !== null ? `${page + 1} / ${totalPages}` : `PÁG. ${page + 1}`}
                     </span>
                     <button

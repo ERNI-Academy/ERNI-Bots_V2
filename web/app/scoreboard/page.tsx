@@ -23,7 +23,7 @@ function formatScore(n: number): string {
 }
 
 function rankColorClass(rank: number): string {
-  if (rank === 1) return "text-[#FFD700]";
+  if (rank === 1) return "text-loot-gold";
   if (rank === 2) return "text-[#C0C0C0]";
   if (rank === 3) return "text-[#CD7F32]";
   return "text-primary";
@@ -92,7 +92,7 @@ export default function ScoreboardPage() {
 
   return (
     <div
-      className={`${spaceMono.className} fixed inset-0 flex flex-col bg-[#050505] text-primary overflow-hidden`}
+      className={`${spaceMono.className} fixed inset-0 flex flex-col bg-surface text-primary overflow-hidden`}
     >
       {/* CRT scanlines */}
       <div className="scanlines" />
@@ -119,7 +119,7 @@ export default function ScoreboardPage() {
       <div className="fixed bottom-4 right-4 size-16 border-b border-r border-primary/30 pointer-events-none" />
 
       {/* ─── HEADER ─── */}
-      <header className="flex items-center justify-between border-b border-primary/20 bg-[#050505]/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 sticky top-0 shrink-0">
+      <header className="flex items-center justify-between border-b border-primary/20 bg-surface/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 sticky top-0 shrink-0">
         <div className="flex items-center gap-2 md:gap-4">
           <div className="size-6 text-primary flex items-center justify-center">
             <span className="material-symbols-outlined text-xl md:text-2xl">leaderboard</span>
@@ -154,7 +154,7 @@ export default function ScoreboardPage() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-40 text-[#00ffff] text-xs animate-pulse uppercase tracking-widest">
+          <div className="flex items-center justify-center h-40 text-primary text-xs animate-pulse uppercase tracking-widest">
             SINCRONIZANDO DATOS...
           </div>
         ) : error ? (
@@ -221,7 +221,7 @@ export default function ScoreboardPage() {
           >
             <span className="material-symbols-outlined text-sm">chevron_left</span>
           </button>
-          <span className="text-xs md:text-xs font-mono tracking-widest text-[#00ffff] min-w-[5rem] text-center">
+          <span className="text-xs md:text-xs font-mono tracking-widest text-primary min-w-[5rem] text-center">
             {loading ? "…" : totalPages !== null ? `${page + 1} / ${totalPages}` : `PÁG. ${page + 1}`}
           </span>
           <button

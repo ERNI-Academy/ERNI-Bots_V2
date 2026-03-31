@@ -104,11 +104,11 @@ function LoginContent() {
             {/* Status Logs */}
             <div className="space-y-1 font-mono text-xs sm:text-xs uppercase opacity-80">
               <p className="flex items-center gap-2">
-                <span className="text-[#00ffff]">[OK]</span>
+                <span className="text-primary">[OK]</span>
                 <span>SYSTEM_KERNEL_LOADED</span>
               </p>
               <p className="flex items-center gap-2">
-                <span className="text-[#00ffff]">[OK]</span>
+                <span className="text-primary">[OK]</span>
                 <span>CRYPTOGRAPHIC_SHIELD_UP</span>
               </p>
               <p className="flex items-center gap-2 text-yellow-500/80">
@@ -195,7 +195,7 @@ function LoginContent() {
               <div className="text-center pt-4">
                 <Link
                   href={searchParams.get("code") ? `/register?code=${encodeURIComponent(searchParams.get("code")!)}` : "/register"}
-                  className="text-xs sm:text-xs text-[#00ffff] hover:text-primary transition-colors tracking-widest uppercase font-mono"
+                  className="text-xs sm:text-xs text-primary hover:text-primary transition-colors tracking-widest uppercase font-mono"
                 >
                   &gt; ¿NO_TIENES_CUENTA? REGISTRARSE_AQUÍ
                 </Link>
@@ -205,7 +205,7 @@ function LoginContent() {
             {/* Terminal Footer Status */}
             <div className="flex justify-between items-end text-xs sm:text-xs font-mono pt-2 sm:pt-4">             
               <div className="flex items-center gap-3">
-                <Link href="/about" className="text-[#00ffff] hover:text-primary transition-colors uppercase tracking-widest">
+                <Link href="/about" className="text-primary hover:text-primary transition-colors uppercase tracking-widest">
                   &gt; QUIÉNES_SOMOS
                 </Link>
                 <span className="opacity-40">|</span>
@@ -218,7 +218,7 @@ function LoginContent() {
         </div>
 
         {/* System Message / Cursor */}
-        <div className="mt-4 sm:mt-6 md:mt-8 flex items-center gap-2 text-[#00ffff] text-xs sm:text-sm font-mono px-2">
+        <div className="mt-4 sm:mt-6 md:mt-8 flex items-center gap-2 text-primary text-xs sm:text-sm font-mono px-2">
           <span className="hidden sm:inline">RUNNING: BETTERASK.ERNI</span>
           <span className="sm:hidden">BETTERASK.ERNI</span>
           <span className="w-1.5 sm:w-2 h-3 sm:h-4 bg-primary cursor-blink"></span>

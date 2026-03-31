@@ -143,11 +143,11 @@ function RegisterContent() {
                         {/* Status Logs */}
                         <div className="space-y-1 font-mono text-xs sm:text-xs uppercase opacity-80">
                             <p className="flex items-center gap-2">
-                                <span className="text-[#00ffff]">[OK]</span>
+                                <span className="text-primary">[OK]</span>
                                 <span>SYSTEM_KERNEL_LOADED</span>
                             </p>
                             <p className="flex items-center gap-2">
-                                <span className="text-[#00ffff]">[OK]</span>
+                                <span className="text-primary">[OK]</span>
                                 <span>CRYPTOGRAPHIC_SHIELD_UP</span>
                             </p>
                             <p className="flex items-center gap-2 text-yellow-500/80">
@@ -234,7 +234,7 @@ function RegisterContent() {
                                             type="button"
                                             onClick={handleGenerateCode}
                                             disabled={generatingCode || !!invitationCode}
-                                            className="shrink-0 border border-primary/40 text-[#00ffff] hover:text-primary hover:border-primary font-mono text-xs tracking-widest uppercase px-2 py-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
+                                            className="shrink-0 border border-primary/40 text-primary hover:text-primary hover:border-primary font-mono text-xs tracking-widest uppercase px-2 py-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
                                         >
                                             {generatingCode ? "[ ... ]" : invitationCode ? "[ OK ]" : "[ GENERAR ]"}
                                         </button>
@@ -251,13 +251,13 @@ function RegisterContent() {
                                     checked={acceptTerms}
                                     onChange={(e) => setAcceptTerms(e.target.checked)}
                                 />
-                                <label htmlFor="terms" className="text-xs sm:text-sm font-bold tracking-wider text-[#00ffff] hover:text-primary transition-colors cursor-pointer">
+                                <label htmlFor="terms" className="text-xs sm:text-sm font-bold tracking-wider text-primary hover:text-primary transition-colors cursor-pointer">
                                     ACEPTO LA{" "}
                                     <a
                                         href="https://www.betterask.erni/es-es/privacy-statement/"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-primary underline hover:text-[#00ffff]"
+                                        className="text-primary underline hover:text-primary"
                                     >
                                         POLÍTICA DE PRIVACIDAD
                                     </a>
@@ -265,7 +265,7 @@ function RegisterContent() {
                             </div>
 
                             {/* Winners Communication Notice */}
-                            <p className="text-xs sm:text-sm font-bold tracking-wider text-[#00ffff] uppercase">
+                            <p className="text-xs sm:text-sm font-bold tracking-wider text-primary uppercase">
                                 La comunicación de los ganadores se realizará mediante correo electrónico.
                             </p>
 
@@ -298,7 +298,7 @@ function RegisterContent() {
                             <div className="text-center pt-4">
                                 <Link
                                     href={searchParams.get("code") ? `/login?code=${encodeURIComponent(searchParams.get("code")!)}` : "/login"}
-                                    className="text-xs sm:text-xs text-[#00ffff] hover:text-primary transition-colors tracking-widest uppercase font-mono"
+                                    className="text-xs sm:text-xs text-primary hover:text-primary transition-colors tracking-widest uppercase font-mono"
                                 >
                                     &gt; ¿YA_TIENES_CUENTA? ACCEDER_AQUÍ
                                 </Link>
@@ -308,7 +308,7 @@ function RegisterContent() {
                         {/* Terminal Footer Status */}
                         <div className="flex justify-between items-end text-xs sm:text-xs font-mono pt-2 sm:pt-4">
                             <div className="flex items-center gap-3">
-                                <Link href="/about" className="text-[#00ffff] hover:text-primary transition-colors uppercase tracking-widest">
+                                <Link href="/about" className="text-primary hover:text-primary transition-colors uppercase tracking-widest">
                                     &gt; QUIÉNES_SOMOS
                                 </Link>
                                 <span className="opacity-40">|</span>
@@ -321,7 +321,7 @@ function RegisterContent() {
                 </div>
 
                 {/* System Message / Cursor */}
-                <div className="mt-4 sm:mt-6 md:mt-8 flex items-center gap-2 text-[#00ffff] text-xs sm:text-sm font-mono px-2">
+                <div className="mt-4 sm:mt-6 md:mt-8 flex items-center gap-2 text-primary text-xs sm:text-sm font-mono px-2">
                     <span className="hidden sm:inline">RUNNING: BETTERASK.ERNI</span>
                     <span className="sm:hidden">BETTERASK.ERNI</span>
                     <span className="w-1.5 sm:w-2 h-3 sm:h-4 bg-primary cursor-blink"></span>

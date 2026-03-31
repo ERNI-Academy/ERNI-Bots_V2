@@ -178,28 +178,28 @@ function Arrow({ side }: { side: TourStep["side"] }) {
     if (side === "bottom")
         return (
             <span
-                className={`${base} border-b-[#00ffff] border-x-[8px] border-b-[10px] -top-[10px] left-1/2 -translate-x-1/2`}
+                className={`${base} border-b-primary border-x-[8px] border-b-[10px] -top-[10px] left-1/2 -translate-x-1/2`}
                 style={{ borderLeftColor: "transparent", borderRightColor: "transparent", borderTopWidth: 0, position: "absolute" }}
             />
         );
     if (side === "top")
         return (
             <span
-                className={`${base} border-t-[#00ffff] border-x-[8px] border-t-[10px] -bottom-[10px] left-1/2 -translate-x-1/2`}
+                className={`${base} border-t-primary border-x-[8px] border-t-[10px] -bottom-[10px] left-1/2 -translate-x-1/2`}
                 style={{ borderLeftColor: "transparent", borderRightColor: "transparent", borderBottomWidth: 0, position: "absolute" }}
             />
         );
     if (side === "right")
         return (
             <span
-                className={`${base} border-r-[#00ffff] border-y-[8px] border-r-[10px] -left-[10px] top-6`}
+                className={`${base} border-r-primary border-y-[8px] border-r-[10px] -left-[10px] top-6`}
                 style={{ borderTopColor: "transparent", borderBottomColor: "transparent", borderLeftWidth: 0, position: "absolute" }}
             />
         );
     // left
     return (
         <span
-            className={`${base} border-l-[#00ffff] border-y-[8px] border-l-[10px] -right-[10px] top-6`}
+            className={`${base} border-l-primary border-y-[8px] border-l-[10px] -right-[10px] top-6`}
             style={{ borderTopColor: "transparent", borderBottomColor: "transparent", borderRightWidth: 0, position: "absolute" }}
         />
     );
@@ -326,7 +326,7 @@ export default function TourOverlay({ setActiveTab, username }: { setActiveTab: 
                         width: spotRect.width,
                         height: spotRect.height,
                         boxShadow: "0 0 0 9999px rgba(0,0,0,0.82)",
-                        border: "2px solid #00ffff",
+                        border: "2px solid var(--color-primary)",
                         outline: "1px solid rgba(0,255,255,0.3)",
                     }}
                 />
@@ -351,13 +351,13 @@ export default function TourOverlay({ setActiveTab, username }: { setActiveTab: 
                 <div className="relative">
                         <Arrow side={activeSide} />
                     <div
-                        className="border border-[#00ffff]/60 bg-black/95 backdrop-blur-sm shadow-[0_0_30px_rgba(0,255,255,0.25)] p-4 space-y-3"
+                        className="border border-primary/60 bg-black/95 backdrop-blur-sm shadow-[0_0_30px_rgba(0,255,255,0.25)] p-4 space-y-3"
                         style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}
                     >
                         {/* Step counter */}
-                        <div className="flex items-center gap-2 text-[#00ffff]">
+                        <div className="flex items-center gap-2 text-primary">
                             <span className="material-symbols-outlined text-base">{currentStep.icon}</span>
-                            <span className="text-[10px] font-mono uppercase tracking-widest text-[#00ffff]/60">
+                            <span className="text-[10px] font-mono uppercase tracking-widest text-primary/60">
                                 PASO {step + 1} / {TOUR_STEPS.length}
                             </span>
                         </div>
@@ -369,7 +369,7 @@ export default function TourOverlay({ setActiveTab, username }: { setActiveTab: 
                                     key={i}
                                     className={`h-0.5 flex-1 transition-all duration-300 ${
                                         i <= step
-                                            ? "bg-[#00ffff]"
+                                            ? "bg-primary"
                                             : "bg-white/15"
                                     }`}
                                 />
@@ -398,7 +398,7 @@ export default function TourOverlay({ setActiveTab, username }: { setActiveTab: 
                             </button>
                             <button
                                 onClick={next}
-                                className="flex items-center gap-1.5 bg-[#00ffff]/10 border border-[#00ffff]/50 hover:bg-[#00ffff]/25 px-3 py-1.5 text-[#00ffff] text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer"
+                                className="flex items-center gap-1.5 bg-primary/10 border border-primary/50 hover:bg-primary/25 px-3 py-1.5 text-primary text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer"
                             >
                                 {isLast ? "¡Entendido!" : "Siguiente"}
                                 {!isLast && (

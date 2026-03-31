@@ -19,11 +19,11 @@ interface Prize {
 }
 
 const COLOR_THEMES: Record<string, { color: string; borderColor: string; glowColor: string; dotColor: string }> = {
-    red:    { color: "text-[#ff0033]",  borderColor: "border-[#ff0033]/40",  glowColor: "shadow-[0_0_18px_rgba(255,0,51,0.15)]",     dotColor: "bg-[#ff0033]"  },
-    cyan:   { color: "text-[#00ffff]",  borderColor: "border-[#00ffff]/40",  glowColor: "shadow-[0_0_18px_rgba(0,255,255,0.12)]",    dotColor: "bg-[#00ffff]"  },
-    green:  { color: "text-[#00ff41]",  borderColor: "border-[#00ff41]/40",  glowColor: "shadow-[0_0_18px_rgba(0,255,65,0.12)]",     dotColor: "bg-[#00ff41]"  },
+    red:    { color: "text-blood-red",  borderColor: "border-blood-red/40",  glowColor: "shadow-[0_0_18px_rgba(255,0,51,0.15)]",     dotColor: "bg-blood-red"  },
+    cyan:   { color: "text-primary",  borderColor: "border-primary/40",  glowColor: "shadow-[0_0_18px_rgba(0,255,255,0.12)]",    dotColor: "bg-primary"  },
+    green:  { color: "text-matrix-green",  borderColor: "border-matrix-green/40",  glowColor: "shadow-[0_0_18px_rgba(0,255,65,0.12)]",     dotColor: "bg-matrix-green"  },
     purple: { color: "text-[#a78bfa]",  borderColor: "border-[#a78bfa]/40",  glowColor: "shadow-[0_0_18px_rgba(167,139,250,0.12)]",  dotColor: "bg-[#a78bfa]"  },
-    yellow: { color: "text-[#ffd700]",  borderColor: "border-[#ffd700]/40",  glowColor: "shadow-[0_0_18px_rgba(255,215,0,0.12)]",    dotColor: "bg-[#ffd700]"  },
+    yellow: { color: "text-loot-gold",  borderColor: "border-loot-gold/40",  glowColor: "shadow-[0_0_18px_rgba(255,215,0,0.12)]",    dotColor: "bg-loot-gold"  },
     orange: { color: "text-[#fb923c]",  borderColor: "border-[#fb923c]/40",  glowColor: "shadow-[0_0_18px_rgba(251,146,60,0.12)]",   dotColor: "bg-[#fb923c]"  },
 };
 
@@ -44,7 +44,7 @@ export default function PremiosPage() {
     }, []);
 
     return (
-        <div className={`${spaceMono.className} fixed inset-0 flex flex-col bg-[#050505] text-primary overflow-hidden`}>
+        <div className={`${spaceMono.className} fixed inset-0 flex flex-col bg-surface text-primary overflow-hidden`}>
             <div className="scanlines" />
             <div
                 className="fixed inset-0 pointer-events-none opacity-20"
@@ -59,7 +59,7 @@ export default function PremiosPage() {
             <div className="fixed bottom-4 left-4 size-16 border-b border-l border-primary/30 pointer-events-none" />
             <div className="fixed bottom-4 right-4 size-16 border-b border-r border-primary/30 pointer-events-none" />
 
-            <header className="flex items-center justify-between border-b border-primary/20 bg-[#050505]/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 sticky top-0 shrink-0">
+            <header className="flex items-center justify-between border-b border-primary/20 bg-surface/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 sticky top-0 shrink-0">
                 <div className="flex items-center gap-2 md:gap-4">
                     <span className="material-symbols-outlined text-xl md:text-2xl text-primary">trophy</span>
                     <div className="flex flex-col">
@@ -158,9 +158,9 @@ export default function PremiosPage() {
                                                 </p>
                                             )}
                                             {prize.winner_username && (
-                                                <div className="mt-4 flex items-center gap-2 border border-[#ffd700]/30 bg-[#ffd700]/5 px-3 py-2 w-fit">
-                                                    <span className="material-symbols-outlined text-[#ffd700] text-base">emoji_events</span>
-                                                    <span className="text-[#ffd700] text-xs font-bold uppercase tracking-widest">
+                                                <div className="mt-4 flex items-center gap-2 border border-loot-gold/30 bg-loot-gold/5 px-3 py-2 w-fit">
+                                                    <span className="material-symbols-outlined text-loot-gold text-base">emoji_events</span>
+                                                    <span className="text-loot-gold text-xs font-bold uppercase tracking-widest">
                                                         {prize.winner_username}
                                                     </span>
                                                 </div>

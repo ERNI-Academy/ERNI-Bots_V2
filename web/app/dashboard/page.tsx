@@ -17,13 +17,13 @@ interface ActivityEntry {
 function activityStyle(type: string): { border: string; label: string; color: string } {
     switch (type) {
         case "battle_win":
-            return { border: "border-[#ff0033]/30", label: "BRECHA", color: "text-[#ff0033]" };
+            return { border: "border-blood-red/30", label: "BRECHA", color: "text-blood-red" };
         case "boss_defeated":
             return { border: "border-[#c084fc]/40", label: "▸ BOSS NEUTRALIZADO", color: "text-[#c084fc]" };
         case "battle_defense":
-            return { border: "border-[#ffd700]/30", label: "DEFENSA", color: "text-[#ffd700]" };
+            return { border: "border-loot-gold/30", label: "DEFENSA", color: "text-loot-gold" };
         case "fortress_reconfigured":
-            return { border: "border-[#8b5cf6]/30", label: "RECONFIG", color: "text-[#8b5cf6]" };
+            return { border: "border-void-violet/30", label: "RECONFIG", color: "text-void-violet" };
         case "fortress_destroyed":
             return { border: "border-white/30", label: "DESTRUIDA", color: "text-white" };
         default:
@@ -120,8 +120,8 @@ function generateSpreadPositions(count: number): MarkerPos[] {
 function markerClass(status: Fortress["status"]): string {
     const base = "absolute flex items-center justify-center cursor-pointer hover:scale-150 transition-transform focus:outline-none -translate-x-1/2 -translate-y-1/2";
     switch (status) {
-        case "INVENCIBLE": return `${base} text-[#ff0033] drop-shadow-[0_0_10px_#ff0033]`;
-        case "HOSTIL":     return `${base} text-[#ffd700] drop-shadow-[0_0_10px_#ffd700]`;
+        case "INVENCIBLE": return `${base} text-blood-red drop-shadow-[0_0_10px_theme(--color-blood-red)]`;
+        case "HOSTIL":     return `${base} text-loot-gold drop-shadow-[0_0_10px_theme(--color-loot-gold)]`;
         case "DEBIL":      return `${base} text-primary  drop-shadow-[0_0_8px_var(--color-primary)]`;
         default:           return `${base} text-white    drop-shadow-[0_0_8px_white] animate-pulse`;
     }
@@ -230,7 +230,7 @@ export default function DashboardPage() {
                 {/* Loading overlay */}
                 {loading && (
                     <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <div className="font-mono text-[#00ffff] text-xs animate-pulse uppercase tracking-widest">
+                        <div className="font-mono text-primary text-xs animate-pulse uppercase tracking-widest">
                             ESCANEANDO FORTALEZAS...
                         </div>
                     </div>
@@ -242,8 +242,8 @@ export default function DashboardPage() {
                     const startsInFuture = seasonStatus === "frozen" && startMs > 0;
                     return (
                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                            <div className="bg-black/80 border border-[#ffd700]/60 px-6 py-4 font-mono text-center space-y-2 max-w-sm mx-4">
-                                <div className="text-[#ffd700] font-bold uppercase tracking-widest text-sm animate-pulse">
+                            <div className="bg-black/80 border border-loot-gold/60 px-6 py-4 font-mono text-center space-y-2 max-w-sm mx-4">
+                                <div className="text-loot-gold font-bold uppercase tracking-widest text-sm animate-pulse">
                                     {startsInFuture ? "⏳ PRÓXIMA TEMPORADA" : seasonStatus === "frozen" ? "⚠ TEMPORADA CONGELADA" : "⚠ TEMPORADA FINALIZADA"}
                                 </div>
                                 <p className="text-slate-300 text-xs uppercase tracking-widest leading-relaxed">
@@ -254,9 +254,9 @@ export default function DashboardPage() {
                                             : "La temporada ha concluido. No se pueden iniciar batallas."}
                                 </p>
                                 {startsInFuture && (
-                                    <div className="flex items-center justify-center gap-2 bg-black/40 border border-[#ffd700]/30 px-3 py-1.5 mt-1">
-                                        <span className="material-symbols-outlined text-[#ffd700] text-sm">schedule</span>
-                                        <span className="font-black text-[#ffd700] text-sm tracking-widest">{formatCountdown(startMs)}</span>
+                                    <div className="flex items-center justify-center gap-2 bg-black/40 border border-loot-gold/30 px-3 py-1.5 mt-1">
+                                        <span className="material-symbols-outlined text-loot-gold text-sm">schedule</span>
+                                        <span className="font-black text-loot-gold text-sm tracking-widest">{formatCountdown(startMs)}</span>
                                     </div>
                                 )}
                             </div>
@@ -283,7 +283,7 @@ export default function DashboardPage() {
                 ))}
 
                 {/* Viewport status */}
-                <div className="absolute bottom-20 md:bottom-6 left-6 font-mono text-[#00ffff] text-xs md:text-sm">
+                <div className="absolute bottom-20 md:bottom-6 left-6 font-mono text-primary text-xs md:text-sm">
                     VIEWPORT_STATUS: FULL_SCAN_ACTIVE<br />
                     COORD_X: 44.08821<br />
                     COORD_Y: 12.91223<br />
@@ -302,10 +302,10 @@ export default function DashboardPage() {
                         <span className="md:hidden">FORTALEZAS_V2</span>
                     </h1>
                     <div className="flex gap-2 md:gap-4">
-                        <span className="text-xs md:text-xs text-[#00ffff] uppercase tracking-widest">
+                        <span className="text-xs md:text-xs text-primary uppercase tracking-widest">
                             ESTADO: OK
                         </span>
-                        <span className="hidden md:inline text-xs text-[#00ff41] uppercase tracking-widest">
+                        <span className="hidden md:inline text-xs text-matrix-green uppercase tracking-widest">
                             BETTERASK.ERNI
                         </span>
                     </div>
@@ -381,7 +381,7 @@ export default function DashboardPage() {
                                         <div className="border-t border-white/20 my-1" />
                                         <button
                                             onClick={handleLogout}
-                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-[#ff0033] hover:bg-[#ff0033]/20 transition-colors uppercase tracking-widest cursor-pointer"
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-blood-red hover:bg-blood-red/20 transition-colors uppercase tracking-widest cursor-pointer"
                                         >
                                             <span className="material-symbols-outlined text-sm">power_settings_new</span>
                                             Salir
@@ -407,7 +407,7 @@ export default function DashboardPage() {
                         <span className="material-symbols-outlined text-xs">list_alt</span>
                         ACTIVIDAD DE RED
                     </h2>
-                    <span className="text-xs text-[#00ff41] animate-pulse">LIVE</span>
+                    <span className="text-xs text-matrix-green animate-pulse">LIVE</span>
                 </div>
                 <div className="flex-1 overflow-y-auto p-3 custom-scrollbar space-y-2 font-mono text-xs">
                     {activityFeed.length === 0 ? (
@@ -417,7 +417,7 @@ export default function DashboardPage() {
                             const s = activityStyle(entry.type);
                             return (
                                 <div key={i} className={`border-l ${s.border} pl-2`}>
-                                    <span className="text-[#00ffff]">[{formatTime(entry.timestamp)}]</span>{" "}
+                                    <span className="text-primary">[{formatTime(entry.timestamp)}]</span>{" "}
                                     <span className={`font-bold ${s.color}`}>{s.label}:</span>{" "}
                                     <span className="text-slate-300">{entry.message}</span>
                                 </div>
@@ -438,7 +438,7 @@ export default function DashboardPage() {
                 <aside className="md:fixed md:top-24 md:right-4 md:w-72 md:max-h-[calc(100vh-14rem)] md:overflow-y-auto panel-float z-20 custom-scrollbar">
                     <div data-tour="tour-fortress">
                     <div className="panel-header p-2">
-                        <h2 className="text-xs font-bold text-[#ffd700] flex items-center gap-2">
+                        <h2 className="text-xs font-bold text-loot-gold flex items-center gap-2">
                             <span className="material-symbols-outlined text-xs">fort</span>
                             MI FORTALEZA
                         </h2>
@@ -461,9 +461,9 @@ export default function DashboardPage() {
                             const canReconfigure = f.status === "active" && f.defeat_count >= 3;
                             const isDestroyed = f.status === "destroyed";
                             const statusCfg = {
-                                active: { label: "FUERTE",    color: "text-[#00ff41]", border: "border-[#00ff41]/40", bg: "bg-[#00ff41]/10" },
-                                weak:   { label: "DÉBIL",     color: "text-[#ffd700]", border: "border-[#ffd700]/40", bg: "bg-[#ffd700]/10" },
-                                destroyed: { label: "DESTRUIDA", color: "text-[#ff0033]", border: "border-[#ff0033]/40", bg: "bg-[#ff0033]/10" },
+                                active: { label: "FUERTE",    color: "text-matrix-green", border: "border-matrix-green/40", bg: "bg-matrix-green/10" },
+                                weak:   { label: "DÉBIL",     color: "text-loot-gold", border: "border-loot-gold/40", bg: "bg-loot-gold/10" },
+                                destroyed: { label: "DESTRUIDA", color: "text-blood-red", border: "border-blood-red/40", bg: "bg-blood-red/10" },
                             };
                             const st = isDestroyed ? statusCfg.destroyed : canReconfigure ? statusCfg.weak : statusCfg.active;
                             return (
@@ -477,7 +477,7 @@ export default function DashboardPage() {
                                     <div className="space-y-1.5 font-mono text-xs">
                                         <div className="flex justify-between items-center">
                                             <span className="text-slate-400 uppercase">Derrotas</span>
-                                            <span className={`font-bold ${f.defeat_count >= MAX_DEFEATS ? "text-[#ff0033]" : f.defeat_count >= 3 ? "text-[#ffd700]" : "text-[#00ff41]"}`}>
+                                            <span className={`font-bold ${f.defeat_count >= MAX_DEFEATS ? "text-blood-red" : f.defeat_count >= 3 ? "text-loot-gold" : "text-matrix-green"}`}>
                                                 {f.defeat_count} / {MAX_DEFEATS}
                                             </span>
                                         </div>
@@ -485,7 +485,7 @@ export default function DashboardPage() {
                                             {[...Array(MAX_DEFEATS)].map((_, i) => (
                                                 <div key={i} className={`flex-1 rounded-sm ${
                                                     i < f.defeat_count
-                                                        ? f.defeat_count >= MAX_DEFEATS ? "bg-[#ff0033]" : f.defeat_count >= 3 ? "bg-[#ffd700]" : "bg-[#00ff41]"
+                                                        ? f.defeat_count >= MAX_DEFEATS ? "bg-blood-red" : f.defeat_count >= 3 ? "bg-loot-gold" : "bg-matrix-green"
                                                         : "bg-white/10"
                                                 }`} />
                                             ))}
@@ -497,26 +497,26 @@ export default function DashboardPage() {
                                     </div>
                                     {/* Contextual alerts */}
                                     {isDestroyed && (
-                                        <div className="border border-[#ff0033]/50 bg-[#ff0033]/10 p-2 text-xs font-mono space-y-1.5">
-                                            <div className="flex items-center gap-1.5 text-[#ff0033] font-bold uppercase tracking-widest">
+                                        <div className="border border-blood-red/50 bg-blood-red/10 p-2 text-xs font-mono space-y-1.5">
+                                            <div className="flex items-center gap-1.5 text-blood-red font-bold uppercase tracking-widest">
                                                 <span className="material-symbols-outlined text-sm">crisis_alert</span>
                                                 Fortaleza destruida
                                             </div>
                                             <p className="text-slate-300 leading-relaxed">No puedes atacar otras fortalezas. Reconstruye la tuya para volver al combate.</p>
-                                            <Link href="/fortresses/configure" className="flex items-center justify-center gap-1 mt-1 px-2 py-1.5 border border-[#ff0033]/50 hover:bg-[#ff0033]/20 transition-colors text-[#ff0033] uppercase tracking-widest">
+                                            <Link href="/fortresses/configure" className="flex items-center justify-center gap-1 mt-1 px-2 py-1.5 border border-blood-red/50 hover:bg-blood-red/20 transition-colors text-blood-red uppercase tracking-widest">
                                                 <span className="material-symbols-outlined text-xs">construction</span>
                                                 Reconstruir
                                             </Link>
                                         </div>
                                     )}
                                     {canReconfigure && (
-                                        <div className="border border-[#ffd700]/50 bg-[#ffd700]/10 p-2 text-xs font-mono space-y-1.5">
-                                            <div className="flex items-center gap-1.5 text-[#ffd700] font-bold uppercase tracking-widest">
+                                        <div className="border border-loot-gold/50 bg-loot-gold/10 p-2 text-xs font-mono space-y-1.5">
+                                            <div className="flex items-center gap-1.5 text-loot-gold font-bold uppercase tracking-widest">
                                                 <span className="material-symbols-outlined text-sm">warning</span>
                                                 Reconfiguración disponible
                                             </div>
                                             <p className="text-slate-300 leading-relaxed">Tu fortaleza ha acumulado {f.defeat_count} derrotas. Puedes reconfigurarla ahora.</p>
-                                            <Link href="/fortresses/configure" className="flex items-center justify-center gap-1 mt-1 px-2 py-1.5 border border-[#ffd700]/50 hover:bg-[#ffd700]/20 transition-colors text-[#ffd700] uppercase tracking-widest">
+                                            <Link href="/fortresses/configure" className="flex items-center justify-center gap-1 mt-1 px-2 py-1.5 border border-loot-gold/50 hover:bg-loot-gold/20 transition-colors text-loot-gold uppercase tracking-widest">
                                                 <span className="material-symbols-outlined text-xs">radar</span>
                                                 Reconfigurar
                                             </Link>
@@ -541,13 +541,13 @@ export default function DashboardPage() {
                     </div>
                     </div>{/* /tour-fortress */}
                     {/* Zona Cero */}
-                    <div data-tour="tour-zona-cero" className="border-t border-[#8b5cf6]/30">
+                    <div data-tour="tour-zona-cero" className="border-t border-void-violet/30">
                         <div className="panel-header px-3 py-2 flex items-center justify-between">
-                            <h2 className="text-xs font-bold text-[#8b5cf6] flex items-center gap-2 uppercase tracking-widest">
+                            <h2 className="text-xs font-bold text-void-violet flex items-center gap-2 uppercase tracking-widest">
                                 <span className="material-symbols-outlined text-sm">target</span>
                                 Zona Cero
                             </h2>
-                            <span className="text-[10px] text-[#8b5cf6]/60 font-mono uppercase">{bosses.length} entidad{bosses.length !== 1 ? "es" : ""}</span>
+                            <span className="text-[10px] text-void-violet/60 font-mono uppercase">{bosses.length} entidad{bosses.length !== 1 ? "es" : ""}</span>
                         </div>
                         <div className="p-3 space-y-3">
                             {bosses.length === 0 ? (
@@ -563,10 +563,10 @@ export default function DashboardPage() {
                                 return (
                                     <div key={boss.boss_id} className={`border p-3 space-y-2.5 ${
                                         boss.defeated
-                                            ? "border-[#8b5cf6]/15 bg-[#8b5cf6]/4 opacity-60"
+                                            ? "border-void-violet/15 bg-void-violet/4 opacity-60"
                                             : available
-                                                ? "border-[#8b5cf6]/50 bg-[#8b5cf6]/8"
-                                                : "border-[#8b5cf6]/20 bg-[#8b5cf6]/4"
+                                                ? "border-void-violet/50 bg-void-violet/8"
+                                                : "border-void-violet/20 bg-void-violet/4"
                                     }`}>
                                         {/* Name + reward */}
                                         <div className="flex items-start justify-between gap-2">
@@ -579,10 +579,10 @@ export default function DashboardPage() {
                                             </div>
                                             {!boss.defeated && (
                                                 <div className="shrink-0 text-right">
-                                                    <div className="text-base font-black text-[#ffd700] leading-tight">+{boss.reward_score}</div>
-                                                    <div className="text-[9px] text-[#ffd700]/60 uppercase tracking-widest">puntos</div>
-                                                    <div className="text-sm font-bold text-[#00ffff] leading-tight mt-0.5">+{boss.reward_credits}</div>
-                                                    <div className="text-[9px] text-[#00ffff]/60 uppercase tracking-widest">fragmentos</div>
+                                                    <div className="text-base font-black text-loot-gold leading-tight">+{boss.reward_score}</div>
+                                                    <div className="text-[9px] text-loot-gold/60 uppercase tracking-widest">puntos</div>
+                                                    <div className="text-sm font-bold text-primary leading-tight mt-0.5">+{boss.reward_credits}</div>
+                                                    <div className="text-[9px] text-primary/60 uppercase tracking-widest">fragmentos</div>
                                                 </div>
                                             )}
                                         </div>
@@ -596,13 +596,13 @@ export default function DashboardPage() {
                                             canAttackBoss ? (
                                                 <Link
                                                     href={`/attack/boss/${boss.boss_id}`}
-                                                    className="flex items-center justify-center gap-2 w-full bg-[#8b5cf6]/25 border border-[#8b5cf6] text-[#e9d5ff] text-xs font-bold uppercase tracking-widest py-1.5 hover:bg-[#8b5cf6]/50 transition-colors"
+                                                    className="flex items-center justify-center gap-2 w-full bg-void-violet/25 border border-void-violet text-[#e9d5ff] text-xs font-bold uppercase tracking-widest py-1.5 hover:bg-void-violet/50 transition-colors"
                                                 >
                                                     <span className="material-symbols-outlined text-xs">bolt</span>
                                                     Atacar
                                                 </Link>
                                             ) : (
-                                                <div className="flex items-center justify-center gap-2 w-full bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 text-[#8b5cf6]/40 text-xs font-bold uppercase tracking-widest py-1.5 cursor-not-allowed">
+                                                <div className="flex items-center justify-center gap-2 w-full bg-void-violet/5 border border-void-violet/20 text-void-violet/40 text-xs font-bold uppercase tracking-widest py-1.5 cursor-not-allowed">
                                                     <span className="material-symbols-outlined text-xs">lock</span>
                                                     Atacar
                                                 </div>
@@ -610,9 +610,9 @@ export default function DashboardPage() {
                                         ) : (
                                             <div className="space-y-1">
                                                 <div className="text-[10px] text-slate-500 uppercase tracking-widest font-mono">Disponible en</div>
-                                                <div className="flex items-center gap-2 bg-black/30 border border-[#00ffff]/20 px-2 py-1">
-                                                    <span className="material-symbols-outlined text-[#00ffff] text-sm">schedule</span>
-                                                    <span className="font-black text-[#00ffff] font-mono text-sm tracking-wider">{formatCountdown(remaining)}</span>
+                                                <div className="flex items-center gap-2 bg-black/30 border border-primary/20 px-2 py-1">
+                                                    <span className="material-symbols-outlined text-primary text-sm">schedule</span>
+                                                    <span className="font-black text-primary font-mono text-sm tracking-wider">{formatCountdown(remaining)}</span>
                                                 </div>
                                             </div>
                                         )}
@@ -621,8 +621,8 @@ export default function DashboardPage() {
                             })}
                             {/* Season blocked warning */}
                             {bosses.length > 0 && battlesBlocked && (
-                                <div className="border border-[#ffd700]/30 bg-[#ffd700]/5 p-2.5 text-xs font-mono space-y-1.5">
-                                    <div className="flex items-center gap-1.5 text-[#ffd700] font-bold uppercase tracking-widest">
+                                <div className="border border-loot-gold/30 bg-loot-gold/5 p-2.5 text-xs font-mono space-y-1.5">
+                                    <div className="flex items-center gap-1.5 text-loot-gold font-bold uppercase tracking-widest">
                                         <span className="material-symbols-outlined text-sm">warning</span>
                                         {seasonStatus === "frozen" ? "Temporada congelada" : "Temporada finalizada"}
                                     </div>
@@ -639,8 +639,8 @@ export default function DashboardPage() {
                                 const fortressDestroyed = player?.fortress?.status === "destroyed";
                                 if (!noFortress && !fortressDestroyed) return null;
                                 return (
-                                    <div className="border border-[#8b5cf6]/30 bg-[#8b5cf6]/5 p-2.5 text-xs font-mono space-y-1.5">
-                                        <div className="flex items-center gap-1.5 text-[#8b5cf6] font-bold uppercase tracking-widest">
+                                    <div className="border border-void-violet/30 bg-void-violet/5 p-2.5 text-xs font-mono space-y-1.5">
+                                        <div className="flex items-center gap-1.5 text-void-violet font-bold uppercase tracking-widest">
                                             <span className="material-symbols-outlined text-sm">lock</span>
                                             Acceso bloqueado
                                         </div>
@@ -679,7 +679,7 @@ export default function DashboardPage() {
                     <div className="flex-1 space-y-2">
                         <div className="flex justify-between items-end">
                             <span className="text-xs text-slate-300">PUNTOS</span>
-                            <span className="text-[#ffd700] text-xs font-bold">
+                            <span className="text-loot-gold text-xs font-bold">
                                 {player !== null ? `${playerScore} PTS` : "— PTS"}
                             </span>
                         </div>
@@ -687,12 +687,12 @@ export default function DashboardPage() {
                             {[...Array(5)].map((_, i) => (
                                 <div
                                     key={i}
-                                    className={`flex-1 ${player !== null && playerScore > 0 && i < Math.ceil(Math.min((playerScore / topScore) * 5, 5)) ? "bg-[#ffd700] shadow-[0_0_5px_#ffd700]" : "bg-white/10"}`}
+                                    className={`flex-1 ${player !== null && playerScore > 0 && i < Math.ceil(Math.min((playerScore / topScore) * 5, 5)) ? "bg-loot-gold shadow-[0_0_5px_theme(--color-loot-gold)]" : "bg-white/10"}`}
                                 ></div>
                             ))}
                         </div>
                         <div className="flex gap-4 text-xs text-slate-400 font-mono">
-                            <span className="text-[#ffd700]">
+                            <span className="text-loot-gold">
                                 {player !== null ? `PUNTUACIÓN DEL JUGADOR: ${playerScore}` : "CARGANDO..."}
                             </span>
                         </div>
@@ -703,11 +703,11 @@ export default function DashboardPage() {
                             const ms = new Date(seasonEndDate).getTime() - Date.now();
                             if (ms <= 0) return null;
                             return (
-                                <div className="flex md:hidden items-center justify-between border border-[#ff0033]/30 bg-[#ff0033]/5 px-3 py-1.5 font-mono">
+                                <div className="flex md:hidden items-center justify-between border border-blood-red/30 bg-blood-red/5 px-3 py-1.5 font-mono">
                                     <span className="text-[9px] text-slate-400 uppercase tracking-widest">FIN DE TEMPORADA</span>
                                     <div className="flex items-center gap-1.5">
-                                        <span className="material-symbols-outlined text-[#ff0033] text-xs">timer</span>
-                                        <span className="font-black text-[#ff0033] text-sm tracking-widest">{formatCountdown(ms)}</span>
+                                        <span className="material-symbols-outlined text-blood-red text-xs">timer</span>
+                                        <span className="font-black text-blood-red text-sm tracking-widest">{formatCountdown(ms)}</span>
                                     </div>
                                 </div>
                             );
@@ -717,11 +717,11 @@ export default function DashboardPage() {
                                 const ms = new Date(seasonEndDate).getTime() - Date.now();
                                 if (ms <= 0) return null;
                                 return (
-                                    <div className="hidden md:flex flex-col justify-center space-y-1 border border-[#ff0033]/30 bg-[#ff0033]/5 px-3 py-1 font-mono">
+                                    <div className="hidden md:flex flex-col justify-center space-y-1 border border-blood-red/30 bg-blood-red/5 px-3 py-1 font-mono">
                                         <span className="text-[9px] text-slate-400 uppercase tracking-widest">FIN DE TEMPORADA</span>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="material-symbols-outlined text-[#ff0033] text-xs">timer</span>
-                                            <span className="font-black text-[#ff0033] text-sm tracking-widest">{formatCountdown(ms)}</span>
+                                            <span className="material-symbols-outlined text-blood-red text-xs">timer</span>
+                                            <span className="font-black text-blood-red text-sm tracking-widest">{formatCountdown(ms)}</span>
                                         </div>
                                     </div>
                                 );
@@ -739,7 +739,7 @@ export default function DashboardPage() {
                             </button>
                             <Link
                                 href="/history"
-                                className="flex-1 md:flex-none bg-[#ff0033]/10 border border-[#ff0033]/40 text-xs px-4 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase text-center flex items-center justify-center"
+                                className="flex-1 md:flex-none bg-blood-red/10 border border-blood-red/40 text-xs px-4 py-2 text-blood-red hover:bg-blood-red/30 transition-colors uppercase text-center flex items-center justify-center"
                             >
                                 HISTORIAL DE PUNTOS
                             </Link>
@@ -841,7 +841,7 @@ export default function DashboardPage() {
                                                     onClick={() => canAttack ? router.push(`/attack/${selectedFortress.id}`) : undefined}
                                                     disabled={!canAttack}
                                                     title={battlesBlocked ? (seasonStatus === "frozen" ? "Temporada congelada. Las batallas están pausadas." : "La temporada ha finalizado. No se pueden iniciar batallas.") : noFortress ? "Debes crear tu fortaleza antes de atacar" : fortressDestroyed ? "Tu fortaleza está destruida. Reconstruyela primero." : undefined}
-                                                    className="flex-1 bg-[#ff0033]/10 border border-[#ff0033]/40 text-xs px-3 py-2 text-[#ff0033] hover:bg-[#ff0033]/30 transition-colors uppercase flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    className="flex-1 bg-blood-red/10 border border-blood-red/40 text-xs px-3 py-2 text-blood-red hover:bg-blood-red/30 transition-colors uppercase flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
                                                     <span className="material-symbols-outlined text-xs">gps_fixed</span>
                                                     Atacar
@@ -858,7 +858,7 @@ export default function DashboardPage() {
                                                 {fortressDestroyed && (
                                                     <Link
                                                         href="/fortresses/configure"
-                                                        className="text-xs text-center text-[#ff0033] font-mono border border-[#ff0033]/40 px-3 py-1.5 hover:bg-[#ff0033]/10 transition-colors uppercase tracking-widest flex items-center justify-center gap-1"
+                                                        className="text-xs text-center text-blood-red font-mono border border-blood-red/40 px-3 py-1.5 hover:bg-blood-red/10 transition-colors uppercase tracking-widest flex items-center justify-center gap-1"
                                                     >
                                                         <span className="material-symbols-outlined text-xs">construction</span>
                                                         Reconstruir fortaleza

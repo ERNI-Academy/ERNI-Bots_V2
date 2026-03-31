@@ -118,7 +118,7 @@ export default function InvitationsPage() {
     const canCreate = !loading && !creating && remaining > 0;
 
     return (
-        <div className="fixed inset-0 flex flex-col bg-[#050505] text-white font-mono overflow-hidden">
+        <div className="fixed inset-0 flex flex-col bg-surface text-white font-mono overflow-hidden">
             {/* Scanlines */}
             <div className="scanlines" />
 
@@ -138,14 +138,14 @@ export default function InvitationsPage() {
             <div className="fixed bottom-4 right-4 size-16 border-b border-r border-primary/30 pointer-events-none" />
 
             {/* ─── HEADER ─── */}
-            <header className="sticky top-0 z-40 panel-float border-b border-[#00ffff]/20 px-4 md:px-6 py-3 flex items-center justify-between gap-4">
+            <header className="sticky top-0 z-40 panel-float border-b border-primary/20 px-4 md:px-6 py-3 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 overflow-hidden">
-                    <span className="material-symbols-outlined text-[#00ffff] text-2xl shrink-0">mail</span>
+                    <span className="material-symbols-outlined text-primary text-2xl shrink-0">mail</span>
                     <div className="overflow-hidden">
                         <h1 className="text-base md:text-xl font-black tracking-[0.15em] war-room-glitch uppercase truncate">
                             INVITACIONES<span className="hidden md:inline">_v2.0.0</span>
                         </h1>
-                        <div className="text-xs text-[#00ff41] uppercase tracking-widest">
+                        <div className="text-xs text-matrix-green uppercase tracking-widest">
                             {data
                                 ? data.unlimited
                                     ? `${data.total} GENERADAS // BETTERASK.ERNI`
@@ -157,7 +157,7 @@ export default function InvitationsPage() {
                 <div className="flex items-center gap-4 shrink-0">
                     <Link
                         href="/dashboard"
-                        className="flex items-center gap-1 px-3 py-1.5 border border-[#00ffff]/30 hover:bg-[#00ffff]/20 text-[#00ffff] transition-colors font-mono text-xs uppercase tracking-widest"
+                        className="flex items-center gap-1 px-3 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary transition-colors font-mono text-xs uppercase tracking-widest"
                         title="Volver al mapa"
                     >
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
@@ -190,9 +190,9 @@ export default function InvitationsPage() {
                     </p>
 
                     {/* Referral bonus callout */}
-                    <div className="flex items-start gap-2 border border-[#00ff41]/30 bg-[#00ff41]/5 px-3 py-2">
-                        <span className="material-symbols-outlined text-[#00ff41] text-base shrink-0 mt-0.5">toll</span>
-                        <p className="text-xs text-[#00ff41] leading-relaxed">
+                    <div className="flex items-start gap-2 border border-matrix-green/30 bg-matrix-green/5 px-3 py-2">
+                        <span className="material-symbols-outlined text-matrix-green text-base shrink-0 mt-0.5">toll</span>
+                        <p className="text-xs text-matrix-green leading-relaxed">
                             <span className="font-bold uppercase tracking-wider">+20 fragmentos</span> por cada jugador que se registre con tu código.
                             Los fragmentos se acreditan automáticamente en el momento del registro.
                         </p>
@@ -228,7 +228,7 @@ export default function InvitationsPage() {
 
                 {/* Error */}
                 {error && (
-                    <div className="border border-[#ff0033]/40 bg-[#ff0033]/10 px-4 py-3 text-[#ff0033] text-xs mb-4 flex items-center gap-2">
+                    <div className="border border-blood-red/40 bg-blood-red/10 px-4 py-3 text-blood-red text-xs mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-sm">error</span>
                         {error}
                     </div>
@@ -262,7 +262,7 @@ export default function InvitationsPage() {
                         {data.invitations.map((inv) => {
                             const claimed = inv.claimed;
                             const borderColor = claimed
-                                ? "border-[#00ff41]/30"
+                                ? "border-matrix-green/30"
                                 : inv.is_active
                                     ? "border-primary/30"
                                     : "border-slate-700";
@@ -272,7 +272,7 @@ export default function InvitationsPage() {
                                     ? "DISPONIBLE"
                                     : "INACTIVA";
                             const statusColor = claimed
-                                ? "text-[#00ff41] border-[#00ff41]/40 bg-[#00ff41]/10"
+                                ? "text-matrix-green border-matrix-green/40 bg-matrix-green/10"
                                 : inv.is_active
                                     ? "text-primary border-primary/40 bg-primary/10"
                                     : "text-slate-500 border-slate-700 bg-slate-800/50";
@@ -293,7 +293,7 @@ export default function InvitationsPage() {
                                                 <button
                                                     onClick={() => setQrCode(inv.code)}
                                                     title="Mostrar QR"
-                                                    className="p-1 border border-[#8b5cf6]/40 hover:bg-[#8b5cf6]/20 text-[#8b5cf6] transition-colors shrink-0 cursor-pointer"
+                                                    className="p-1 border border-void-violet/40 hover:bg-void-violet/20 text-void-violet transition-colors shrink-0 cursor-pointer"
                                                 >
                                                     <span className="material-symbols-outlined text-sm">qr_code</span>
                                                 </button>
@@ -314,7 +314,7 @@ export default function InvitationsPage() {
                                             <>
                                                 <div className="space-y-0.5">
                                                     <div className="text-slate-500 uppercase tracking-widest text-[10px]">Reclamada por</div>
-                                                    <div className="text-[#00ff41] font-bold flex items-center gap-1">
+                                                    <div className="text-matrix-green font-bold flex items-center gap-1">
                                                         <span className="material-symbols-outlined text-xs">person</span>
                                                         {inv.invited_user ?? "Desconocido"}
                                                     </div>
@@ -328,7 +328,7 @@ export default function InvitationsPage() {
                                         {!claimed && inv.expires_at && (
                                             <div className="space-y-0.5">
                                                 <div className="text-slate-500 uppercase tracking-widest text-[10px]">Expira</div>
-                                                <div className="text-[#ffd700]">{formatDate(inv.expires_at)}</div>
+                                                <div className="text-loot-gold">{formatDate(inv.expires_at)}</div>
                                             </div>
                                         )}
                                     </div>
@@ -349,12 +349,12 @@ export default function InvitationsPage() {
                     >
                         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
                         <div
-                            className="relative bg-[#0a0a0f] border border-[#8b5cf6]/50 p-6 space-y-4 max-w-xs w-full shadow-[0_0_40px_rgba(139,92,246,0.3)]"
+                            className="relative bg-[#0a0a0f] border border-void-violet/50 p-6 space-y-4 max-w-xs w-full shadow-[0_0_40px_rgba(139,92,246,0.3)]"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Header */}
                             <div className="flex items-center justify-between">
-                                <h2 className="text-xs font-bold text-[#8b5cf6] uppercase tracking-widest flex items-center gap-2">
+                                <h2 className="text-xs font-bold text-void-violet uppercase tracking-widest flex items-center gap-2">
                                     <span className="material-symbols-outlined text-sm">qr_code</span>
                                     Código QR de Invitación
                                 </h2>

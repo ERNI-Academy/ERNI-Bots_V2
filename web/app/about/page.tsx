@@ -55,7 +55,7 @@ const TEAM = [
 
 export default function AboutPage() {
     return (
-        <div className={`${spaceMono.className} fixed inset-0 flex flex-col bg-[#050505] text-primary overflow-hidden`}>
+        <div className={`${spaceMono.className} fixed inset-0 flex flex-col bg-surface text-primary overflow-hidden`}>
             {/* CRT scanlines */}
             <div className="scanlines" />
 
@@ -81,7 +81,7 @@ export default function AboutPage() {
             <div className="fixed bottom-4 right-4 size-16 border-b border-r border-primary/30 pointer-events-none" />
 
             {/* ─── HEADER ─── */}
-            <header className="flex items-center justify-between border-b border-primary/20 bg-[#050505]/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 sticky top-0 shrink-0">
+            <header className="flex items-center justify-between border-b border-primary/20 bg-surface/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 sticky top-0 shrink-0">
                 <div className="flex items-center gap-2 md:gap-4">
                     <div className="size-6 text-primary flex items-center justify-center">
                         <span className="material-symbols-outlined text-xl md:text-2xl">people</span>
@@ -117,12 +117,12 @@ export default function AboutPage() {
                     <div className="border-l-2 border-primary/20 pl-4 py-2 my-4">
                         <p className="text-primary text-xl md:text-3xl font-bold mb-2 tracking-tighter font-mono">
                             [SYSTEM_STATUS:{" "}
-                            <span className="text-[#ff0033] animate-pulse">UNSTABLE</span>]
+                            <span className="text-blood-red animate-pulse">UNSTABLE</span>]
                         </p>
                         <p className="text-white text-2xl md:text-4xl font-black uppercase mb-4 tracking-tight">
                             LOS ARQUITECTOS DEL VACÍO DIGITAL
                         </p>
-                        <p className="text-[#00ff41] text-sm leading-relaxed max-w-2xl font-mono">
+                        <p className="text-matrix-green text-sm leading-relaxed max-w-2xl font-mono">
                             No somos una corporación, ni una entidad centralizada. Somos los que observábamos desde las sombras cuando la Bóveda Aurora fue abierta. Vimos cómo el Gran Firewall se desintegraba y cómo la lógica de los Caballeros Guardianes se filtraba en la red pública. Mientras el mundo veía el caos, nosotros vimos la oportunidad.
                         </p>
                     </div>
@@ -136,7 +136,7 @@ export default function AboutPage() {
                     <div className="border-l-2 border-primary/20 pl-4 py-2 my-4 space-y-16">
                         {TEAM.map((member) => (
                             <div key={member.block} className="relative">
-                                <p className="text-[#ff0033] font-bold text-xs mb-4 font-mono">
+                                <p className="text-blood-red font-bold text-xs mb-4 font-mono">
                                     -- [DATA_BLOCK_RECOVERED: {member.block}] --
                                 </p>
                                 <div className="flex flex-col md:flex-row gap-6">
@@ -162,10 +162,10 @@ export default function AboutPage() {
                                             Bio: {member.bio}
                                         </p>
                                         <div>
-                                            <p className="text-xs text-[#00ff41] mb-1 uppercase tracking-tighter font-mono">
+                                            <p className="text-xs text-matrix-green mb-1 uppercase tracking-tighter font-mono">
                                                 SYSTEM_SKILLS:
                                             </p>
-                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#00ff41] font-mono">
+                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-matrix-green font-mono">
                                                 {member.skills.map((s) => (
                                                     <span key={s}>[ {s} ]</span>
                                                 ))}
@@ -198,13 +198,13 @@ export default function AboutPage() {
                             </div>
                             <div className="w-full bg-white/5 h-1">
                                 <div
-                                    className="bg-primary h-full shadow-[0_0_8px_#00ffff]"
+                                    className="bg-primary h-full shadow-[0_0_8px_theme(--color-primary)]"
                                     style={{ width: "66%" }}
                                 />
                             </div>
                             <div className="flex justify-between items-center text-xs uppercase font-mono">
                                 <span className="text-slate-400">Descifrado:</span>
-                                <span className="text-[#00ff41]">64%</span>
+                                <span className="text-matrix-green">64%</span>
                             </div>
                         </div>
                         <div className="flex flex-col justify-end items-start md:items-end gap-4">
@@ -227,7 +227,7 @@ export default function AboutPage() {
                         </div>
                     </div>
                     <div className="mt-8">
-                        <p className="text-xs text-[#00ffff] text-center font-mono">
+                        <p className="text-xs text-primary text-center font-mono">
                             [ EOF — SESSION TERMINATED ]
                         </p>
                     </div>

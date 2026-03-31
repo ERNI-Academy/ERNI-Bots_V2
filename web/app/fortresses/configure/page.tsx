@@ -330,15 +330,15 @@ function FortressConfigurePage() {
             )}
 
             {/* ─── HEADER ─── */}
-            <header className="sticky top-0 z-40 panel-float border-b border-[#00ffff]/20 px-4 md:px-6 py-3 flex items-center justify-between gap-4">
+            <header className="sticky top-0 z-40 panel-float border-b border-primary/20 px-4 md:px-6 py-3 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 overflow-hidden">
-                    <span className="material-symbols-outlined text-[#00ffff] text-2xl shrink-0 animate-pulse">fort</span>
+                    <span className="material-symbols-outlined text-primary text-2xl shrink-0 animate-pulse">fort</span>
                     <div className="overflow-hidden">
                         <h1 className="text-base md:text-xl font-black tracking-[0.15em] war-room-glitch uppercase truncate">
                             FORTRESS_CONFIG
                             <span className="hidden md:inline">_v2.04</span>
                         </h1>
-                        <div className="text-xs text-[#00ff41] uppercase tracking-widest">
+                        <div className="text-xs text-matrix-green uppercase tracking-widest">
                             {isEditMode
                                 ? `MODO: RECONFIGURAR // ID: ${existingFortress?.id?.slice(0, 8)}...`
                                 : "MODO: NUEVO_DESPLIEGUE // CONSTRUIR_DEFENSA"}
@@ -350,12 +350,12 @@ function FortressConfigurePage() {
                     {player && (
                         <div className="hidden md:flex flex-col items-end">
                             <span className="text-xs text-slate-300 uppercase tracking-widest">Fragmentos</span>
-                            <span className="text-[#00ffff] font-bold text-base">{player.credits.toLocaleString()} ⌬</span>
+                            <span className="text-primary font-bold text-base">{player.credits.toLocaleString()} ⌬</span>
                         </div>
                     )}
                     <Link
                         href="/dashboard"
-                        className="p-2 border border-[#00ffff]/30 hover:bg-[#00ffff]/20 text-[#00ffff] transition-colors cursor-pointer"
+                        className="p-2 border border-primary/30 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
                         title="Volver al mapa"
                     >
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
@@ -366,7 +366,7 @@ function FortressConfigurePage() {
             {/* ─── LOADING ─── */}
             {loading && (
                 <div className="flex-1 flex items-center justify-center">
-                    <div className="font-mono text-[#00ffff] text-xs animate-pulse uppercase tracking-widest">
+                    <div className="font-mono text-primary text-xs animate-pulse uppercase tracking-widest">
                         CARGANDO_MÓDULOS...
                     </div>
                 </div>
@@ -381,13 +381,13 @@ function FortressConfigurePage() {
 
                         {/* Existing fortress info banner */}
                         {isEditMode && (
-                            <div className="border border-[#ffd700]/30 bg-[#ffd700]/5 p-3 flex items-center gap-3">
-                                <span className="material-symbols-outlined text-[#ffd700] text-xl shrink-0">info</span>
+                            <div className="border border-loot-gold/30 bg-loot-gold/5 p-3 flex items-center gap-3">
+                                <span className="material-symbols-outlined text-loot-gold text-xl shrink-0">info</span>
                                 <div>
-                                    <div className="text-sm font-bold text-[#ffd700] uppercase tracking-widest">
+                                    <div className="text-sm font-bold text-loot-gold uppercase tracking-widest">
                                         Fortaleza activa: {existingFortress?.name}
                                     </div>
-                                    <div className="text-xs text-[#ffd700] font-mono mt-0.5">
+                                    <div className="text-xs text-loot-gold font-mono mt-0.5">
                                         Protocolo: {existingFortress?.protocol} // Arquetipo: {existingFortress?.archetype}
                                     </div>
                                     <div className="text-xs text-[#e8c000] font-mono">
@@ -400,8 +400,8 @@ function FortressConfigurePage() {
                         {/* ── IDENTITY PANEL ── */}
                         <section className="panel-float flex flex-col gap-4">
                             <div data-tour="tour-cfg-identity" className="panel-header px-4 py-2.5 flex items-center gap-2">
-                                <span className="material-symbols-outlined text-[#ff0033] text-lg">fingerprint</span>
-                                <h2 className="text-sm font-bold text-[#ff0033] uppercase tracking-widest">
+                                <span className="material-symbols-outlined text-blood-red text-lg">fingerprint</span>
+                                <h2 className="text-sm font-bold text-blood-red uppercase tracking-widest">
                                     Mi Fortaleza
                                 </h2>
                             </div>
@@ -409,12 +409,12 @@ function FortressConfigurePage() {
 
                                 {/* Name */}
                                 <div className="flex flex-col gap-1">
-                                    <label className="text-xs text-[#00ffff] uppercase tracking-widest">
+                                    <label className="text-xs text-primary uppercase tracking-widest">
                                         Nombre de la Fortaleza
                                     </label>
                                     <input
                                         type="text"
-                                        className="bg-black/60 border border-[#00ffff]/30 text-[#00ffff] p-2.5 text-sm rounded-sm placeholder:text-[#00ffff]/20 focus:outline-none focus:border-[#00ffff] focus:ring-1 focus:ring-[#00ffff]/40 font-mono"
+                                        className="bg-black/60 border border-primary/30 text-primary p-2.5 text-sm rounded-sm placeholder:text-primary/20 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 font-mono"
                                         placeholder="e.g. NE0-K4STLE"
                                         value={name}
                                         onChange={e => setName(e.target.value)}
@@ -424,11 +424,11 @@ function FortressConfigurePage() {
 
                                 {/* Story */}
                                 <div className="flex flex-col gap-1">
-                                    <label className="text-xs text-[#00ffff] uppercase tracking-widest">
+                                    <label className="text-xs text-primary uppercase tracking-widest">
                                         Descripción de la Fortaleza
                                     </label>
                                     <textarea
-                                        className="bg-black/60 border border-[#00ffff]/30 text-slate-300 p-2.5 text-sm rounded-sm placeholder:text-slate-400 focus:outline-none focus:border-[#00ffff] focus:ring-1 focus:ring-[#00ffff]/40 resize-none custom-scrollbar"
+                                        className="bg-black/60 border border-primary/30 text-slate-300 p-2.5 text-sm rounded-sm placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 resize-none custom-scrollbar"
                                         placeholder="Introduce los metadatos ancestrales de tu fortaleza..."
                                         rows={4}
                                         value={story}
@@ -438,14 +438,14 @@ function FortressConfigurePage() {
 
                                 {/* Protected word */}
                                 <div className="flex flex-col gap-1">
-                                    <label className="text-xs text-[#00ffff] uppercase tracking-widest">
+                                    <label className="text-xs text-primary uppercase tracking-widest">
                                         🔐 Palabra Secreta (Código de Acceso)
                                     </label>
                                     <select
-                                        className={`bg-black/60 border text-[#00ffff] p-2.5 text-sm rounded-sm focus:outline-none focus:border-[#00ffff] font-mono uppercase ${
+                                        className={`bg-black/60 border text-primary p-2.5 text-sm rounded-sm focus:outline-none focus:border-primary font-mono uppercase ${
                                             isEditMode && originalWord && protectedWord.toUpperCase() === originalWord.toUpperCase()
-                                                ? "border-[#ff0033]/70 ring-1 ring-[#ff0033]/40"
-                                                : "border-[#00ffff]/30"
+                                                ? "border-blood-red/70 ring-1 ring-blood-red/40"
+                                                : "border-primary/30"
                                         }`}
                                         value={protectedWord}
                                         onChange={e => setProtectedWord(e.target.value)}
@@ -459,7 +459,7 @@ function FortressConfigurePage() {
                                         )}
                                     </select>
                                     {isEditMode && originalWord && protectedWord.toUpperCase() === originalWord.toUpperCase() && (
-                                        <p className="text-xs text-[#ff0033] font-mono mt-0.5 flex items-center gap-1">
+                                        <p className="text-xs text-blood-red font-mono mt-0.5 flex items-center gap-1">
                                             <span className="material-symbols-outlined text-xs">warning</span>
                                             Esta es tu palabra secreta. Debes elegir una diferente en tu próxima reconfiguración.
                                         </p>
@@ -474,8 +474,8 @@ function FortressConfigurePage() {
                         {/* ── PERSONALITY PANEL ── */}
                         <section className="panel-float flex flex-col">
                             <div data-tour="tour-cfg-personality" className="panel-header px-4 py-2.5 flex items-center gap-2">
-                                <span className="material-symbols-outlined text-[#8b5cf6] text-lg">theater_comedy</span>
-                                <h2 className="text-sm font-bold text-[#8b5cf6] uppercase tracking-widest">
+                                <span className="material-symbols-outlined text-void-violet text-lg">theater_comedy</span>
+                                <h2 className="text-sm font-bold text-void-violet uppercase tracking-widest">
                                     Personalidad de la IA Defensora
                                 </h2>
                             </div>
@@ -492,12 +492,12 @@ function FortressConfigurePage() {
                                                     onClick={() => setSelectedPersonality(personality.id)}
                                                     className={`text-left p-3 flex justify-between items-start transition-all border cursor-pointer ${
                                                         isSelected
-                                                            ? "border-[#8b5cf6] bg-[#8b5cf6]/15 shadow-[0_0_10px_#8b5cf620]"
-                                                            : "border-[#8b5cf6]/20 bg-[#8b5cf6]/5 hover:border-[#8b5cf6]/50 hover:bg-[#8b5cf6]/10"
+                                                            ? "border-void-violet bg-void-violet/15 shadow-[0_0_10px_theme(--color-void-violet)]"
+                                                            : "border-void-violet/20 bg-void-violet/5 hover:border-void-violet/50 hover:bg-void-violet/10"
                                                     }`}
                                                 >
                                                     <div className="flex flex-col gap-1 mr-2 flex-1 min-w-0">
-                                                        <span className={`font-bold text-sm ${isSelected ? "text-[#8b5cf6]" : "text-slate-300"}`}>
+                                                        <span className={`font-bold text-sm ${isSelected ? "text-void-violet" : "text-slate-300"}`}>
                                                             {personality.name}
                                                         </span>
                                                         <span className="text-sm text-slate-300 leading-tight">
@@ -505,7 +505,7 @@ function FortressConfigurePage() {
                                                         </span>
                                                     </div>
                                                     {isSelected && (
-                                                        <span className="text-xs bg-[#8b5cf6] text-white px-1 font-bold shrink-0 ml-2 self-start">
+                                                        <span className="text-xs bg-void-violet text-white px-1 font-bold shrink-0 ml-2 self-start">
                                                             SELEC.
                                                         </span>
                                                     )}
@@ -525,8 +525,8 @@ function FortressConfigurePage() {
                         <section className="panel-float">
                             <div data-tour="tour-cfg-protocol" className="panel-header px-4 py-2.5 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[#00ff41] text-lg">extension</span>
-                                    <h2 className="text-sm font-bold text-[#00ff41] uppercase tracking-widest">
+                                    <span className="material-symbols-outlined text-matrix-green text-lg">extension</span>
+                                    <h2 className="text-sm font-bold text-matrix-green uppercase tracking-widest">
                                         Protocolo
                                     </h2>
                                 </div>
@@ -548,15 +548,15 @@ function FortressConfigurePage() {
                                                     onClick={isOwned ? () => setSelectedProtocol(protocol.id) : undefined}
                                                     className={`p-3 flex flex-col gap-2 transition-all border ${
                                                         isSelected
-                                                            ? "border-[#00ff41] bg-[#00ff41]/15 shadow-[0_0_10px_#00ff4120] cursor-pointer"
+                                                            ? "border-matrix-green bg-matrix-green/15 shadow-[0_0_10px_theme(--color-matrix-green)] cursor-pointer"
                                                             : isOwned
-                                                                ? "border-[#00ff41]/30 bg-[#00ff41]/5 hover:border-[#00ff41]/50 hover:bg-[#00ff41]/10 cursor-pointer"
+                                                                ? "border-matrix-green/30 bg-matrix-green/5 hover:border-matrix-green/50 hover:bg-matrix-green/10 cursor-pointer"
                                                                 : "border-slate-700 bg-black/30"
                                                     }`}
                                                 >
                                                     <div className="flex justify-between items-start gap-2">
                                                         <div className="flex flex-col gap-1 flex-1 min-w-0">
-                                                            <span className={`font-bold text-sm ${isSelected ? "text-[#00ff41]" : "text-slate-300"}`}>
+                                                            <span className={`font-bold text-sm ${isSelected ? "text-matrix-green" : "text-slate-300"}`}>
                                                                 {protocol.name}
                                                             </span>
                                                             <span className="text-sm text-slate-300 leading-tight">
@@ -565,10 +565,10 @@ function FortressConfigurePage() {
                                                         </div>
                                                         <div className="flex flex-col items-end shrink-0">
                                                             {isSelected && (
-                                                                <span className="text-xs bg-[#00ff41] text-black px-1 font-bold">SELEC.</span>
+                                                                <span className="text-xs bg-matrix-green text-black px-1 font-bold">SELEC.</span>
                                                             )}
                                                             {isOwned && !isSelected && (
-                                                                <span className="text-xs bg-[#00ff41]/20 border border-[#00ff41]/40 text-[#00ff41] px-1 font-bold">
+                                                                <span className="text-xs bg-matrix-green/20 border border-matrix-green/40 text-matrix-green px-1 font-bold">
                                                                     {protocol.unlock_cost === 0 ? "FREE" : "COMPRADO"}
                                                                 </span>
                                                             )}
@@ -581,7 +581,7 @@ function FortressConfigurePage() {
                                                         <button
                                                             onClick={() => buyAsset("protocol", protocol.id)}
                                                             disabled={!canAffordBuy || isBuying}
-                                                            className="w-full py-1.5 text-xs font-bold uppercase tracking-wider border border-[#00ff41]/50 text-[#00ff41] hover:bg-[#00ff41]/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                                            className="w-full py-1.5 text-xs font-bold uppercase tracking-wider border border-matrix-green/50 text-matrix-green hover:bg-matrix-green/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                                                         >
                                                             {isBuying ? "COMPRANDO..." : canAffordBuy ? `COMPRAR · ${protocol.unlock_cost} ⌬` : "FONDOS INSUFICIENTES"}
                                                         </button>
@@ -598,8 +598,8 @@ function FortressConfigurePage() {
                         <section className="panel-float">
                             <div data-tour="tour-cfg-archetype" className="panel-header px-4 py-2.5 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[#00ffff] text-lg">psychology</span>
-                                    <h2 className="text-sm font-bold text-[#00ffff] uppercase tracking-widest">
+                                    <span className="material-symbols-outlined text-primary text-lg">psychology</span>
+                                    <h2 className="text-sm font-bold text-primary uppercase tracking-widest">
                                         Arquetipo
                                     </h2>
                                 </div>
@@ -622,33 +622,33 @@ function FortressConfigurePage() {
                                                     onClick={isOwned ? () => setSelectedArchetype(archetype.id) : undefined}
                                                     className={`p-3 flex flex-col gap-1.5 transition-all border relative overflow-hidden ${
                                                         isSelected
-                                                            ? "border-2 border-[#00ffff] bg-[#00ffff]/15 shadow-[0_0_12px_#00ffff20] cursor-pointer"
+                                                            ? "border-2 border-primary bg-primary/15 shadow-[0_0_12px_theme(--color-primary)] cursor-pointer"
                                                             : isOwned
-                                                                ? "border border-[#00ffff]/20 bg-[#00ffff]/5 hover:border-[#00ffff]/50 hover:bg-[#00ffff]/10 cursor-pointer"
+                                                                ? "border border-primary/20 bg-primary/5 hover:border-primary/50 hover:bg-primary/10 cursor-pointer"
                                                                 : "border border-slate-700 bg-black/30"
                                                     }`}
                                                 >
                                                     {isSelected && (
-                                                        <div className="absolute top-0 right-0 bg-[#00ffff] text-black text-xs px-1.5 font-bold">
+                                                        <div className="absolute top-0 right-0 bg-primary text-black text-xs px-1.5 font-bold">
                                                             SELEC.
                                                         </div>
                                                     )}
                                                     {isOwned && !isSelected && archetype.unlock_cost > 0 && (
-                                                        <div className="absolute top-0 right-0 bg-[#00ffff]/20 border border-[#00ffff]/40 text-[#00ffff] text-xs px-1.5 font-bold">
+                                                        <div className="absolute top-0 right-0 bg-primary/20 border border-primary/40 text-primary text-xs px-1.5 font-bold">
                                                             COMPRADO
                                                         </div>
                                                     )}
-                                                    <span className={`material-symbols-outlined text-2xl ${isSelected ? "text-[#00ffff]" : isOwned ? "text-slate-400" : "text-slate-600"}`}>
+                                                    <span className={`material-symbols-outlined text-2xl ${isSelected ? "text-primary" : isOwned ? "text-slate-400" : "text-slate-600"}`}>
                                                         {icon}
                                                     </span>
-                                                    <span className={`font-bold text-sm leading-tight ${isSelected ? "text-[#00ffff]" : isOwned ? "text-slate-300" : "text-slate-500"}`}>
+                                                    <span className={`font-bold text-sm leading-tight ${isSelected ? "text-primary" : isOwned ? "text-slate-300" : "text-slate-500"}`}>
                                                         {archetype.name}
                                                     </span>
                                                     <span className={`text-sm leading-tight ${isOwned ? "text-slate-300" : "text-slate-500"}`}>
                                                         {archetype.description}
                                                     </span>
                                                     {isOwned ? (
-                                                        <span className={`font-bold text-sm mt-auto ${isSelected ? "text-[#00ffff]" : "text-slate-400"}`}>
+                                                        <span className={`font-bold text-sm mt-auto ${isSelected ? "text-primary" : "text-slate-400"}`}>
                                                             {archetype.unlock_cost === 0 ? "FREE" : "COMPRADO"}
                                                         </span>
                                                     ) : (
@@ -657,7 +657,7 @@ function FortressConfigurePage() {
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); buyAsset("archetype", archetype.id); }}
                                                                 disabled={!canAffordBuy || isBuying}
-                                                                className="w-full py-1 text-xs font-bold uppercase tracking-wider border border-[#00ffff]/50 text-[#00ffff] hover:bg-[#00ffff]/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                                                className="w-full py-1 text-xs font-bold uppercase tracking-wider border border-primary/50 text-primary hover:bg-primary/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                                                             >
                                                                 {isBuying ? "..." : canAffordBuy ? "COMPRAR" : "FONDOS INSUF."}
                                                             </button>
@@ -675,19 +675,19 @@ function FortressConfigurePage() {
                         <section className="panel-float">
                             <div data-tour="tour-cfg-constraints" className="panel-header px-4 py-2.5 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[#ff0033] text-lg">settings</span>
-                                    <h2 className="text-sm font-bold text-[#ff0033] uppercase tracking-widest">
+                                    <span className="material-symbols-outlined text-blood-red text-lg">settings</span>
+                                    <h2 className="text-sm font-bold text-blood-red uppercase tracking-widest">
                                         Restricciones
                                     </h2>
                                 </div>
                                 <span className="text-xs text-slate-300 font-mono">
-                                    <span className={constraints.size >= MAX_CONSTRAINTS ? "text-[#ff0033] font-bold" : ""}>
+                                    <span className={constraints.size >= MAX_CONSTRAINTS ? "text-blood-red font-bold" : ""}>
                                         {constraints.size}/{MAX_CONSTRAINTS}
                                     </span>
                                     {" "}<span className="hidden sm:inline">seleccionadas</span>
                                 </span>
                             </div>
-                            <div className="divide-y divide-[#ff0033]/10">
+                            <div className="divide-y divide-blood-red/10">
                                 {constraintTypes.length === 0 ? (
                                     <div className="p-4 text-xs text-slate-300 font-mono animate-pulse">CARGANDO RESTRICCIONES...</div>
                                 ) : (
@@ -700,19 +700,19 @@ function FortressConfigurePage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => toggleGroup(group.id)}
-                                                    className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-[#ff0033]/8 transition-colors cursor-pointer"
+                                                    className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-blood-red/8 transition-colors cursor-pointer"
                                                 >
                                                     <div className="flex items-center gap-2.5">
                                                         <span className="text-sm font-bold text-white uppercase tracking-wider">
                                                             {group.name}
                                                         </span>
                                                         {activeCount > 0 && (
-                                                            <span className="bg-[#ff0033] text-white text-xs font-bold px-2 py-0.5 leading-none rounded-sm">
+                                                            <span className="bg-blood-red text-white text-xs font-bold px-2 py-0.5 leading-none rounded-sm">
                                                                 {activeCount}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <span className={`material-symbols-outlined text-[#ff0033] text-xl transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+                                                    <span className={`material-symbols-outlined text-blood-red text-xl transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
                                                         expand_more
                                                     </span>
                                                 </button>
@@ -742,7 +742,7 @@ function FortressConfigurePage() {
                                                                             <button
                                                                                 onClick={() => buyAsset("constraint", constraint.id)}
                                                                                 disabled={!canAffordBuy || isBuying}
-                                                                                className="text-xs font-bold border border-[#ff0033]/50 text-[#ff0033] px-2 py-1 hover:bg-[#ff0033]/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer uppercase tracking-wider whitespace-nowrap"
+                                                                                className="text-xs font-bold border border-blood-red/50 text-blood-red px-2 py-1 hover:bg-blood-red/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer uppercase tracking-wider whitespace-nowrap"
                                                                             >
                                                                                 {isBuying ? "..." : canAffordBuy ? "COMPRAR" : "FONDOS INSUF."}
                                                                             </button>
@@ -756,10 +756,10 @@ function FortressConfigurePage() {
                                                                     key={constraint.id}
                                                                     className={`flex items-center gap-3 px-3 py-2.5 border-l-[3px] transition-all ${
                                                                         active
-                                                                            ? "bg-[#ff0033]/15 border-[#ff0033] cursor-pointer"
+                                                                            ? "bg-blood-red/15 border-blood-red cursor-pointer"
                                                                             : locked
                                                                                 ? "bg-black/20 border-slate-700 cursor-not-allowed"
-                                                                                : "bg-black/30 border-slate-600 hover:border-[#ff0033]/60 hover:bg-[#ff0033]/5 cursor-pointer"
+                                                                                : "bg-black/30 border-slate-600 hover:border-blood-red/60 hover:bg-blood-red/5 cursor-pointer"
                                                                     }`}
                                                                 >
                                                                     <input
@@ -767,13 +767,13 @@ function FortressConfigurePage() {
                                                                         checked={active}
                                                                         onChange={() => toggleConstraint(constraint.id)}
                                                                         disabled={locked}
-                                                                        className="w-4 h-4 bg-black border-[#ff0033] text-[#ff0033] focus:ring-[#ff0033] rounded-sm shrink-0 accent-[#ff0033] disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                        className="w-4 h-4 bg-black border-blood-red text-blood-red focus:ring-blood-red rounded-sm shrink-0 accent-blood-red disabled:opacity-40 disabled:cursor-not-allowed"
                                                                     />
                                                                     <p className={`text-sm leading-snug flex-1 font-medium ${active ? "text-white" : locked ? "text-slate-400" : "text-slate-300"}`}>
                                                                         {constraint.text}
                                                                     </p>
                                                                     {constraint.price > 0 && (
-                                                                        <span className="text-xs text-[#00ff41] font-bold shrink-0 ml-2">COMPRADO</span>
+                                                                        <span className="text-xs text-matrix-green font-bold shrink-0 ml-2">COMPRADO</span>
                                                                     )}
                                                                 </label>
                                                             );
@@ -785,7 +785,7 @@ function FortressConfigurePage() {
                                     })
                                 )}
                                 {constraints.size > 0 && (
-                                    <div className="px-4 py-2.5 text-right text-xs text-[#ff0033] font-mono font-bold tracking-widest">
+                                    <div className="px-4 py-2.5 text-right text-xs text-blood-red font-mono font-bold tracking-widest">
                                         {constraints.size} RESTRICCIÓN{constraints.size !== 1 ? "ES" : ""} ACTIVA{constraints.size !== 1 ? "S" : ""}
                                     </div>
                                 )}
@@ -797,13 +797,13 @@ function FortressConfigurePage() {
                             <div className="flex flex-col gap-2 w-full sm:w-auto">
                                 {/* Error */}
                                 {error && (
-                                    <div className="border border-[#ff0033]/50 bg-[#ff0033]/10 p-2 text-sm text-[#ff0033] font-mono">
+                                    <div className="border border-blood-red/50 bg-blood-red/10 p-2 text-sm text-blood-red font-mono">
                                         ERROR: {error}
                                     </div>
                                 )}
                                 {/* Success */}
                                 {success && (
-                                    <div className="border border-[#00ff41]/50 bg-[#00ff41]/10 p-2 text-sm text-[#00ff41] font-mono">
+                                    <div className="border border-matrix-green/50 bg-matrix-green/10 p-2 text-sm text-matrix-green font-mono">
                                         {success}
                                     </div>
                                 )}
@@ -812,7 +812,7 @@ function FortressConfigurePage() {
                                     data-tour="tour-cfg-deploy"
                                     onClick={handleSubmit}
                                     disabled={saving}
-                                    className="flex items-center justify-center gap-2 bg-[#00ffff]/10 border border-[#00ffff]/50 text-[#00ffff] font-bold text-sm px-6 py-3 hover:bg-[#00ffff]/25 transition-all uppercase tracking-widest cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed glitch-button"
+                                    className="flex items-center justify-center gap-2 bg-primary/10 border border-primary/50 text-primary font-bold text-sm px-6 py-3 hover:bg-primary/25 transition-all uppercase tracking-widest cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed glitch-button"
                                 >
                                     <span className="material-symbols-outlined text-base">bolt</span>
                                     {saving
@@ -825,7 +825,7 @@ function FortressConfigurePage() {
                                 {/* Abort */}
                                 <Link
                                     href="/dashboard"
-                                    className="flex items-center justify-center gap-2 bg-black border border-[#ff0033]/40 text-[#ff0033] font-bold text-sm px-6 py-2.5 hover:bg-[#ff0033]/20 transition-all uppercase tracking-widest cursor-pointer"
+                                    className="flex items-center justify-center gap-2 bg-black border border-blood-red/40 text-blood-red font-bold text-sm px-6 py-2.5 hover:bg-blood-red/20 transition-all uppercase tracking-widest cursor-pointer"
                                 >
                                     <span className="material-symbols-outlined text-sm">close</span>
                                     Cancelar
@@ -839,7 +839,7 @@ function FortressConfigurePage() {
 
             {/* ─── STATUS BAR ─── */}
             <FortressConfigTour username={player?.username ?? null} />
-            <footer className="border-t border-[#00ffff]/15 bg-black/80 px-4 md:px-6 py-2 flex justify-between items-center text-xs text-[#00ffff] font-mono tracking-widest shrink-0">
+            <footer className="border-t border-primary/15 bg-black/80 px-4 md:px-6 py-2 flex justify-between items-center text-xs text-primary font-mono tracking-widest shrink-0">
                 <div className="flex gap-4 md:gap-6">
                     <span>LATENCIA: 14MS</span>
                     <span className="hidden md:inline">PÉRDIDA_PAQUETES: 0.00%</span>

@@ -26,11 +26,11 @@ export default function Home() {
         <div className="w-full bg-black/80 border border-primary/40 rounded p-8 space-y-6">
           <div className="space-y-2 font-mono text-xs uppercase">
             <p className="flex items-center gap-2">
-              <span className="text-[#00ffff]">[OK]</span>
+              <span className="text-primary">[OK]</span>
               <span>AUTENTICACIÓN_EXITOSA</span>
             </p>
             <p className="flex items-center gap-2">
-              <span className="text-[#00ffff]">[OK]</span>
+              <span className="text-primary">[OK]</span>
               <span>ENLACE_NEURAL_ESTABLECIDO</span>
             </p>
             <p className="flex items-center gap-2 text-green-500/80">

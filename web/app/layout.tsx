@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -21,6 +21,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ERNI BOTS V2 | EL PROTOCOLO FRAGMENTADO",
   description: "CTF de Infiltración y Dominio de Fortalezas en la Red",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({

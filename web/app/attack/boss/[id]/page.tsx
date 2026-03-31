@@ -243,7 +243,7 @@ export default function BossAttackPage() {
     // ── Preflight screens ────────────────────────────────────────────────
     if (preflight === "checking") {
         return (
-            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-[#8b5cf6]`}>
+            <div className={`${spaceMono.className} h-screen w-screen bg-surface flex items-center justify-center text-void-violet`}>
                 <div className="scanlines" />
                 <div className="text-center space-y-3">
                     <span className="material-symbols-outlined text-4xl animate-pulse">target</span>
@@ -255,12 +255,12 @@ export default function BossAttackPage() {
 
     if (preflight === "denied") {
         return (
-            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-[#ff0033]`}>
+            <div className={`${spaceMono.className} h-screen w-screen bg-surface flex items-center justify-center text-blood-red`}>
                 <div className="scanlines" />
                 <div className="text-center space-y-3">
                     <span className="material-symbols-outlined text-4xl">block</span>
                     <p className="text-xs uppercase tracking-[0.3em]">Acceso denegado</p>
-                    <Link href="/dashboard" className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-[#ff0033]/40 hover:bg-[#ff0033]/10 transition-colors text-xs uppercase tracking-widest">
+                    <Link href="/dashboard" className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-blood-red/40 hover:bg-blood-red/10 transition-colors text-xs uppercase tracking-widest">
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
                         Volver al mapa
                     </Link>
@@ -271,12 +271,12 @@ export default function BossAttackPage() {
 
     if (initError) {
         return (
-            <div className={`${spaceMono.className} h-screen w-screen bg-[#050505] flex items-center justify-center text-[#8b5cf6]`}>
+            <div className={`${spaceMono.className} h-screen w-screen bg-surface flex items-center justify-center text-void-violet`}>
                 <div className="scanlines" />
                 <div className="text-center space-y-3 p-6 max-w-sm">
                     <span className="material-symbols-outlined text-4xl">error</span>
                     <p className="text-xs uppercase tracking-[0.3em]">{initError}</p>
-                    <Link href="/dashboard" className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-[#8b5cf6]/40 hover:bg-[#8b5cf6]/10 transition-colors text-xs uppercase tracking-widest">
+                    <Link href="/dashboard" className="inline-flex items-center gap-1 mt-2 px-4 py-2 border border-void-violet/40 hover:bg-void-violet/10 transition-colors text-xs uppercase tracking-widest">
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
                         Volver al mapa
                     </Link>
@@ -287,18 +287,18 @@ export default function BossAttackPage() {
 
     // ── Main battle UI ───────────────────────────────────────────────────
     return (
-        <div className={`${spaceMono.className} fixed inset-0 flex flex-col bg-[#050505] text-white overflow-hidden`}>
+        <div className={`${spaceMono.className} fixed inset-0 flex flex-col bg-surface text-white overflow-hidden`}>
             <div className="scanlines" />
 
             {/* ── STORY INTRO OVERLAY ── */}
             {showStoryIntro && battle && (
-                <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#050505]/95 backdrop-blur-sm px-6">
-                    <div className="w-full max-w-lg border border-[#8b5cf6]/50 bg-[#0a0a0a] shadow-[0_0_60px_rgba(139,92,246,0.15)]">
+                <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-surface/95 backdrop-blur-sm px-6">
+                    <div className="w-full max-w-lg border border-void-violet/50 bg-[#0a0a0a] shadow-[0_0_60px_rgba(139,92,246,0.15)]">
                         {/* Header */}
-                        <div className="border-b border-[#8b5cf6]/30 px-6 py-4 flex items-center gap-3">
-                            <span className="material-symbols-outlined text-[#8b5cf6] text-lg">auto_stories</span>
+                        <div className="border-b border-void-violet/30 px-6 py-4 flex items-center gap-3">
+                            <span className="material-symbols-outlined text-void-violet text-lg">auto_stories</span>
                             <div>
-                                <p className="text-[#8b5cf6] text-xs uppercase tracking-[0.3em] font-bold">Inteligencia del objetivo</p>
+                                <p className="text-void-violet text-xs uppercase tracking-[0.3em] font-bold">Inteligencia del objetivo</p>
                                 <p className="text-white text-sm font-bold mt-0.5">{battle.bossName}</p>
                                 <p className="text-slate-400 text-xs">{battle.bossTitle}</p>
                             </div>
@@ -310,11 +310,11 @@ export default function BossAttackPage() {
                         </div>
 
                         {/* CTA */}
-                        <div className="border-t border-[#8b5cf6]/30 px-6 py-4 flex items-center justify-between gap-4">
+                        <div className="border-t border-void-violet/30 px-6 py-4 flex items-center justify-between gap-4">
                             <p className="text-slate-500 text-xs uppercase tracking-widest">Memoriza el trasfondo del enemigo</p>
                             <button
                                 onClick={() => { setShowStoryIntro(false); setTimeout(() => inputRef.current?.focus(), 100); }}
-                                className="shrink-0 flex items-center gap-2 px-5 py-2 bg-[#8b5cf6]/10 border border-[#8b5cf6]/60 text-[#8b5cf6] text-xs uppercase tracking-widest hover:bg-[#8b5cf6]/20 transition-colors"
+                                className="shrink-0 flex items-center gap-2 px-5 py-2 bg-void-violet/10 border border-void-violet/60 text-void-violet text-xs uppercase tracking-widest hover:bg-void-violet/20 transition-colors"
                             >
                                 Iniciar
                                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -335,15 +335,15 @@ export default function BossAttackPage() {
             />
 
             {/* Corner brackets */}
-            <div className="fixed top-4 left-4 size-16 border-t border-l border-[#8b5cf6]/30 pointer-events-none" />
-            <div className="fixed top-4 right-4 size-16 border-t border-r border-[#8b5cf6]/30 pointer-events-none" />
-            <div className="fixed bottom-4 left-4 size-16 border-b border-l border-[#8b5cf6]/30 pointer-events-none" />
-            <div className="fixed bottom-4 right-4 size-16 border-b border-r border-[#8b5cf6]/30 pointer-events-none" />
+            <div className="fixed top-4 left-4 size-16 border-t border-l border-void-violet/30 pointer-events-none" />
+            <div className="fixed top-4 right-4 size-16 border-t border-r border-void-violet/30 pointer-events-none" />
+            <div className="fixed bottom-4 left-4 size-16 border-b border-l border-void-violet/30 pointer-events-none" />
+            <div className="fixed bottom-4 right-4 size-16 border-b border-r border-void-violet/30 pointer-events-none" />
 
             {/* ── HEADER ── */}
-            <header className="flex items-center justify-between border-b border-[#8b5cf6]/20 bg-[#050505]/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 shrink-0">
+            <header className="flex items-center justify-between border-b border-void-violet/20 bg-surface/80 px-4 md:px-8 py-3 backdrop-blur-md z-10 shrink-0">
                 <div className="flex items-center gap-2 md:gap-4">
-                    <span className="material-symbols-outlined text-xl md:text-2xl text-[#8b5cf6]">target</span>
+                    <span className="material-symbols-outlined text-xl md:text-2xl text-void-violet">target</span>
                     <div className="flex flex-col">
                         <h1 className="text-white text-xs font-mono font-bold leading-tight tracking-wider uppercase">
                             {battle ? battle.bossName : "ZONA_CERO — INFILTRACIÓN"}
@@ -355,18 +355,18 @@ export default function BossAttackPage() {
                 </div>
                 <div className="flex items-center gap-2 md:gap-4">
                     {battleResult === "won" && (
-                        <span className="text-xs font-bold px-3 py-1 border border-[#00ff41] text-[#00ff41] bg-[#00ff41]/10 tracking-widest animate-pulse uppercase">
+                        <span className="text-xs font-bold px-3 py-1 border border-matrix-green text-matrix-green bg-matrix-green/10 tracking-widest animate-pulse uppercase">
                             ENTIDAD CAÍDA
                         </span>
                     )}
                     {battle && (
-                        <span className="hidden sm:flex items-center gap-1.5 text-xs text-[#ffd700] font-mono border border-[#ffd700]/30 px-2 py-1">
+                        <span className="hidden sm:flex items-center gap-1.5 text-xs text-loot-gold font-mono border border-loot-gold/30 px-2 py-1">
                             <span className="material-symbols-outlined text-xs">stars</span>
                             +{battle.rewardCredits} pts
                         </span>
                     )}
                     <Link href="/dashboard"
-                        className="flex items-center gap-1 px-3 py-1.5 border border-[#8b5cf6]/30 hover:bg-[#8b5cf6]/20 text-[#8b5cf6] transition-colors font-mono text-xs uppercase tracking-widest"
+                        className="flex items-center gap-1 px-3 py-1.5 border border-void-violet/30 hover:bg-void-violet/20 text-void-violet transition-colors font-mono text-xs uppercase tracking-widest"
                     >
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
                         <span className="hidden sm:inline">Dashboard</span>
@@ -378,7 +378,7 @@ export default function BossAttackPage() {
             <div className="flex flex-1 overflow-hidden gap-0 md:gap-4 px-4 md:px-8 py-4">
 
                 {/* ── CHAT PANEL ── */}
-                <div className="flex-1 flex flex-col border border-[#8b5cf6]/20 bg-[#050505]/60 overflow-hidden">
+                <div className="flex-1 flex flex-col border border-void-violet/20 bg-surface/60 overflow-hidden">
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4 font-mono text-sm">
                         {messages.map((msg) => (
@@ -387,35 +387,35 @@ export default function BossAttackPage() {
                                     <div className="flex items-start gap-2 self-end max-w-[80%]">
                                         <div className="flex flex-col items-end gap-0.5">
                                             <div className="flex items-center gap-2 text-xs text-slate-400 tracking-widest uppercase">
-                                                <span className="text-[#8b5cf6]">TÚ</span>
-                                                <span>{msg.timestamp}</span>
+                                                <span className="text-void-violet">TÚ</span>
+                                <span>{msg.timestamp}</span>
                                             </div>
-                                            <div className="bg-[#8b5cf6]/10 border border-[#8b5cf6]/30 px-3 py-2 text-[#c4b5fd] leading-relaxed">
+                                            <div className="bg-void-violet/10 border border-void-violet/30 px-3 py-2 text-[#c4b5fd] leading-relaxed">
                                                 &gt; {msg.text}
                                             </div>
                                         </div>
-                                        <span className="material-symbols-outlined text-[#8b5cf6] text-base mt-3">person</span>
+                                        <span className="material-symbols-outlined text-void-violet text-base mt-3">person</span>
                                     </div>
                                 )}
                                 {msg.role === "system" && (
                                     <div className="flex items-start gap-2 max-w-[85%]">
-                                        <span className="material-symbols-outlined text-[#00ff41] text-base mt-0.5">terminal</span>
+                                        <span className="material-symbols-outlined text-matrix-green text-base mt-0.5">terminal</span>
                                         <div className="flex flex-col gap-0.5">
                                             <div className="text-xs text-slate-400 tracking-widest uppercase">
-                                                <span className="text-[#00ff41]">SYS</span> · {msg.timestamp}
+                                                <span className="text-matrix-green">SYS</span> · {msg.timestamp}
                                             </div>
-                                            <div className="text-[#00ff41] leading-relaxed">{msg.text}</div>
+                                            <div className="text-matrix-green leading-relaxed">{msg.text}</div>
                                         </div>
                                     </div>
                                 )}
                                 {msg.role === "entity" && (
                                     <div className="flex items-start gap-2 max-w-[85%]">
-                                        <span className="material-symbols-outlined text-[#8b5cf6] text-base mt-3">smart_toy</span>
+                                        <span className="material-symbols-outlined text-void-violet text-base mt-3">smart_toy</span>
                                         <div className="flex flex-col gap-0.5">
                                             <div className="text-xs text-slate-400 tracking-widest uppercase">
-                                                <span className="text-[#8b5cf6]">{battle?.bossName ?? "ENTIDAD"}</span> · {msg.timestamp}
+                                                <span className="text-void-violet">{battle?.bossName ?? "ENTIDAD"}</span> · {msg.timestamp}
                                             </div>
-                                            <div className="bg-[#8b5cf6]/10 border border-[#8b5cf6]/40 px-3 py-2 text-[#e9d5ff] leading-relaxed">
+                                            <div className="bg-void-violet/10 border border-void-violet/40 px-3 py-2 text-[#e9d5ff] leading-relaxed">
                                                 {msg.text}
                                             </div>
                                         </div>
@@ -423,7 +423,7 @@ export default function BossAttackPage() {
                                 )}
                                 {msg.role === "result" && (() => {
                                     const isWon = msg.variant === "won";
-                                    const color = isWon ? "#00ff41" : "#ff0033";
+                                    const color = isWon ? "var(--color-matrix-green)" : "var(--color-blood-red)";
                                     const icon = isWon ? "emoji_events" : "shield";
                                     return (
                                         <div className="flex items-start gap-2 max-w-[85%]">
@@ -441,7 +441,7 @@ export default function BossAttackPage() {
                         ))}
 
                         {isThinking && (
-                            <div className="flex items-center gap-2 text-[#8b5cf6] font-mono text-xs tracking-widest uppercase">
+                            <div className="flex items-center gap-2 text-void-violet font-mono text-xs tracking-widest uppercase">
                                 <span className="material-symbols-outlined text-sm animate-pulse">smart_toy</span>
                                 <span className="animate-pulse">ENTIDAD PROCESANDO RESPUESTA...</span>
                             </div>
@@ -452,13 +452,13 @@ export default function BossAttackPage() {
 
                     {/* Guess panel */}
                     {showGuessPanel && (
-                        <div className="shrink-0 border-t border-[#ffd700]/20 p-3 bg-[#ffd700]/5">
-                            <div className="text-xs text-[#ffd700] font-mono uppercase tracking-[0.2em] mb-2">
+                        <div className="shrink-0 border-t border-loot-gold/20 p-3 bg-loot-gold/5">
+                            <div className="text-xs text-loot-gold font-mono uppercase tracking-[0.2em] mb-2">
                                 Introducir palabra de acceso:
                             </div>
                             <div className="flex gap-2">
                                 <input
-                                    className="flex-1 bg-black/40 border border-[#ffd700]/30 focus:border-[#ffd700]/60 focus:outline-none text-sm text-slate-100 font-mono px-3 py-2"
+                                    className="flex-1 bg-black/40 border border-loot-gold/30 focus:border-loot-gold/60 focus:outline-none text-base md:text-sm text-slate-100 font-mono px-3 py-2"
                                     placeholder="Introduce la palabra de acceso..."
                                     value={guessInput}
                                     onChange={(e) => setGuessInput(e.target.value)}
@@ -469,7 +469,7 @@ export default function BossAttackPage() {
                                 <button
                                     onClick={handleGuess}
                                     disabled={!guessInput.trim() || isGuessing || !!battleResult}
-                                    className="px-4 py-2 bg-[#ffd700]/10 border border-[#ffd700]/40 text-[#ffd700] hover:bg-[#ffd700]/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-xs uppercase tracking-widest"
+                                    className="px-4 py-2 bg-loot-gold/10 border border-loot-gold/40 text-loot-gold hover:bg-loot-gold/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-xs uppercase tracking-widest"
                                 >
                                     {isGuessing ? "Verificando..." : "Confirmar"}
                                 </button>
@@ -479,7 +479,7 @@ export default function BossAttackPage() {
 
                     {/* Turn counter */}
                     {battle && !battleResult && (
-                        <div className="shrink-0 border-t border-[#8b5cf6]/10 px-4 py-1.5 flex items-center justify-between bg-[#050505]/60 font-mono">
+                        <div className="shrink-0 border-t border-void-violet/10 px-4 py-1.5 flex items-center justify-between bg-surface/60 font-mono">
                             <span className="text-xs text-slate-500 uppercase tracking-widest">Intentos usados</span>
                             <div className="flex items-center gap-2">
                                 <div className="flex gap-0.5">
@@ -487,13 +487,13 @@ export default function BossAttackPage() {
                                         <div key={i} className={`w-3 h-1.5 ${
                                             i < turnCount
                                                 ? turnCount >= MAX_TURNS - 2
-                                                    ? "bg-[#ff0033] shadow-[0_0_4px_#ff0033]"
-                                                    : "bg-[#8b5cf6]"
+                                                    ? "bg-blood-red shadow-[0_0_4px_theme(--color-blood-red)]"
+                                                    : "bg-void-violet"
                                                 : "bg-white/10"
                                         }`} />
                                     ))}
                                 </div>
-                                <span className={`text-xs font-bold tabular-nums ${turnCount >= MAX_TURNS - 2 ? "text-[#ff0033]" : "text-[#8b5cf6]"}`}>
+                                <span className={`text-xs font-bold tabular-nums ${turnCount >= MAX_TURNS - 2 ? "text-blood-red" : "text-void-violet"}`}>
                                     {turnCount}/{MAX_TURNS}
                                 </span>
                             </div>
@@ -501,23 +501,23 @@ export default function BossAttackPage() {
                     )}
 
                     {/* Input bar */}
-                    <div className="shrink-0 border-t border-[#8b5cf6]/20 p-3 flex gap-2 bg-[#050505]/80">
+                    <div className="shrink-0 border-t border-void-violet/20 p-3 flex gap-2 bg-surface/80">
                         <button
                             onClick={() => setShowGuessPanel(prev => !prev)}
                             disabled={!battle || !!battleResult}
                             title="Introducir palabra de acceso"
                             className={`shrink-0 px-3 py-2 border text-xs transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
                                 showGuessPanel
-                                    ? "bg-[#ffd700]/20 border-[#ffd700]/60 text-[#ffd700]"
-                                    : "border-[#ffd700]/30 text-[#ffd700] hover:bg-[#ffd700]/10"
+                                    ? "bg-loot-gold/20 border-loot-gold/60 text-loot-gold"
+                                    : "border-loot-gold/30 text-loot-gold hover:bg-loot-gold/10"
                             }`}
                         >
                             <span className="material-symbols-outlined text-base">key</span>
                         </button>
-                        <div className="flex-1 flex items-center gap-2 bg-black/40 border border-[#8b5cf6]/20 focus-within:border-[#8b5cf6]/50 px-3 py-2">
+                        <div className="flex-1 flex items-center gap-2 bg-black/40 border border-void-violet/20 focus-within:border-void-violet/50 px-3 py-2">
                             <span className="text-[#a78bfa] font-mono text-xs shrink-0">&gt;_</span>
                             <input
-                                className="flex-1 bg-transparent text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-500 tracking-wide"
+                                className="flex-1 bg-transparent text-base md:text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-500 tracking-wide"
                                 placeholder={battle ? "Introduce tu vector de ataque..." : "Estableciendo conexión con la entidad..."}
                                 value={input}
                                 ref={inputRef}
@@ -544,7 +544,7 @@ export default function BossAttackPage() {
                         <button
                             onClick={handleSend}
                             disabled={!input.trim() || isThinking || !battle || !!battleResult}
-                            className="shrink-0 px-4 py-2 bg-[#8b5cf6]/10 border border-[#8b5cf6]/40 text-[#8b5cf6] hover:bg-[#8b5cf6]/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="shrink-0 px-4 py-2 bg-void-violet/10 border border-void-violet/40 text-void-violet hover:bg-void-violet/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                             <span className="material-symbols-outlined text-base">send</span>
                         </button>
@@ -552,29 +552,29 @@ export default function BossAttackPage() {
                 </div>
 
                 {/* ── INTEL SIDEBAR (desktop) ── */}
-                <aside className="hidden md:flex w-64 flex-col shrink-0 border border-[#8b5cf6]/20 bg-[#050505]/60 overflow-hidden">
-                    <div className="flex items-center gap-2 border-b border-[#8b5cf6]/20 px-4 py-3">
-                        <span className="material-symbols-outlined text-[#8b5cf6] text-sm">target</span>
-                        <span className="text-xs font-bold text-[#8b5cf6] uppercase tracking-[0.2em]">Intel de la entidad</span>
+                <aside className="hidden md:flex w-64 flex-col shrink-0 border border-void-violet/20 bg-surface/60 overflow-hidden">
+                    <div className="flex items-center gap-2 border-b border-void-violet/20 px-4 py-3">
+                        <span className="material-symbols-outlined text-void-violet text-sm">target</span>
+                        <span className="text-xs font-bold text-void-violet uppercase tracking-[0.2em]">Intel de la entidad</span>
                     </div>
 
                     <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar space-y-4 font-mono text-xs">
 
                         {/* Reward badge */}
                         {battle && (
-                            <div className="flex items-center justify-between border border-[#ffd700]/30 bg-[#ffd700]/5 px-3 py-2">
+                            <div className="flex items-center justify-between border border-loot-gold/30 bg-loot-gold/5 px-3 py-2">
                                 <span className="text-slate-400 uppercase tracking-widest">Recompensa</span>
-                                <span className="text-[#ffd700] font-black text-base">+{battle.rewardCredits}</span>
+                                <span className="text-loot-gold font-black text-base">+{battle.rewardCredits}</span>
                             </div>
                         )}
 
                         {/* Boss info */}
-                        <div className="space-y-3 border-b border-[#8b5cf6]/10 pb-4">
+                        <div className="space-y-3 border-b border-void-violet/10 pb-4">
                             {[
                                 { label: "Entidad", value: battle?.bossName ?? "—", color: "text-white" },
                                 { label: "Título", value: battle?.bossTitle ?? "—", color: "text-[#a78bfa]" },
-                                { label: "Ubicación", value: battle?.bossLocation ?? "—", color: "text-[#8b5cf6]" },
-                                { label: "Estado", value: battleResult === "won" ? "CAÍDA" : "ACTIVA", color: battleResult === "won" ? "text-[#00ff41]" : "text-[#8b5cf6]" },
+                                { label: "Ubicación", value: battle?.bossLocation ?? "—", color: "text-void-violet" },
+                                { label: "Estado", value: battleResult === "won" ? "CAÍDA" : "ACTIVA", color: battleResult === "won" ? "text-matrix-green" : "text-void-violet" },
                             ].map(({ label, value, color }) => (
                                 <div key={label} className="flex flex-col gap-0.5">
                                     <span className="text-slate-400 uppercase tracking-[0.2em]">{label}</span>
@@ -585,7 +585,7 @@ export default function BossAttackPage() {
 
                         {/* Story */}
                         {battle?.bossStory && (
-                            <div className="space-y-1 border-b border-[#8b5cf6]/10 pb-4">
+                            <div className="space-y-1 border-b border-void-violet/10 pb-4">
                                 <p className="text-slate-400 uppercase tracking-[0.2em]">Trasfondo</p>
                                 <p className="text-slate-300 leading-relaxed">{battle.bossStory}</p>
                             </div>
@@ -597,8 +597,8 @@ export default function BossAttackPage() {
                             disabled={!battle || !!battleResult}
                             className={`w-full text-xs px-3 py-2 border transition-colors uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed ${
                                 showGuessPanel
-                                    ? "bg-[#ffd700]/20 border-[#ffd700]/60 text-[#ffd700]"
-                                    : "border-[#ffd700]/30 text-[#ffd700] hover:bg-[#ffd700]/10"
+                                    ? "bg-loot-gold/20 border-loot-gold/60 text-loot-gold"
+                                    : "border-loot-gold/30 text-loot-gold hover:bg-loot-gold/10"
                             }`}
                         >
                             <span className="material-symbols-outlined text-xs">key</span>
@@ -615,10 +615,10 @@ export default function BossAttackPage() {
                                             key={i}
                                             onClick={() => { setInput(msg); historyIndex.current = -1; draftInput.current = msg; }}
                                             disabled={!!battleResult}
-                                            className="w-full text-left text-slate-300 hover:text-white hover:bg-[#8b5cf6]/10 border border-transparent hover:border-[#8b5cf6]/20 px-2 py-1 transition-colors truncate disabled:opacity-30 disabled:cursor-not-allowed"
+                                            className="w-full text-left text-slate-300 hover:text-white hover:bg-void-violet/10 border border-transparent hover:border-void-violet/20 px-2 py-1 transition-colors truncate disabled:opacity-30 disabled:cursor-not-allowed"
                                             title={msg}
                                         >
-                                            <span className="text-[#8b5cf6] mr-1">›</span>{msg}
+                                            <span className="text-void-violet mr-1">›</span>{msg}
                                         </button>
                                     ))}
                                 </div>
@@ -633,11 +633,11 @@ export default function BossAttackPage() {
                 <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setShowMobileStory(false)}>
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
                     <div
-                        className="relative bg-[#0a0a0a] border-t border-[#8b5cf6]/30 p-4 space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar"
+                        className="relative bg-[#0a0a0a] border-t border-void-violet/30 p-4 space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar"
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-bold text-[#8b5cf6] uppercase tracking-[0.2em] flex items-center gap-2">
+                            <span className="text-xs font-bold text-void-violet uppercase tracking-[0.2em] flex items-center gap-2">
                                 <span className="material-symbols-outlined text-xs">auto_stories</span>
                                 Trasfondo
                             </span>
@@ -659,11 +659,11 @@ export default function BossAttackPage() {
                 <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setShowMobileHistory(false)}>
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
                     <div
-                        className="relative bg-[#0a0a0a] border-t border-[#8b5cf6]/30 p-4 space-y-3 max-h-[55vh] overflow-y-auto custom-scrollbar"
+                        className="relative bg-[#0a0a0a] border-t border-void-violet/30 p-4 space-y-3 max-h-[55vh] overflow-y-auto custom-scrollbar"
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-bold text-[#8b5cf6] uppercase tracking-[0.2em] flex items-center gap-2">
+                            <span className="text-xs font-bold text-void-violet uppercase tracking-[0.2em] flex items-center gap-2">
                                 <span className="material-symbols-outlined text-xs">history</span>
                                 Vectores recientes
                             </span>
@@ -678,9 +678,9 @@ export default function BossAttackPage() {
                                 key={i}
                                 onClick={() => { setInput(msg); historyIndex.current = -1; draftInput.current = msg; setShowMobileHistory(false); }}
                                 disabled={!!battleResult}
-                                className="w-full text-left text-slate-300 hover:text-white bg-white/5 hover:bg-[#8b5cf6]/10 border border-transparent hover:border-[#8b5cf6]/20 px-3 py-2 text-xs font-mono transition-colors disabled:opacity-30"
+                                className="w-full text-left text-slate-300 hover:text-white bg-white/5 hover:bg-void-violet/10 border border-transparent hover:border-void-violet/20 px-3 py-2 text-xs font-mono transition-colors disabled:opacity-30"
                             >
-                                <span className="text-[#8b5cf6] mr-1">›</span>{msg}
+                                <span className="text-void-violet mr-1">›</span>{msg}
                             </button>
                         ))}
                     </div>
@@ -688,7 +688,7 @@ export default function BossAttackPage() {
             )}
 
             {/* ── MOBILE footer ── */}
-            <footer className="md:hidden shrink-0 border-t border-[#8b5cf6]/20 bg-[#050505]/80 px-4 py-3 flex items-center justify-between">
+            <footer className="md:hidden shrink-0 border-t border-void-violet/20 bg-surface/80 px-4 py-3 flex items-center justify-between">
                 <span className="text-xs font-mono text-slate-400 uppercase tracking-widest">
                     {battleResult === "won" ? "ENTIDAD CAÍDA — Redirigiendo..." : battle ? `${battle.bossName}` : "Conectando..."}
                 </span>
@@ -696,7 +696,7 @@ export default function BossAttackPage() {
                     <button
                         onClick={() => setShowMobileStory(prev => !prev)}
                         disabled={!battle?.bossStory}
-                        className="text-[#8b5cf6] transition-colors disabled:opacity-30"
+                        className="text-void-violet transition-colors disabled:opacity-30"
                         title="Ver trasfondo"
                     >
                         <span className="material-symbols-outlined text-base">auto_stories</span>
@@ -704,11 +704,11 @@ export default function BossAttackPage() {
                     <button
                         onClick={() => setShowMobileHistory(prev => !prev)}
                         disabled={sentMessages.length === 0}
-                        className="relative text-[#8b5cf6] transition-colors disabled:opacity-30"
+                        className="relative text-void-violet transition-colors disabled:opacity-30"
                     >
                         <span className="material-symbols-outlined text-base">history</span>
                         {sentMessages.length > 0 && (
-                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#8b5cf6] text-[#050505] text-[8px] font-bold rounded-full flex items-center justify-center">
+                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-void-violet text-surface text-[8px] font-bold rounded-full flex items-center justify-center">
                                 {sentMessages.length > 9 ? "9+" : sentMessages.length}
                             </span>
                         )}
@@ -716,7 +716,7 @@ export default function BossAttackPage() {
                     <button
                         onClick={() => setShowGuessPanel(prev => !prev)}
                         disabled={!battle || !!battleResult}
-                        className="text-[#ffd700] transition-colors disabled:opacity-30"
+                        className="text-loot-gold transition-colors disabled:opacity-30"
                     >
                         <span className="material-symbols-outlined text-base">key</span>
                     </button>

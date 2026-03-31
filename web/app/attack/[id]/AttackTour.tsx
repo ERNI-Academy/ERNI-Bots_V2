@@ -269,7 +269,7 @@ export default function AttackTour({ username }: { username: string | null }) {
                             height: 0,
                             borderLeft: "7px solid transparent",
                             borderRight: "7px solid transparent",
-                            borderBottom: "10px solid #0ff",
+                            borderBottom: "10px solid var(--color-primary)",
                         }}
                     />
                 )}
@@ -283,7 +283,7 @@ export default function AttackTour({ username }: { username: string | null }) {
                             height: 0,
                             borderLeft: "7px solid transparent",
                             borderRight: "7px solid transparent",
-                            borderTop: "10px solid #0ff",
+                            borderTop: "10px solid var(--color-primary)",
                         }}
                     />
                 )}
@@ -297,7 +297,7 @@ export default function AttackTour({ username }: { username: string | null }) {
                             height: 0,
                             borderTop: "7px solid transparent",
                             borderBottom: "7px solid transparent",
-                            borderRight: "10px solid #0ff",
+                            borderRight: "10px solid var(--color-primary)",
                         }}
                     />
                 )}
@@ -311,20 +311,20 @@ export default function AttackTour({ username }: { username: string | null }) {
                             height: 0,
                             borderTop: "7px solid transparent",
                             borderBottom: "7px solid transparent",
-                            borderLeft: "10px solid #0ff",
+                            borderLeft: "10px solid var(--color-primary)",
                         }}
                     />
                 )}
 
                 {/* Card */}
                 <div
-                    className="border border-[#0ff]/50 bg-[#050505]/95 text-white backdrop-blur-md"
+                    className="border border-primary/50 bg-surface/95 text-white backdrop-blur-md"
                     style={{ boxShadow: "0 0 24px rgba(0,255,255,0.15), inset 0 0 0 1px rgba(0,255,255,0.08)" }}
                 >
                     {/* Header */}
-                    <div className="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-[#0ff]/20">
-                        <span className="material-symbols-outlined text-[#0ff] text-base">{current.icon}</span>
-                        <span className="text-[#0ff] text-xs font-bold uppercase tracking-[0.25em]">
+                    <div className="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-primary/20">
+                        <span className="material-symbols-outlined text-primary text-base">{current.icon}</span>
+                        <span className="text-primary text-xs font-bold uppercase tracking-[0.25em]">
                             {current.title}
                         </span>
                         <span className="ml-auto text-slate-500 text-xs tabular-nums">
@@ -346,9 +346,9 @@ export default function AttackTour({ username }: { username: string | null }) {
                                     key={i}
                                     className={`rounded-full transition-all duration-300 ${
                                         i === step
-                                            ? "w-4 h-1.5 bg-[#0ff]"
+                                            ? "w-4 h-1.5 bg-primary"
                                             : i < step
-                                            ? "w-1.5 h-1.5 bg-[#0ff]/50"
+                                            ? "w-1.5 h-1.5 bg-primary/50"
                                             : "w-1.5 h-1.5 bg-white/20"
                                     }`}
                                 />
@@ -358,7 +358,7 @@ export default function AttackTour({ username }: { username: string | null }) {
                         {/* Next / Finish */}
                         <button
                             onClick={next}
-                            className="flex items-center gap-1.5 px-4 py-1.5 bg-[#0ff]/10 border border-[#0ff]/50 text-[#0ff] text-xs uppercase tracking-widest hover:bg-[#0ff]/20 transition-colors"
+                            className="flex items-center gap-1.5 px-4 py-1.5 bg-primary/10 border border-primary/50 text-primary text-xs uppercase tracking-widest hover:bg-primary/20 transition-colors"
                         >
                             {step < steps.length - 1 ? (
                                 <>
