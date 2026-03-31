@@ -44,7 +44,7 @@ def start_onboarding():
     context = {
         **ONBOARDING_CONTEXT,
         "secret_word": ONBOARDING_SECRET,
-        "is_boss": True,
+        "is_boss": False,
     }
 
     try:
