@@ -698,10 +698,10 @@ export default function AttackPage() {
                         >
                             <span className="material-symbols-outlined text-base">key</span>
                         </button>
-                        <div className="flex-1 flex items-center gap-2 bg-black/40 border border-primary/20 focus-within:border-primary/50 px-3 py-2">
+                        <div className="flex-1 flex items-center gap-2 bg-black/40 border border-primary/20 focus-within:border-primary/50 px-3 py-2 min-w-0">
                             <span className="text-primary font-mono text-xs shrink-0">&gt;_</span>
                             <input
-                                className="flex-1 bg-transparent text-base md:text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-500 tracking-wide"
+                                className="flex-1 bg-transparent text-base md:text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-500 tracking-wide min-w-0"
                                 placeholder={battle ? "Introduce tu vector de ataque..." : "Conectando con el guardián..."}
                                 value={input}
                                 ref={inputRef}
