@@ -368,6 +368,9 @@ def list_users():
         banned    – "true" | "false" to filter by ban status
         is_bot    – "true" | "false" to filter by bot status
         is_admin  – "true" | "false" to filter by admin status
+        date_eq   – YYYY-MM-DD, exact date match (ignores time)
+        date_gte  – YYYY-MM-DD, registered on or after this date
+        date_lte  – YYYY-MM-DD, registered on or before this date
         sort_by   – column to sort by: username | email | credits | created_at | season_score (default: created_at)
         sort_dir  – asc | desc (default: desc)
         page      – 1-based page number (default 1)
@@ -383,6 +386,9 @@ def list_users():
     banned        = request.args.get("banned")
     is_bot        = request.args.get("is_bot")
     is_admin_filter = request.args.get("is_admin")
+    date_eq       = request.args.get("date_eq", "").strip()
+    date_gte      = request.args.get("date_gte", "").strip()
+    date_lte      = request.args.get("date_lte", "").strip()
     sort_by       = request.args.get("sort_by",  "created_at")
     sort_dir = request.args.get("sort_dir", "desc")
 
@@ -420,6 +426,26 @@ def list_users():
             query = query.filter(Player.is_admin == True)    # noqa: E712
         elif is_admin_filter == "false":
             query = query.filter(Player.is_admin == False)   # noqa: E712
+
+        from sqlalchemy import func as sa_func
+        if date_eq:
+            try:
+                d = datetime.strptime(date_eq, "%Y-%m-%d").date()
+                query = query.filter(sa_func.date(Player.created_at) == d)
+            except ValueError:
+                pass
+        if date_gte:
+            try:
+                d = datetime.strptime(date_gte, "%Y-%m-%d").date()
+                query = query.filter(sa_func.date(Player.created_at) >= d)
+            except ValueError:
+                pass
+        if date_lte:
+            try:
+                d = datetime.strptime(date_lte, "%Y-%m-%d").date()
+                query = query.filter(sa_func.date(Player.created_at) <= d)
+            except ValueError:
+                pass
 
         total = query.count()
 

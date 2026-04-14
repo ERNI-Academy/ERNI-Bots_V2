@@ -502,7 +502,11 @@ export default function PlayersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [bannedFilter, setBannedFilter]       = useState<"" | "true" | "false">("")
   const [roleFilter,   setRoleFilter]          = useState<"" | "bot" | "admin" | "player">("")
+  const [dateOp, setDateOp]     = useState<"" | "eq" | "gte" | "lte" | "range">("")
+  const [dateVal, setDateVal]   = useState("")
+  const [dateVal2, setDateVal2] = useState("")
   const [sortKeys, setSortKeys] = useState<SortKey[]>([{ field: "created_at", dir: "desc" }]);;
+  const [exporting, setExporting] = useState(false);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState<string | null>(null);
 
@@ -517,7 +521,7 @@ export default function PlayersPage() {
   }, [search]);
 
   // Reset to page 1 on filter/sort change
-  useEffect(() => { setPage(1); }, [debouncedSearch, bannedFilter, roleFilter, sortKeys]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, bannedFilter, roleFilter, dateOp, dateVal, dateVal2, sortKeys]);
 
   const handleSort = useCallback((field: SortField, shift: boolean) => {
     setSortKeys(prev => {
@@ -550,6 +554,12 @@ export default function PlayersPage() {
     if (roleFilter === "bot")    { params.set("is_bot", "true"); }
     if (roleFilter === "admin")  { params.set("is_admin", "true"); }
     if (roleFilter === "player") { params.set("is_bot", "false"); params.set("is_admin", "false"); }
+    if (dateOp === "range") {
+      if (dateVal) params.set("date_gte", dateVal);
+      if (dateVal2) params.set("date_lte", dateVal2);
+    } else if (dateOp && dateVal) {
+      params.set(`date_${dateOp}`, dateVal);
+    }
     params.set("sort_by",  sortKeys.map(k => k.field).join(","));
     params.set("sort_dir", sortKeys.map(k => k.dir).join(","));
 
@@ -564,7 +574,7 @@ export default function PlayersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, bannedFilter, roleFilter, sortKeys]);
+  }, [page, debouncedSearch, bannedFilter, roleFilter, dateOp, dateVal, dateVal2, sortKeys]);
 
   useEffect(() => { fetchPlayers(); }, [fetchPlayers]);
 
@@ -574,6 +584,58 @@ export default function PlayersPage() {
   }, []);
 
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+
+  const handleExportCSV = useCallback(async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams({ per_page: "0" });
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (bannedFilter)    params.set("banned", bannedFilter);
+      if (roleFilter === "bot")    { params.set("is_bot", "true"); }
+      if (roleFilter === "admin")  { params.set("is_admin", "true"); }
+      if (roleFilter === "player") { params.set("is_bot", "false"); params.set("is_admin", "false"); }
+      if (dateOp === "range") {
+        if (dateVal) params.set("date_gte", dateVal);
+        if (dateVal2) params.set("date_lte", dateVal2);
+      } else if (dateOp && dateVal) {
+        params.set(`date_${dateOp}`, dateVal);
+      }
+      params.set("sort_by",  sortKeys.map(k => k.field).join(","));
+      params.set("sort_dir", sortKeys.map(k => k.dir).join(","));
+
+      const res  = await fetch(`/api/admin/users?${params}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error al exportar");
+
+      const items: Player[] = data.items ?? [];
+      const headers = ["username","email","first_name","last_name","job_title","credits","season_score","is_admin","is_bot","is_banned","created_at"];
+      const csvRows = [
+        headers.join(","),
+        ...items.map(p =>
+          headers.map(h => {
+            const val = p[h as keyof Player];
+            if (val == null) return "";
+            const str = String(val);
+            return str.includes(",") || str.includes('"') || str.includes("\n")
+              ? `"${str.replace(/"/g, '""')}"`
+              : str;
+          }).join(",")
+        ),
+      ];
+
+      const blob = new Blob(["\uFEFF" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = `jugadores_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Error al exportar");
+    } finally {
+      setExporting(false);
+    }
+  }, [debouncedSearch, bannedFilter, roleFilter, dateOp, dateVal, dateVal2, sortKeys]);
 
   return (
     <AdminLayout title="JUGADORES">
@@ -622,12 +684,61 @@ export default function PlayersPage() {
                 <option value="admin">Solo admins</option>
                 <option value="player">Solo players</option>
               </select>
+              {/* Date filter */}
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={dateOp}
+                  onChange={(e) => { const v = e.target.value as "" | "eq" | "gte" | "lte" | "range"; setDateOp(v); if (!v) { setDateVal(""); setDateVal2(""); } }}
+                  className="rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 font-mono text-sm text-white focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="">Fecha registro</option>
+                  <option value="eq">Igual a</option>
+                  <option value="gte">Desde</option>
+                  <option value="lte">Hasta</option>
+                  <option value="range">Entre</option>
+                </select>
+                {dateOp && dateOp !== "range" && (
+                  <input
+                    type="date"
+                    value={dateVal}
+                    onChange={(e) => setDateVal(e.target.value)}
+                    className="rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 font-mono text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+                  />
+                )}
+                {dateOp === "range" && (
+                  <>
+                    <input
+                      type="date"
+                      value={dateVal}
+                      onChange={(e) => setDateVal(e.target.value)}
+                      title="Desde"
+                      className="rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 font-mono text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+                    />
+                    <span className="text-xs text-[#52525B]">–</span>
+                    <input
+                      type="date"
+                      value={dateVal2}
+                      onChange={(e) => setDateVal2(e.target.value)}
+                      title="Hasta"
+                      className="rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 font-mono text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+                    />
+                  </>
+                )}
+              </div>
               <button
                 onClick={fetchPlayers}
                 className="flex items-center gap-1.5 rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 font-mono text-sm text-[#71717A] hover:border-[#3F3F46] hover:text-white transition-all"
               >
                 <span className={`material-symbols-outlined text-[16px] ${loading ? "animate-spin" : ""}`}>refresh</span>
                 Actualizar
+              </button>
+              <button
+                onClick={handleExportCSV}
+                disabled={exporting || loading}
+                className="flex items-center gap-1.5 rounded border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 font-mono text-sm text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50 transition-all"
+              >
+                <span className={`material-symbols-outlined text-[16px] ${exporting ? "animate-spin" : ""}`}>{exporting ? "progress_activity" : "download"}</span>
+                Exportar CSV
               </button>
             </div>
           </div>
