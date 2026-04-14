@@ -317,7 +317,7 @@ function RegisterContent() {
                                     </a>
                                     {" "}Y LAS{" "}
                                     <a
-                                        href="/sorteo"
+                                        href="/premios#sorteo"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-primary underline hover:text-primary"

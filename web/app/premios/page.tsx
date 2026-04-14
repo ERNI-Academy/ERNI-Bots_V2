@@ -83,30 +83,7 @@ export default function PremiosPage() {
             <div className="flex-1 overflow-y-auto">
                 <div className="relative max-w-3xl mx-auto px-4 md:px-8 py-10 md:py-14">
 
-                    <div className="mb-10">
-                        <p className="text-primary text-sm uppercase font-bold before:content-[\'>_\'] before:mr-1">
-                            cat /rewards/ctf_prizes.json
-                        </p>
-                        <div className="border-l-2 border-primary/20 pl-4 py-2 my-4">
-                            <p className="text-primary text-xl md:text-3xl font-bold mb-2 tracking-tighter">
-                                [REWARD_SYSTEM:{" "}
-                                <span className="text-[#ffcc00] animate-pulse">INITIALIZED</span>]
-                            </p>
-                            <p className="text-white text-2xl md:text-4xl font-black uppercase mb-4 tracking-tight">
-                                PREMIOS DEL CTF
-                            </p>
-                            <div className="flex items-start gap-3 bg-[#ffcc00]/5 border border-[#ffcc00]/30 px-4 py-3 mt-4">
-                                <span className="material-symbols-outlined text-[#ffcc00] text-xl shrink-0 mt-0.5">calendar_month</span>
-                                <p className="text-[#ffcc00] text-sm leading-relaxed">
-                                    El <strong>6 de marzo por la tarde</strong> anunciaremos a los{" "}
-                                    <strong>3 ganadores</strong> y realizaremos el sorteo de los premios.
-                                    Los ganadores serán contactados por los organizadores a través de correo electrónico.
-                                    Cada premio se asignará a un ganador diferente, por lo que no es posible ganar más de un premio.
-                                    Los premios se entregarán el día 6 de marzo a las 19:30 en el track de Securiters.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                  
 
                     <div className="space-y-5 mb-14">
                         <p className="text-xs text-white/40 uppercase tracking-[0.3em] mb-4">
@@ -170,6 +147,68 @@ export default function PremiosPage() {
                                 </div>
                             );
                         })}
+                    </div>
+
+                    {/* ── Bases del sorteo ── */}
+                    <div id="sorteo" className="mb-14 scroll-mt-20">
+                        <div className="border-l-2 border-[#ffcc00]/30 pl-4 py-2 mb-6">
+                            <p className="text-[#ffcc00] text-xl md:text-3xl font-bold mb-2 tracking-tighter">
+                                [RAFFLE_SYSTEM:{" "}
+                                <span className="text-primary animate-pulse">ACTIVE</span>]
+                            </p>
+                            <p className="text-white text-2xl md:text-4xl font-black uppercase mb-4 tracking-tight">
+                                BASES DEL SORTEO
+                            </p>
+                            <div className="flex items-start gap-3 bg-[#ffcc00]/5 border border-[#ffcc00]/30 px-4 py-3 mt-4">
+                                <span className="material-symbols-outlined text-[#ffcc00] text-xl shrink-0 mt-0.5">visibility</span>
+                                <p className="text-[#ffcc00] text-sm leading-relaxed">
+                                    Premio: <strong>Meta Quest 3S</strong>. Fecha del sorteo: <strong>22 de abril</strong>.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="border border-primary/20 bg-[#0a0a0f] p-5 md:p-6">
+                                <h3 className="text-primary text-sm md:text-base font-bold uppercase tracking-tight mb-3">1. Objeto del sorteo</h3>
+                                <p className="text-white/70 text-xs md:text-sm leading-relaxed">La organización llevará a cabo un sorteo de unas gafas Meta Quest 3S entre los participantes que cumplan las condiciones establecidas en las presentes bases.</p>
+                            </div>
+                            <div className="border border-primary/20 bg-[#0a0a0f] p-5 md:p-6">
+                                <h3 className="text-primary text-sm md:text-base font-bold uppercase tracking-tight mb-3">2. Requisitos de participación</h3>
+                                <p className="text-white/70 text-xs md:text-sm leading-relaxed mb-2">Podrán participar en el sorteo aquellas personas que cumplan al menos una de las siguientes condiciones:</p>
+                                <ul className="space-y-1.5 pl-4">
+                                    <li className="text-white/70 text-xs md:text-sm leading-relaxed flex items-start gap-2">
+                                        <span className="text-primary mt-0.5 shrink-0">▸</span>
+                                        Estar dentro del Top 10 del ranking del juego ERNI Bots (CTF), o
+                                    </li>
+                                    <li className="text-white/70 text-xs md:text-sm leading-relaxed flex items-start gap-2">
+                                        <span className="text-primary mt-0.5 shrink-0">▸</span>
+                                        Estar dentro del Top 10 del ranking del videojuego Fire o Fired.
+                                    </li>
+                                </ul>
+                            </div>
+                            <div className="border border-primary/20 bg-[#0a0a0f] p-5 md:p-6">
+                                <h3 className="text-primary text-sm md:text-base font-bold uppercase tracking-tight mb-3">3. Ámbito geográfico</h3>
+                                <p className="text-white/70 text-xs md:text-sm leading-relaxed">El envío del premio se realizará únicamente a direcciones ubicadas en la península.</p>
+                            </div>
+                            <div className="border border-primary/20 bg-[#0a0a0f] p-5 md:p-6">
+                                <h3 className="text-primary text-sm md:text-base font-bold uppercase tracking-tight mb-3">4. Fecha del sorteo</h3>
+                                <p className="text-white/70 text-xs md:text-sm leading-relaxed">El sorteo se celebrará el día 22 de abril.</p>
+                            </div>
+                            <div className="border border-primary/20 bg-[#0a0a0f] p-5 md:p-6">
+                                <h3 className="text-primary text-sm md:text-base font-bold uppercase tracking-tight mb-3">5. Selección del ganador y comunicación</h3>
+                                <p className="text-white/70 text-xs md:text-sm leading-relaxed mb-2">El ganador será seleccionado de entre los participantes que cumplan los requisitos establecidos.</p>
+                                <p className="text-white/70 text-xs md:text-sm leading-relaxed">La organización se pondrá en contacto con el ganador a través de correo electrónico, solicitando la dirección postal para el envío del premio.</p>
+                            </div>
+                            <div className="border border-primary/20 bg-[#0a0a0f] p-5 md:p-6">
+                                <h3 className="text-primary text-sm md:text-base font-bold uppercase tracking-tight mb-3">6. Aceptación del premio y suplencias</h3>
+                                <p className="text-white/70 text-xs md:text-sm leading-relaxed mb-2">El ganador dispondrá de un plazo de 5 días naturales desde el envío del email para responder y facilitar sus datos de envío.</p>
+                                <p className="text-white/70 text-xs md:text-sm leading-relaxed">En caso de no recibir respuesta dentro de dicho plazo, la organización se reserva el derecho de realizar un nuevo sorteo para seleccionar a otro ganador.</p>
+                            </div>
+                            <div className="border border-primary/20 bg-[#0a0a0f] p-5 md:p-6">
+                                <h3 className="text-primary text-sm md:text-base font-bold uppercase tracking-tight mb-3">7. Aceptación de las bases</h3>
+                                <p className="text-white/70 text-xs md:text-sm leading-relaxed">La participación en el sorteo implica la aceptación íntegra de estas bases.</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="border-t border-primary/10 pt-6 text-center">
