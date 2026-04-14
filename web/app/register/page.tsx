@@ -315,6 +315,15 @@ function RegisterContent() {
                                     >
                                         POLÍTICA DE PRIVACIDAD
                                     </a>
+                                    {" "}Y LAS{" "}
+                                    <a
+                                        href="/sorteo"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-primary underline hover:text-primary"
+                                    >
+                                        BASES DEL SORTEO
+                                    </a>
                                 </label>
                             </div>
 
