@@ -49,6 +49,9 @@ interface Player {
   id: string;
   username: string;
   email: string;
+  first_name: string | null;
+  last_name: string | null;
+  job_title: string | null;
   credits: number;
   energy: number;
   is_admin: boolean;
@@ -95,6 +98,9 @@ function EditPlayerModal({
 }) {
   const [username,    setUsername]    = useState(player.username);
   const [email,       setEmail]       = useState(player.email);
+  const [firstName,   setFirstName]   = useState(player.first_name ?? "");
+  const [lastName,    setLastName]    = useState(player.last_name ?? "");
+  const [jobTitle,    setJobTitle]    = useState(player.job_title ?? "");
   const [credits,     setCredits]     = useState(String(player.credits));
   const [seasonScore, setSeasonScore] = useState(String(player.season_score ?? 0));
   const [isAdmin,     setIsAdmin]     = useState(player.is_admin);
@@ -109,6 +115,9 @@ function EditPlayerModal({
     const payload: Record<string, unknown> = {};
     if (username    !== player.username)              payload.username     = username.trim();
     if (email       !== player.email)                 payload.email        = email.trim();
+    if (firstName   !== (player.first_name ?? ""))   payload.first_name   = firstName.trim();
+    if (lastName    !== (player.last_name ?? ""))    payload.last_name    = lastName.trim();
+    if (jobTitle    !== (player.job_title ?? ""))    payload.job_title    = jobTitle.trim();
     if (credits     !== String(player.credits))       payload.credits      = parseInt(credits, 10);
     if (seasonScore !== String(player.season_score ?? 0)) payload.season_score = parseInt(seasonScore, 10);
     if (isAdmin     !== player.is_admin)              payload.is_admin     = isAdmin;
@@ -126,6 +135,9 @@ function EditPlayerModal({
         onSaved({
           username:     (payload.username     as string)  ?? player.username,
           email:        (payload.email        as string)  ?? player.email,
+          first_name:   (payload.first_name   as string)  ?? player.first_name,
+          last_name:    (payload.last_name    as string)  ?? player.last_name,
+          job_title:    (payload.job_title    as string)  ?? player.job_title,
           credits:      (payload.credits      as number)  ?? player.credits,
           season_score: (payload.season_score as number)  ?? player.season_score,
           is_admin:     (payload.is_admin     as boolean) ?? player.is_admin,
@@ -208,6 +220,30 @@ function EditPlayerModal({
               <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Email</label>
               <input
                 type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white font-mono placeholder-[#71717A] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Nombre</label>
+              <input
+                value={firstName} onChange={e => setFirstName(e.target.value)}
+                maxLength={100}
+                className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white font-mono placeholder-[#71717A] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Apellidos</label>
+              <input
+                value={lastName} onChange={e => setLastName(e.target.value)}
+                maxLength={100}
+                className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white font-mono placeholder-[#71717A] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Cargo</label>
+              <input
+                value={jobTitle} onChange={e => setJobTitle(e.target.value)}
+                maxLength={100}
                 className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white font-mono placeholder-[#71717A] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
               />
             </div>

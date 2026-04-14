@@ -8,6 +8,9 @@ import { registerApi } from "@/lib/auth";
 function RegisterContent() {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [jobTitle, setJobTitle] = useState("");
     const [invitationCode, setInvitationCode] = useState("");
     const [acceptTerms, setAcceptTerms] = useState(false);
     const [error, setError] = useState("");
@@ -22,6 +25,9 @@ function RegisterContent() {
         username.length >= 3 &&
         username.length <= 50 &&
         /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) &&
+        firstName.trim().length > 0 &&
+        lastName.trim().length > 0 &&
+        jobTitle.trim().length > 0 &&
         (invitationCode.trim().length > 0 || !!searchParams.get("code")) &&
         acceptTerms;
 
@@ -73,7 +79,7 @@ function RegisterContent() {
         setError("");
         setLoading(true);
         try {
-            await registerApi(username, email, codeToUse);
+            await registerApi(username, email, codeToUse, firstName.trim(), lastName.trim(), jobTitle.trim());
             localStorage.setItem("username", username);
             localStorage.setItem("invitationCode", codeToUse);
             router.push("/dashboard");
@@ -210,6 +216,54 @@ function RegisterContent() {
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2 group">
+                                <p className="text-xs sm:text-sm font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
+                                    &gt; NOMBRE:
+                                </p>
+                                <input
+                                    className="w-full bg-transparent border-0 border-b border-primary/30 p-0 py-2 focus:ring-0 focus:border-primary text-base sm:text-lg md:text-xl placeholder:text-primary/10 transition-all"
+                                    placeholder="AGENT_FIRST_NAME..."
+                                    spellCheck={false}
+                                    type="text"
+                                    value={firstName}
+                                    maxLength={100}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2 group">
+                                <p className="text-xs sm:text-sm font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
+                                    &gt; APELLIDOS:
+                                </p>
+                                <input
+                                    className="w-full bg-transparent border-0 border-b border-primary/30 p-0 py-2 focus:ring-0 focus:border-primary text-base sm:text-lg md:text-xl placeholder:text-primary/10 transition-all"
+                                    placeholder="AGENT_LAST_NAME..."
+                                    spellCheck={false}
+                                    type="text"
+                                    value={lastName}
+                                    maxLength={100}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2 group">
+                                <p className="text-xs sm:text-sm font-bold tracking-wider sm:tracking-widest opacity-60 group-focus-within:opacity-100 transition-opacity">
+                                    &gt; CARGO:
+                                </p>
+                                <input
+                                    className="w-full bg-transparent border-0 border-b border-primary/30 p-0 py-2 focus:ring-0 focus:border-primary text-base sm:text-lg md:text-xl placeholder:text-primary/10 transition-all"
+                                    placeholder="JOB_TITLE..."
+                                    spellCheck={false}
+                                    type="text"
+                                    value={jobTitle}
+                                    maxLength={100}
+                                    onChange={(e) => setJobTitle(e.target.value)}
                                     required
                                 />
                             </div>

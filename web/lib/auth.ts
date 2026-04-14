@@ -27,12 +27,15 @@ export async function loginApi(
 export async function registerApi(
   username: string,
   email: string,
-  invitationCode: string
+  invitationCode: string,
+  firstName: string,
+  lastName: string,
+  jobTitle: string
 ): Promise<AuthPlayer> {
   const res = await fetch("/api/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, email, invitation_code: invitationCode }),
+    body: JSON.stringify({ username, email, invitation_code: invitationCode, first_name: firstName, last_name: lastName, job_title: jobTitle }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "Error de registro");

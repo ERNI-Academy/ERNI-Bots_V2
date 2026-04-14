@@ -131,12 +131,24 @@ def register():
     username        = (data.get("username")        or "").strip()
     email           = (data.get("email")           or "").strip()
     invitation_code = (data.get("invitation_code") or "").strip()
+    first_name      = (data.get("first_name")      or "").strip()
+    last_name       = (data.get("last_name")       or "").strip()
+    job_title       = (data.get("job_title")       or "").strip()
 
-    if not username or not email or not invitation_code:
-        return jsonify({"error": "username, email and invitation_code are required"}), 400
+    if not username or not email or not invitation_code or not first_name or not last_name or not job_title:
+        return jsonify({"error": "username, email, invitation_code, first_name, last_name and job_title are required"}), 400
 
     if not (3 <= len(username) <= 50):
         return jsonify({"error": "username must be 3–50 characters"}), 400
+
+    if not (1 <= len(first_name) <= 100):
+        return jsonify({"error": "first_name must be 1–100 characters"}), 400
+
+    if not (1 <= len(last_name) <= 100):
+        return jsonify({"error": "last_name must be 1–100 characters"}), 400
+
+    if not (1 <= len(job_title) <= 100):
+        return jsonify({"error": "job_title must be 1–100 characters"}), 400
 
     if not _EMAIL_RE.match(email):
         return jsonify({"error": "Invalid email format"}), 400
@@ -161,6 +173,9 @@ def register():
         player = Player(
             username=username,
             email=email,
+            first_name=first_name,
+            last_name=last_name,
+            job_title=job_title,
             password_hash=generate_password_hash(secrets.token_hex(32)),
         )
         db.add(player)

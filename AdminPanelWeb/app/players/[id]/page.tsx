@@ -10,6 +10,9 @@ interface PlayerDetail {
   id: string;
   username: string;
   email: string;
+  first_name: string | null;
+  last_name: string | null;
+  job_title: string | null;
   credits: number;
   energy: number;
   is_admin: boolean;
@@ -243,6 +246,14 @@ export default function PlayerDetailPage() {
                     )}
                   </div>
                   <span className="font-mono text-sm text-[#71717A]">{player.email}</span>
+                  {(player.first_name || player.last_name) && (
+                    <span className="font-mono text-sm text-[#A1A1AA]">
+                      {[player.first_name, player.last_name].filter(Boolean).join(" ")}
+                    </span>
+                  )}
+                  {player.job_title && (
+                    <span className="font-mono text-xs text-[#52525B]">{player.job_title}</span>
+                  )}
                   <div className="flex flex-wrap gap-3 mt-1">
                     <span className="font-mono text-[11px] text-[#52525B]">ID: {player.id}</span>
                     <span className="font-mono text-[11px] text-[#52525B]">Registro: {fmtDate(player.created_at)}</span>

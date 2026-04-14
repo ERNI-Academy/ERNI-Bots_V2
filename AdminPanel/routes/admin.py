@@ -457,6 +457,9 @@ def list_users():
                     "id":           p.id,
                     "username":     p.username,
                     "email":        p.email,
+                    "first_name":   p.first_name,
+                    "last_name":    p.last_name,
+                    "job_title":    p.job_title,
                     "credits":      p.credits,
                     "energy":       p.energy,
                     "is_admin":     p.is_admin,
@@ -508,6 +511,9 @@ def get_user(player_id):
             "id":                   player.id,
             "username":             player.username,
             "email":                player.email,
+            "first_name":           player.first_name,
+            "last_name":            player.last_name,
+            "job_title":            player.job_title,
             "credits":              player.credits,
             "energy":               player.energy,
             "is_banned":            player.is_banned,
@@ -661,12 +667,15 @@ def get_player_activity(player_id):
 
 @admin_bp.patch("/users/<player_id>")
 def update_user(player_id):
-    """Partial update of player fields: credits, energy, username, email, is_admin, is_bot, season_score.
+    """Partial update of player fields: credits, energy, username, email, first_name, last_name, job_title, is_admin, is_bot, season_score.
 
     Body (all optional):
         {
             "username":     "new_name",
             "email":        "new@email.com",
+            "first_name":   "John",
+            "last_name":    "Doe",
+            "job_title":    "Engineer",
             "credits":      500,
             "energy":       80,
             "is_admin":     true,
@@ -723,6 +732,24 @@ def update_user(player_id):
 
         if "is_bot" in data:
             player.is_bot = bool(data["is_bot"])
+
+        if "first_name" in data:
+            new_first_name = str(data["first_name"]).strip()
+            if not (1 <= len(new_first_name) <= 100):
+                return jsonify({"error": "first_name must be 1–100 characters"}), 400
+            player.first_name = new_first_name
+
+        if "last_name" in data:
+            new_last_name = str(data["last_name"]).strip()
+            if not (1 <= len(new_last_name) <= 100):
+                return jsonify({"error": "last_name must be 1–100 characters"}), 400
+            player.last_name = new_last_name
+
+        if "job_title" in data:
+            new_job_title = str(data["job_title"]).strip()
+            if not (1 <= len(new_job_title) <= 100):
+                return jsonify({"error": "job_title must be 1–100 characters"}), 400
+            player.job_title = new_job_title
 
         if "season_score" in data:
             new_score = int(data["season_score"])

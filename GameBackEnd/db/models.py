@@ -31,6 +31,10 @@ class Player(Base):
     email = Column(String(120), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
 
+    first_name = Column(String(100), nullable=True)
+    last_name = Column(String(100), nullable=True)
+    job_title = Column(String(100), nullable=True)
+
     credits = Column(Integer, default=0)
     legacy_tokens = Column(Integer, default=0)
     energy = Column(Integer, default=100)
