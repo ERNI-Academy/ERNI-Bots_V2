@@ -64,10 +64,10 @@ export default function PremiosPage() {
                     <span className="material-symbols-outlined text-xl md:text-2xl text-primary">trophy</span>
                     <div className="flex flex-col">
                         <h1 className="text-white text-xs font-mono font-bold leading-tight tracking-wider uppercase">
-                            REWARD_PROTOCOL_v1.0.0
+                            ANUNCIO: 22 DE ABRIL
                         </h1>
                         <p className="text-primary text-xs font-mono">
-                            ANUNCIO: 22 DE ABRIL - 1 META QUEST 3S EN JUEGO
+                            1 META QUEST 3S EN JUEGO
                         </p>
                     </div>
                 </div>
@@ -152,10 +152,6 @@ export default function PremiosPage() {
                     {/* ── Bases del sorteo ── */}
                     <div id="sorteo" className="mb-14 scroll-mt-20">
                         <div className="border-l-2 border-[#ffcc00]/30 pl-4 py-2 mb-6">
-                            <p className="text-[#ffcc00] text-xl md:text-3xl font-bold mb-2 tracking-tighter">
-                                [RAFFLE_SYSTEM:{" "}
-                                <span className="text-primary animate-pulse">ACTIVE</span>]
-                            </p>
                             <p className="text-white text-2xl md:text-4xl font-black uppercase mb-4 tracking-tight">
                                 BASES DEL SORTEO
                             </p>
