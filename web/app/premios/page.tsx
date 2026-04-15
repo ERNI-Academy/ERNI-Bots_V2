@@ -67,7 +67,7 @@ export default function PremiosPage() {
                             REWARD_PROTOCOL_v1.0.0
                         </h1>
                         <p className="text-primary text-xs font-mono">
-                            ANUNCIO: 6 DE MARZO· 3 GANADORES
+                            ANUNCIO: 22 DE ABRIL - 1 META QUEST 3S EN JUEGO
                         </p>
                     </div>
                 </div>
