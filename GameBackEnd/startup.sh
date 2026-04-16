@@ -36,7 +36,7 @@ echo "[startup] Running migrations..."
 python scripts/migrate_player_season_stats.py || { echo "[startup] Migration failed, aborting."; exit 1; }
 python scripts/migrate_battle_player_guess.py || { echo "[startup] Migration failed, aborting."; exit 1; }
 # python scripts/migrate_battle_hint_used.py || { echo "[startup] Migration failed, aborting."; exit 1; }
-python scripts/migrate_battle_hint_text.py || { echo "[startup] Migration failed, aborting."; exit 1; }
+# python scripts/migrate_battle_hint_text.py || { echo "[startup] Migration failed, aborting."; exit 1; }
 # python scripts/migrate_player_profile_fields.py || { echo "[startup] Migration failed, aborting."; exit 1; }
 echo "[startup] Migrations completed."
 
