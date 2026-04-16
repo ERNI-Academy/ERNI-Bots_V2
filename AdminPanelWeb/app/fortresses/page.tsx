@@ -42,6 +42,14 @@ interface FortressDetail extends Fortress {
   protocol_id: string | null;
   archetype_id: string | null;
   personality_id: string | null;
+  constraints: FortressConstraintItem[];
+}
+
+interface FortressConstraintItem {
+  id: string;
+  text: string;
+  type: string | null;
+  price: number;
 }
 
 interface CatalogItem { id: string; name: string; }
@@ -278,6 +286,10 @@ function EditFortressModal({
   const [catalog,  setCatalog]  = useState<Catalog | null>(null);
   const [saving,   setSaving]   = useState(false);
   const [error,    setError]    = useState<string | null>(null);
+  const [constraints, setConstraints] = useState<FortressConstraintItem[]>(detail.constraints ?? []);
+  const [removing, setRemoving] = useState<string | null>(null);
+  const [editingConstraint, setEditingConstraint] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/fortresses/catalog")
@@ -422,6 +434,101 @@ function EditFortressModal({
                 </select>
               </div>
             ))}
+          </div>
+
+          {/* Constraints */}
+          <div>
+            <label className="mb-2 block text-xs uppercase tracking-wider text-[#71717A]">
+              Restricciones
+              <span className="ml-2 rounded bg-[#18181B] px-1.5 py-0.5 font-mono text-[10px] text-[#52525B]">
+                {constraints.length}
+              </span>
+            </label>
+            {constraints.length === 0 ? (
+              <p className="text-sm text-[#52525B]">Sin restricciones asignadas.</p>
+            ) : (
+              <div className="space-y-2">
+                {constraints.map(c => (
+                  <div key={c.id} className="flex items-start gap-2 rounded border border-[#27272A] bg-[#18181B] px-3 py-2">
+                    <div className="flex-1 min-w-0">
+                      {editingConstraint === c.id ? (
+                        <input
+                          value={editText}
+                          onChange={e => setEditText(e.target.value)}
+                          onKeyDown={async (e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              const trimmed = editText.trim();
+                              if (!trimmed) return;
+                              try {
+                                const res = await fetch(`/api/admin/constraints/${c.id}`, {
+                                  method: "PUT",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ type_id: undefined, text: trimmed, price: c.price }),
+                                });
+                                if (res.ok) {
+                                  setConstraints(cs => cs.map(x => x.id === c.id ? { ...x, text: trimmed } : x));
+                                  setEditingConstraint(null);
+                                }
+                              } catch { /* ignore */ }
+                            } else if (e.key === "Escape") {
+                              setEditingConstraint(null);
+                            }
+                          }}
+                          autoFocus
+                          className="w-full rounded border border-orange-500/30 bg-[#09090B] px-2 py-1 text-xs text-white font-mono focus:border-orange-500 focus:outline-none"
+                        />
+                      ) : (
+                        <p className="text-xs text-[#A1A1AA] font-mono leading-relaxed">{c.text}</p>
+                      )}
+                      <div className="mt-1 flex items-center gap-2">
+                        {c.type && (
+                          <span className="rounded border border-[#27272A] bg-[#09090B] px-1.5 py-0.5 font-mono text-[10px] text-[#52525B]">
+                            {c.type}
+                          </span>
+                        )}
+                        <span className="font-mono text-[10px] text-amber-400/60">{c.price} cr</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {editingConstraint !== c.id && (
+                        <button
+                          type="button"
+                          onClick={() => { setEditingConstraint(c.id); setEditText(c.text); }}
+                          title="Editar texto"
+                          className="flex h-6 w-6 items-center justify-center rounded border border-[#27272A] text-[#71717A] hover:border-orange-500/50 hover:text-orange-400 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[13px]">edit</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        disabled={removing === c.id}
+                        onClick={async () => {
+                          setRemoving(c.id);
+                          try {
+                            const res = await fetch(`/api/admin/fortresses/${detail.id}/constraints/${c.id}`, { method: "DELETE" });
+                            if (res.ok) {
+                              setConstraints(cs => cs.filter(x => x.id !== c.id));
+                            } else {
+                              const data = await res.json().catch(() => ({}));
+                              setError(data.error ?? "Error al eliminar restricción");
+                            }
+                          } catch { setError("Error de conexión"); }
+                          finally { setRemoving(null); }
+                        }}
+                        title="Quitar de la fortaleza"
+                        className="flex h-6 w-6 items-center justify-center rounded border border-[#27272A] text-[#71717A] hover:border-red-500/50 hover:text-red-400 disabled:opacity-50 transition-colors"
+                      >
+                        <span className={`material-symbols-outlined text-[13px] ${removing === c.id ? "animate-spin" : ""}`}>
+                          {removing === c.id ? "progress_activity" : "delete"}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Actions */}

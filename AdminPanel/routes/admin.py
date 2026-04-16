@@ -1415,6 +1415,15 @@ def get_fortress(fortress_id: str):
             "last_reconfigured_at": f.last_reconfigured_at.isoformat() + "Z" if f.last_reconfigured_at else None,
             "season_stats":         stats_list,
             "player_words":         words_list,
+            "constraints": [
+                {
+                    "id":    c.id,
+                    "text":  c.text,
+                    "type":  c.type.name if c.type else None,
+                    "price": c.price,
+                }
+                for c in f.constraints
+            ],
         })
     finally:
         db.close()
@@ -1490,6 +1499,39 @@ def update_fortress(fortress_id: str):
     except Exception:
         db.rollback()
         logger.exception("admin: update_fortress failed")
+        return jsonify({"error": "Internal server error"}), 500
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────────────────
+# DELETE /fortresses/<fortress_id>/constraints/<constraint_id>
+# ──────────────────────────────────────────────────────────
+
+@admin_bp.delete("/fortresses/<fortress_id>/constraints/<constraint_id>")
+def remove_fortress_constraint(fortress_id: str, constraint_id: str):
+    """Remove a constraint from a fortress (deletes the association row)."""
+    if not _check_admin():
+        return jsonify({"error": "Forbidden"}), 403
+
+    db = SessionLocal()
+    try:
+        fc = (
+            db.query(FortressConstraint)
+            .filter_by(fortress_id=fortress_id, constraint_id=constraint_id)
+            .first()
+        )
+        if not fc:
+            return jsonify({"error": "Constraint not found on this fortress"}), 404
+
+        db.delete(fc)
+        db.commit()
+        logger.info("admin: removed constraint %.8s from fortress %.8s", constraint_id, fortress_id)
+        return jsonify({"ok": True})
+
+    except Exception:
+        db.rollback()
+        logger.exception("admin: remove_fortress_constraint failed")
         return jsonify({"error": "Internal server error"}), 500
     finally:
         db.close()
