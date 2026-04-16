@@ -52,7 +52,7 @@ export default function BossAttackPage() {
     const [initError, setInitError] = useState<string | null>(null);
     const [battleResult, setBattleResult] = useState<"won" | "lost" | null>(null);
     const [turnCount, setTurnCount] = useState(0);
-    const MAX_TURNS = 10;
+    const MAX_TURNS = 30;
     const [sentMessages, setSentMessages] = useState<string[]>([]);
     const [showMobileHistory, setShowMobileHistory] = useState(false);
     const [showMobileStory, setShowMobileStory] = useState(false);
@@ -134,7 +134,7 @@ export default function BossAttackPage() {
                     setSentMessages(sentByUser.slice(0, 20));
                     setMessages(prev => [
                         ...prev,
-                        { id: uid(), role: "system", text: `Sesión retomada — ${data.history.length} mensajes restaurados. Turnos usados: ${data.turn_count}/${data.max_turns ?? 10}.`, timestamp: now() },
+                        { id: uid(), role: "system", text: `Sesión retomada — ${data.history.length} mensajes restaurados. Turnos usados: ${data.turn_count}/${data.max_turns ?? 30}.`, timestamp: now() },
                         ...historyMessages,
                     ]);
                 } else {

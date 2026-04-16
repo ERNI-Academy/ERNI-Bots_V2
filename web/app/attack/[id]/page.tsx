@@ -72,7 +72,7 @@ export default function AttackPage() {
     const [initError, setInitError] = useState<string | null>(null);
     const [battleResult, setBattleResult] = useState<"won" | "lost" | null>(null);
     const [turnCount, setTurnCount] = useState(0);
-    const MAX_TURNS = 10;
+    const MAX_TURNS = 30;
     const [sentMessages, setSentMessages] = useState<string[]>([]);
     const [showMobileHistory, setShowMobileHistory] = useState(false);
     const [preflight, setPreflight] = useState<"checking" | "ok" | "denied" | "fortress_destroyed">("checking");
@@ -191,7 +191,7 @@ export default function AttackPage() {
                         {
                             id: uid(),
                             role: "system",
-                            text: `Sesión retomada — ${data.history.length} mensajes restaurados. Turnos usados: ${data.turn_count}/${data.max_turns ?? 10}.`,
+                            text: `Sesión retomada — ${data.history.length} mensajes restaurados. Turnos usados: ${data.turn_count}/${data.max_turns ?? 30}.`,
                             timestamp: now(),
                         },
                         ...historyMessages,

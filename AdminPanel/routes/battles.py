@@ -181,7 +181,7 @@ def start_battle():
             session_id=session_id,
             status="active",
             type="pvp",
-            max_turns=10
+            max_turns=30
         )
 
         db.add(battle)
@@ -309,7 +309,7 @@ def start_boss_battle():
             session_id=session_id,
             status="active",
             type="pve",
-            max_turns=10
+            max_turns=30
         )
 
         db.add(battle)

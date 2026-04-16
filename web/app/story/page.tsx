@@ -140,6 +140,8 @@ export default function StoryPage() {
                                             Navega por la red, localiza las fortalezas de otros jugadores y ejecuta{" "}
                                             <span className="text-primary italic">inyecciones de prompt</span> para burlar sus defensas.
                                             Roba sus secretos y reclama sus Fragmentos de Lógica.
+                                            Dispones de <span className="text-white font-bold">30 mensajes</span> por batalla
+                                            para extraer la palabra secreta del guardián.
                                         </p>
                                     </div>
                                     <div>

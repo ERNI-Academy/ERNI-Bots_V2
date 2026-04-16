@@ -231,7 +231,7 @@ class Battle(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     turn_count = Column(Integer, default=0)
-    max_turns = Column(Integer, default=15)
+    max_turns = Column(Integer, default=30)
     # Secret word the attacker must guess — snapshot at battle creation.
     secret_word  = Column(String(100), nullable=True)
     # The word the player submitted when making their single guess attempt.

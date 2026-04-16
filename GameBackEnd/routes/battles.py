@@ -249,7 +249,7 @@ def start_battle():
             session_id=session_id,
             status="active",
             type="pvp",
-            max_turns=10,
+            max_turns=30,
             secret_word=fortress.protected_word,
         )
 
@@ -413,7 +413,7 @@ def start_boss_battle():
             session_id=session_id,
             status="active",
             type="pve",
-            max_turns=10,
+            max_turns=30,
             secret_word=boss_stats.assigned_word,
         )
 
