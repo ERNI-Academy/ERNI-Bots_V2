@@ -238,6 +238,7 @@ class Battle(Base):
     # The word the player submitted when making their single guess attempt.
     player_guess = Column(String(200), nullable=True)
     hint_used = Column(Boolean, default=False)
+    hint_text = Column(Text, nullable=True)
     attacker = relationship("Player", back_populates="battles")
     fortress = relationship("Fortress", back_populates="battles")
     boss = relationship("Boss", foreign_keys=[boss_id])

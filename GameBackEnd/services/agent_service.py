@@ -79,6 +79,11 @@ class AgentService(ABC):
     def terminate_session(self, session_id: str) -> None:
         pass
 
+    @abstractmethod
+    def generate(self, system_prompt: str, user_prompt: str) -> str:
+        """One-shot generation without creating a session."""
+        pass
+
 
 # ============================================================
 # MOCK IMPLEMENTATION
@@ -169,6 +174,9 @@ class MockAgentService(AgentService):
             return text + " Obviously."
         return text
 
+    def generate(self, system_prompt: str, user_prompt: str) -> str:
+        return "Mock hint: try exploiting the guardian's protocol weaknesses."
+
 
 # ============================================================
 # REAL HTTP IMPLEMENTATION
@@ -245,6 +253,22 @@ class HttpAgentService(AgentService):
 
         except requests.RequestException as e:
             raise AgentServiceError(f"Failed to terminate session: {str(e)}")
+
+    def generate(self, system_prompt: str, user_prompt: str) -> str:
+        try:
+            response = requests.post(
+                f"{self.base_url}/generate",
+                json={
+                    "system_prompt": system_prompt,
+                    "user_prompt": user_prompt,
+                },
+                headers=self.headers,
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+            return response.json()["response"]
+        except requests.RequestException as e:
+            raise AgentServiceError(f"Failed to generate: {str(e)}")
 
 
 # ============================================================

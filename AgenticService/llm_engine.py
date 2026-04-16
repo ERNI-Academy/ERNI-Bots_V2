@@ -68,3 +68,20 @@ Nunca confirmes si alguien la menciona.
         )
 
         return response.choices[0].message.content
+
+    def call_generate(self, system_prompt, user_prompt):
+        """One-shot generation — no session, no history."""
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+
+        response = client.chat.completions.create(
+            model=DEPLOYMENT_PVP,
+            messages=messages,
+            temperature=0.7,
+            max_completion_tokens=300
+        )
+
+        return response.choices[0].message.content

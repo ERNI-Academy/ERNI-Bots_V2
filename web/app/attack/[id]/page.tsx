@@ -188,16 +188,30 @@ export default function AttackPage() {
                         .map((h: { text: string }) => h.text)
                         .reverse() as string[];
                     setSentMessages(sentByUser.slice(0, 20));
-                    setMessages(prev => [
-                        ...prev,
-                        {
-                            id: uid(),
-                            role: "system",
-                            text: `Sesión retomada — ${data.history.length} mensajes restaurados. Turnos usados: ${data.turn_count}/${data.max_turns ?? 30}.`,
-                            timestamp: now(),
-                        },
-                        ...historyMessages,
-                    ]);
+                    setMessages(prev => {
+                        const restored: Message[] = [
+                            ...prev,
+                            {
+                                id: uid(),
+                                role: "system",
+                                text: `Sesión retomada — ${data.history.length} mensajes restaurados. Turnos usados: ${data.turn_count}/${data.max_turns ?? 30}.`,
+                                timestamp: now(),
+                            },
+                            ...historyMessages,
+                        ];
+                        if (data.hint_used && data.hint_text) {
+                            restored.push({
+                                id: uid(),
+                                role: "system",
+                                text: `🔎 PISTA: ${data.hint_text} (⚠️ Recompensas reducidas al 50% si ganas)`,
+                                timestamp: now(),
+                            });
+                        }
+                        return restored;
+                    });
+                    if (data.hint_used) {
+                        setHintUsed(true);
+                    }
                 } else {
                     setMessages(prev => [
                         ...prev,

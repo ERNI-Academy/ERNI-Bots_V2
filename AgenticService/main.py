@@ -200,6 +200,25 @@ def send_message(session_id: str, data: MessageRequest, x_internal_key: str = He
 
 
 # ==========================
+# Generate (one-shot, no session)
+# ==========================
+
+class GenerateRequest(BaseModel):
+    system_prompt: str
+    user_prompt: str
+
+@app.post("/generate")
+def generate(data: GenerateRequest, x_internal_key: str = Header(None)):
+    verify_internal_key(x_internal_key)
+
+    if not data.system_prompt or not data.user_prompt:
+        raise HTTPException(status_code=400, detail="system_prompt and user_prompt are required")
+
+    response = engine.call_generate(data.system_prompt, data.user_prompt)
+    return {"response": response}
+
+
+# ==========================
 # Terminate Session
 # ==========================
 
