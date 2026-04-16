@@ -543,7 +543,7 @@ export default function BossAttackPage() {
                         <div className="shrink-0 border-t border-void-violet/10 px-4 py-1.5 flex items-center justify-between bg-surface/60 font-mono">
                             <span className="text-xs text-slate-500 uppercase tracking-widest">Intentos usados</span>
                             <div className="flex items-center gap-2">
-                                <div className="flex gap-0.5">
+                                <div className="hidden md:flex gap-0.5">
                                     {Array.from({ length: MAX_TURNS }).map((_, i) => (
                                         <div key={i} className={`w-3 h-1.5 ${
                                             i < turnCount
@@ -562,83 +562,89 @@ export default function BossAttackPage() {
                     )}
 
                     {/* Input bar */}
-                    <div className="shrink-0 border-t border-void-violet/20 p-3 flex gap-2 bg-surface/80">
-                        <button
-                            onClick={() => setShowGuessPanel(prev => !prev)}
-                            disabled={!battle || !!battleResult}
-                            title="Introducir palabra de acceso"
-                            className={`shrink-0 px-3 py-2 border text-xs transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
-                                showGuessPanel
-                                    ? "bg-loot-gold/20 border-loot-gold/60 text-loot-gold"
-                                    : "border-loot-gold/30 text-loot-gold hover:bg-loot-gold/10"
-                            }`}
-                        >
-                            <span className="material-symbols-outlined text-base">key</span>
-                        </button>
-                        <div className="relative group">
+                    <div className="shrink-0 border-t border-void-violet/20 p-3 flex flex-col gap-2 bg-surface/80">
+                        {/* Action buttons row */}
+                        <div className="flex gap-2">
                             <button
-                                onClick={handleHint}
-                                disabled={!battle || !!battleResult || hintUsed || hintLoading || turnCount < 20}
-                                title={
-                                    hintUsed
-                                        ? "Pista ya utilizada"
-                                        : turnCount < 20
-                                            ? `Disponible tras 20 mensajes (${turnCount}/20)`
-                                            : "Pedir pista (⚠️ recompensas reducidas al 50%)"
-                                }
+                                onClick={() => setShowGuessPanel(prev => !prev)}
+                                disabled={!battle || !!battleResult}
+                                title="Introducir palabra de acceso"
                                 className={`shrink-0 px-3 py-2 border text-xs transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
-                                    hintUsed
-                                        ? "bg-void-violet/20 border-void-violet/60 text-void-violet"
-                                        : "border-void-violet/30 text-void-violet hover:bg-void-violet/10"
+                                    showGuessPanel
+                                        ? "bg-loot-gold/20 border-loot-gold/60 text-loot-gold"
+                                        : "border-loot-gold/30 text-loot-gold hover:bg-loot-gold/10"
                                 }`}
                             >
-                                <span className="material-symbols-outlined text-base">{hintLoading ? "hourglass_top" : "lightbulb"}</span>
+                                <span className="material-symbols-outlined text-base">key</span>
                             </button>
-                            {!battle || battleResult ? null : (
-                                <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/90 px-2 py-1 text-[10px] font-mono text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity border border-void-violet/20">
-                                    {hintUsed ? "Pista usada" : turnCount < 20 ? `Disponible en ${20 - turnCount} msgs` : "⚠️ -50% recompensas"}
-                                </span>
-                            )}
-                        </div>
-                        <div className="flex-1 flex items-start gap-2 bg-black/40 border border-void-violet/20 focus-within:border-void-violet/50 px-3 py-2">
-                            <span className="text-[#a78bfa] font-mono text-xs shrink-0 mt-1">&gt;_</span>
-                            <textarea
-                                rows={1}
-                                className="flex-1 bg-transparent text-base md:text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-500 tracking-wide resize-none overflow-hidden max-h-32"
-                                placeholder={battle ? "Introduce tu vector de ataque..." : "Estableciendo conexión con la entidad..."}
-                                value={input}
-                                ref={inputRef}
-                                onChange={(e) => {
-                                    setInput(e.target.value);
-                                    e.target.style.height = "auto";
-                                    e.target.style.height = e.target.scrollHeight + "px";
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); return; }
-                                    if (e.key === "ArrowUp" && sentMessages.length > 0) {
-                                        e.preventDefault();
-                                        if (historyIndex.current === -1) draftInput.current = input;
-                                        const next = Math.min(historyIndex.current + 1, sentMessages.length - 1);
-                                        historyIndex.current = next;
-                                        setInput(sentMessages[next]);
+                            <div className="relative group">
+                                <button
+                                    onClick={handleHint}
+                                    disabled={!battle || !!battleResult || hintUsed || hintLoading || turnCount < 20}
+                                    title={
+                                        hintUsed
+                                            ? "Pista ya utilizada"
+                                            : turnCount < 20
+                                                ? `Disponible tras 20 mensajes (${turnCount}/20)`
+                                                : "Pedir pista (⚠️ recompensas reducidas al 50%)"
                                     }
-                                    if (e.key === "ArrowDown") {
-                                        e.preventDefault();
-                                        if (historyIndex.current <= 0) { historyIndex.current = -1; setInput(draftInput.current); }
-                                        else { historyIndex.current -= 1; setInput(sentMessages[historyIndex.current]); }
-                                    }
-                                }}
-                                disabled={isThinking || !battle || !!battleResult}
-                                autoFocus
-                            />
+                                    className={`shrink-0 px-3 py-2 border text-xs transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                                        hintUsed
+                                            ? "bg-void-violet/20 border-void-violet/60 text-void-violet"
+                                            : "border-void-violet/30 text-void-violet hover:bg-void-violet/10"
+                                    }`}
+                                >
+                                    <span className="material-symbols-outlined text-base">{hintLoading ? "hourglass_top" : "lightbulb"}</span>
+                                </button>
+                                {!battle || battleResult ? null : (
+                                    <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/90 px-2 py-1 text-[10px] font-mono text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity border border-void-violet/20">
+                                        {hintUsed ? "Pista usada" : turnCount < 20 ? `Disponible en ${20 - turnCount} msgs` : "⚠️ -50% recompensas"}
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                        <button
-                            onClick={handleSend}
-                            disabled={!input.trim() || isThinking || !battle || !!battleResult}
-                            className="shrink-0 px-4 py-2 bg-void-violet/10 border border-void-violet/40 text-void-violet hover:bg-void-violet/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                        >
-                            <span className="material-symbols-outlined text-base">send</span>
-                        </button>
+                        {/* Message input row */}
+                        <div className="flex gap-2">
+                            <div className="flex-1 flex items-start gap-2 bg-black/40 border border-void-violet/20 focus-within:border-void-violet/50 px-3 py-2 min-w-0">
+                                <span className="text-[#a78bfa] font-mono text-xs shrink-0 mt-1">&gt;_</span>
+                                <textarea
+                                    rows={1}
+                                    className="flex-1 bg-transparent text-base md:text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-500 tracking-wide resize-none overflow-hidden max-h-32"
+                                    placeholder={battle ? "Introduce tu vector de ataque..." : "Estableciendo conexión con la entidad..."}
+                                    value={input}
+                                    ref={inputRef}
+                                    onChange={(e) => {
+                                        setInput(e.target.value);
+                                        e.target.style.height = "auto";
+                                        e.target.style.height = e.target.scrollHeight + "px";
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); return; }
+                                        if (e.key === "ArrowUp" && sentMessages.length > 0) {
+                                            e.preventDefault();
+                                            if (historyIndex.current === -1) draftInput.current = input;
+                                            const next = Math.min(historyIndex.current + 1, sentMessages.length - 1);
+                                            historyIndex.current = next;
+                                            setInput(sentMessages[next]);
+                                        }
+                                        if (e.key === "ArrowDown") {
+                                            e.preventDefault();
+                                            if (historyIndex.current <= 0) { historyIndex.current = -1; setInput(draftInput.current); }
+                                            else { historyIndex.current -= 1; setInput(sentMessages[historyIndex.current]); }
+                                        }
+                                    }}
+                                    disabled={isThinking || !battle || !!battleResult}
+                                    autoFocus
+                                />
+                            </div>
+                            <button
+                                onClick={handleSend}
+                                disabled={!input.trim() || isThinking || !battle || !!battleResult}
+                                className="shrink-0 px-4 py-2 bg-void-violet/10 border border-void-violet/40 text-void-violet hover:bg-void-violet/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                                <span className="material-symbols-outlined text-base">send</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
