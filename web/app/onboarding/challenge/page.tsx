@@ -275,26 +275,6 @@ export default function InitialChallengePage() {
             )}
 
             {/* Unlocked State */}
-            {unlocked && (
-              <div className="space-y-4 text-center">
-                <div className="font-mono text-xs sm:text-sm text-matrix-green tracking-widest uppercase space-y-1 animate-pulse">
-                  <p>[OK] GUARDIAN_BREACHED</p>
-                  <p>[OK] ACCESS_CODE_VERIFIED</p>
-                  <p>[OK] GATE_UNLOCKED</p>
-                </div>
-
-                <button
-                  onClick={() => router.push("/register")}
-                  className="glitch-button mx-auto bg-primary text-background-dark font-bold py-3 sm:py-4 px-8 sm:px-12 text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase relative overflow-hidden group cursor-pointer"
-                >
-                  <span className="relative z-10">[ PROCEDER AL REGISTRO ]</span>
-                  <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
-                  <div className="absolute top-0 left-0 w-full h-[1px] bg-white opacity-50"></div>
-                  <div className="absolute bottom-0 left-0 w-full h-[1px] bg-black opacity-20"></div>
-                </button>
-              </div>
-            )}
-
             {/* Footer */}
             <footer className="text-center text-xs font-mono text-primary/30 tracking-widest uppercase pb-8">
               ERNI BOTS V2 — PROTOCOLO_FRAGMENTADO — FASE 2/2
@@ -305,6 +285,65 @@ export default function InitialChallengePage() {
 
       {/* Edge Vignette */}
       <div className="fixed inset-0 pointer-events-none z-[100] shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]"></div>
+
+      {/* Victory Modal — unclosable */}
+      {unlocked && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/85 backdrop-blur-sm" />
+
+          {/* Modal */}
+          <div className="relative z-10 w-full max-w-lg rounded border border-primary/30 bg-background-dark shadow-[0_0_60px_rgba(0,255,255,0.08)]">
+            {/* Top accent line */}
+            <div className="h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent" />
+
+            <div className="px-6 py-8 sm:px-10 sm:py-10 space-y-6 sm:space-y-8 text-center">
+              {/* Status lines */}
+              <div className="font-mono text-[10px] sm:text-xs text-matrix-green tracking-widest uppercase space-y-1 animate-pulse">
+                <p>[OK] GUARDIAN_BREACHED</p>
+                <p>[OK] ACCESS_CODE_VERIFIED</p>
+                <p>[OK] GATE_UNLOCKED</p>
+              </div>
+
+              {/* Title */}
+              <h2 className="font-[var(--font-display)] text-xl sm:text-2xl md:text-3xl font-bold text-primary uppercase tracking-wider">
+                Guardián derrotado
+              </h2>
+
+              {/* Message */}
+              <div className="space-y-4 font-mono text-xs sm:text-sm text-gray-300 leading-relaxed tracking-wide">
+                <p>
+                  Has demostrado que sabes pensar como un hacker.
+                  El Guardián ha caído y las puertas de la fortaleza están abiertas.
+                </p>
+                <p>
+                  Ahora empieza lo real: construye tu propia fortaleza,
+                  defiéndela con tus reglas… y ataca las de los demás.
+                </p>
+              </div>
+
+              {/* Prompt */}
+              <p className="font-mono text-[10px] sm:text-xs text-primary/60 tracking-[0.2em] uppercase">
+                ¿Estás listo para la aventura?
+              </p>
+
+              {/* CTA */}
+              <button
+                onClick={() => router.push("/register")}
+                className="glitch-button mx-auto bg-primary text-background-dark font-bold py-3 sm:py-4 px-8 sm:px-12 text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase relative overflow-hidden group cursor-pointer"
+              >
+                <span className="relative z-10">[ COMENZAR LA AVENTURA ]</span>
+                <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-white opacity-50"></div>
+                <div className="absolute bottom-0 left-0 w-full h-[1px] bg-black opacity-20"></div>
+              </button>
+            </div>
+
+            {/* Bottom accent line */}
+            <div className="h-[2px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
