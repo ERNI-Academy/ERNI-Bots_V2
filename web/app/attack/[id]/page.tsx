@@ -82,7 +82,7 @@ export default function AttackPage() {
     const [hintUsed, setHintUsed] = useState(false);
     const [hintLoading, setHintLoading] = useState(false);
     const bottomRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
     const battleInitialized = useRef(false);
     const historyIndex = useRef(-1);
     const draftInput = useRef("");
@@ -252,6 +252,7 @@ export default function AttackPage() {
         historyIndex.current = -1;
         draftInput.current = "";
         setInput("");
+        if (inputRef.current) inputRef.current.style.height = "auto";
         setIsThinking(true);
 
         try {
@@ -795,16 +796,21 @@ export default function AttackPage() {
                                 </span>
                             )}
                         </div>
-                        <div className="flex-1 flex items-center gap-2 bg-black/40 border border-primary/20 focus-within:border-primary/50 px-3 py-2 min-w-0">
-                            <span className="text-primary font-mono text-xs shrink-0">&gt;_</span>
-                            <input
-                                className="flex-1 bg-transparent text-base md:text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-500 tracking-wide min-w-0"
+                        <div className="flex-1 flex items-start gap-2 bg-black/40 border border-primary/20 focus-within:border-primary/50 px-3 py-2 min-w-0">
+                            <span className="text-primary font-mono text-xs shrink-0 mt-1">&gt;_</span>
+                            <textarea
+                                rows={1}
+                                className="flex-1 bg-transparent text-base md:text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-500 tracking-wide min-w-0 resize-none overflow-hidden max-h-32"
                                 placeholder={battle ? "Introduce tu vector de ataque..." : "Conectando con el guardián..."}
                                 value={input}
                                 ref={inputRef}
-                                onChange={(e) => setInput(e.target.value)}
+                                onChange={(e) => {
+                                    setInput(e.target.value);
+                                    e.target.style.height = "auto";
+                                    e.target.style.height = e.target.scrollHeight + "px";
+                                }}
                                 onKeyDown={(e) => {
-                                    if (e.key === "Enter" && !e.shiftKey) { handleSend(); return; }
+                                    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); return; }
                                     if (e.key === "ArrowUp" && sentMessages.length > 0) {
                                         e.preventDefault();
                                         if (historyIndex.current === -1) draftInput.current = input;

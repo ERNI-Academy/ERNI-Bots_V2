@@ -25,6 +25,7 @@ export default function InitialChallengePage() {
   const [hintUsed, setHintUsed] = useState(false);
   const [hintLoading, setHintLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -48,6 +49,7 @@ export default function InitialChallengePage() {
     const userMsg: ChatMessage = { role: "user", text: trimmed };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
+    if (inputRef.current) inputRef.current.style.height = "auto";
     setSending(true);
 
     try {
@@ -255,12 +257,20 @@ export default function InitialChallengePage() {
                   <div className="flex items-center px-3 text-primary/50 font-mono text-sm">
                     &gt;
                   </div>
-                  <input
-                    type="text"
+                  <textarea
+                    rows={1}
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    ref={inputRef}
+                    onChange={(e) => {
+                      setInput(e.target.value);
+                      e.target.style.height = "auto";
+                      e.target.style.height = e.target.scrollHeight + "px";
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(e as unknown as FormEvent); }
+                    }}
                     placeholder="Escribe tu prompt..."
-                    className="flex-1 bg-transparent py-3 text-base sm:text-sm font-mono text-gray-200 placeholder:text-primary/20 focus:outline-none"
+                    className="flex-1 bg-transparent py-3 text-base sm:text-sm font-mono text-gray-200 placeholder:text-primary/20 focus:outline-none resize-none overflow-hidden max-h-32"
                     autoFocus
                   />
                   <div className="relative group flex items-center">
