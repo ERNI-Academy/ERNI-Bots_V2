@@ -9,6 +9,7 @@ export interface Fortress {
     defenseLevel: number;
     description: string;
     victories: number;
+    isBot: boolean;
 }
 
 // Backend matchmaking response shape
@@ -21,6 +22,7 @@ interface MatchmakingEntry {
     defeats: number;
     attacks: number;
     fortress_description: string;
+    is_bot: boolean;
 }
 
 export function statusFromDefeats(defeats: number): FortressStatus {
@@ -43,6 +45,7 @@ function adaptMatchmakingEntry(entry: MatchmakingEntry, index: number): Fortress
         defenseLevel,
         description: entry.fortress_description,
         victories: entry.attacks - entry.defeats,
+        isBot: entry.is_bot ?? false,
     };
 }
 

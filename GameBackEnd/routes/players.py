@@ -309,14 +309,9 @@ def matchmaking():
         bot_fortresses_enabled = cfg_bots is None or cfg_bots.value.lower() == "true"
 
         delta = INITIAL_DELTA
-        results = []
 
-        while len(results) < MIN_RESULTS:
-
-            min_score = current_stats.score - delta
-            max_score = current_stats.score + delta
-
-            query = (
+        def _build_base_query(min_score, max_score):
+            return (
                 db.query(Player, Fortress)
                 .join(Fortress, Fortress.owner_id == Player.id)
                 .join(PlayerSeasonStats,
@@ -328,54 +323,66 @@ def matchmaking():
                 .filter(~Fortress.id.in_(defeated_fortress_ids))
             )
 
-            if not bot_fortresses_enabled:
-                query = query.filter(Player.is_bot == False)  # noqa: E712
-
-            rows = query.all()
-
-            # Filtrar dinámicamente por estado estacional
+        def _filter_and_rank(rows):
             filtered = []
             for player, fortress in rows:
-
                 f_stats = get_or_create_fortress_season_stats(
                     db, fortress.id, season.id
                 )
-
                 if f_stats.status == "destroyed":
                     continue
-
                 filtered.append((player, fortress, f_stats))
 
-           # Orden con presión dinámica + randomización suave
             def ranking_key(x):
                 player, fortress, f_stats = x
-
                 score_distance = abs(
                     player.season_stats[0].score - current_stats.score
                 )
-
                 pressure_component = (
                     f_stats.defeat_count * 2
                     - f_stats.attack_count
                 )
-
-                # Ruido pequeño controlado
                 noise = random.uniform(0, 5)
-
                 return score_distance + pressure_component + noise
 
-
             filtered.sort(key=ranking_key)
+            return filtered
 
-            results = filtered[:MIN_RESULTS]
+        # ── Phase 1: real players only ──
+        real_results = []
+        while len(real_results) < MIN_RESULTS:
+            min_score = current_stats.score - delta
+            max_score = current_stats.score + delta
 
-            if len(results) >= MIN_RESULTS:
+            q = _build_base_query(min_score, max_score)
+            q = q.filter(Player.is_bot == False)  # noqa: E712
+            real_results = _filter_and_rank(q.all())[:MIN_RESULTS]
+
+            if len(real_results) >= MIN_RESULTS:
                 break
-
             delta *= 2
-
-            if delta > 10000:
+            if delta > 2000:
                 break
+
+        # ── Phase 2: fill with bots if needed and enabled ──
+        bot_results = []
+        if len(real_results) < MIN_RESULTS and bot_fortresses_enabled:
+            bot_delta = INITIAL_DELTA
+            while len(real_results) + len(bot_results) < MIN_RESULTS:
+                min_score = current_stats.score - bot_delta
+                max_score = current_stats.score + bot_delta
+
+                q = _build_base_query(min_score, max_score)
+                q = q.filter(Player.is_bot == True)  # noqa: E712
+                bot_results = _filter_and_rank(q.all())[: MIN_RESULTS - len(real_results)]
+
+                if len(real_results) + len(bot_results) >= MIN_RESULTS:
+                    break
+                bot_delta *= 2
+                if bot_delta > 10000:
+                    break
+
+        results = real_results + bot_results
 
         db.commit()  # persist any fortress season stats created during matchmaking
 
@@ -389,7 +396,8 @@ def matchmaking():
                 "fortress_name": fortress.name,
                 "defeats": f_stats.defeat_count,
                 "attacks": f_stats.attack_count,
-                "fortress_description": fortress.story
+                "fortress_description": fortress.story,
+                "is_bot": player.is_bot,
             })
 
         return jsonify(response)

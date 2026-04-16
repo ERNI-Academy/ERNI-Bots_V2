@@ -785,9 +785,16 @@ export default function DashboardPage() {
                             <div className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
                                 {/* Status badge */}
                                 <div className="flex items-center justify-between">
-                                    <span className={`text-xs font-bold uppercase tracking-widest px-2 py-0.5 border ${st.border} ${st.text} ${st.bg}`}>
-                                        {st.label}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-xs font-bold uppercase tracking-widest px-2 py-0.5 border ${st.border} ${st.text} ${st.bg}`}>
+                                            {st.label}
+                                        </span>
+                                        {selectedFortress.isBot && (
+                                            <span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 border border-slate-500/40 text-slate-400 bg-slate-500/10">
+                                                BOT
+                                            </span>
+                                        )}
+                                    </div>
 
                                 </div>
                                 {/* Description */}
