@@ -41,6 +41,7 @@ interface ExistingFortress {
     archetype_id: string;
     created_at: string;
     constraints: ConstraintItem[];
+    defeat_count?: number;
 }
 
 interface ConstraintItem {
@@ -398,6 +399,11 @@ function FortressConfigurePage() {
                                     <div className="text-xs text-[#e8c000] font-mono">
                                         La reconfiguración requiere ≥3 derrotas y tiene coste en créditos
                                     </div>
+                                    {(existingFortress?.defeat_count ?? 0) < 3 && (
+                                        <div className="text-xs text-blood-red font-mono font-bold mt-1">
+                                            ⚠ Tu fortaleza tiene {existingFortress?.defeat_count ?? 0} derrota(s). Necesitas al menos 3.
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -821,7 +827,7 @@ function FortressConfigurePage() {
                                 <button
                                     data-tour="tour-cfg-deploy"
                                     onClick={handleSubmit}
-                                    disabled={saving}
+                                    disabled={saving || (isEditMode && (existingFortress?.defeat_count ?? 0) < 3)}
                                     className="flex items-center justify-center gap-2 bg-primary/10 border border-primary/50 text-primary font-bold text-sm px-6 py-3 hover:bg-primary/25 transition-all uppercase tracking-widest cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed glitch-button"
                                 >
                                     <span className="material-symbols-outlined text-base">bolt</span>

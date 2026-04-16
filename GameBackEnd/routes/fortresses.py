@@ -237,6 +237,14 @@ def get_my_fortress():
         "created_at": fortress.created_at
     }
 
+    season = get_active_season(db)
+    if season:
+        stats = get_or_create_fortress_season_stats(db, fortress.id, season.id)
+        db.commit()
+        result["defeat_count"] = stats.defeat_count
+    else:
+        result["defeat_count"] = 0
+
     db.close()
     return jsonify(result)
 
@@ -281,7 +289,7 @@ def reconfigure_fortress():
 
     if stats.defeat_count < 3:
         db.close()
-        return jsonify({"error": "Not eligible for reconfiguration"}), 403
+        return jsonify({"error": f"Tu fortaleza solo tiene {stats.defeat_count} derrota(s). Necesitas al menos 3 para poder reconfigurarla."}), 403
 
     # COSTE DINÁMICO
     cost = 0
