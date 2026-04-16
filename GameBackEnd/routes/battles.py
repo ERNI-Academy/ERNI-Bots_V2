@@ -585,6 +585,52 @@ def send_message(battle_id):
 
 
 # ==========================
+# HINT (PvP only)
+# ==========================
+
+@battles_bp.post("/<battle_id>/hint")
+@jwt_required()
+def request_hint(battle_id):
+    user_id = get_jwt_identity()
+
+    db = SessionLocal()
+    try:
+        battle = db.query(Battle).filter_by(id=battle_id).first()
+        if not battle:
+            return jsonify({"error": "Battle not found"}), 404
+
+        if battle.attacker_id != user_id:
+            return jsonify({"error": "Not authorized"}), 403
+
+        if battle.status != "active":
+            return jsonify({"error": "Battle not active"}), 400
+
+        if battle.type != "pvp":
+            return jsonify({"error": "Hints are only available in PvP battles"}), 400
+
+        if battle.turn_count < 10:
+            return jsonify({"error": "Necesitas al menos 10 mensajes para pedir una pista"}), 400
+
+        if battle.hint_used:
+            return jsonify({"error": "Ya has usado la pista en esta batalla"}), 400
+
+        word = battle.secret_word or ""
+        hint_text = f"La palabra tiene {len(word)} letras y empieza por '{word[0].upper()}'." if word else "No hay palabra asignada."
+
+        battle.hint_used = True
+        battle.updated_at = datetime.utcnow()
+        db.commit()
+
+        return jsonify({"hint": hint_text, "penalty": True})
+
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.close()
+
+
+# ==========================
 # GUESS WORD
 # ==========================
 
@@ -737,6 +783,11 @@ def guess_word(battle_id):
                 score_awarded = 5 if was_invincible else 3
                 credits_awarded = 50 if was_invincible else 30
 
+                # Halve rewards if hint was used
+                if battle.hint_used:
+                    score_awarded = score_awarded // 2
+                    credits_awarded = credits_awarded // 2
+
                 player_stats.score += score_awarded
                 attacker.credits += credits_awarded
 
@@ -774,7 +825,8 @@ def guess_word(battle_id):
                     "result": "correct",
                     "score_awarded": score_awarded,
                     "credits_awarded": credits_awarded,
-                    "invincible_bonus": was_invincible
+                    "invincible_bonus": was_invincible,
+                    "hint_used": battle.hint_used
                 })
 
         # ── Wrong guess ───────────────────────────────────────────────────

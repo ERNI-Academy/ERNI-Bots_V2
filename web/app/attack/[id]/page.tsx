@@ -79,6 +79,8 @@ export default function AttackPage() {
     const [username, setUsername] = useState<string | null>(null);
     const [alreadyWon, setAlreadyWon] = useState(false);
     const [ownerBanned, setOwnerBanned] = useState(false);
+    const [hintUsed, setHintUsed] = useState(false);
+    const [hintLoading, setHintLoading] = useState(false);
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const battleInitialized = useRef(false);
@@ -299,6 +301,59 @@ export default function AttackPage() {
         }
     }
 
+    async function handleHint() {
+        if (!battle || battleResult || hintUsed || hintLoading || turnCount < 10) return;
+
+        const confirmed = window.confirm(
+            "⚠️ Si usas la pista y aciertas la palabra, las recompensas se reducirán a la MITAD.\n\n¿Quieres continuar?"
+        );
+        if (!confirmed) return;
+
+        setHintLoading(true);
+        try {
+            const res = await fetch(`/api/battles/${battle.battleId}/hint`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+            });
+            const data = await res.json();
+            if (res.ok && data.hint) {
+                setHintUsed(true);
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: uid(),
+                        role: "system",
+                        text: `🔎 PISTA: ${data.hint} (⚠️ Recompensas reducidas al 50% si ganas)`,
+                        timestamp: now(),
+                    },
+                ]);
+            } else {
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: uid(),
+                        role: "system",
+                        text: `ERROR: ${data.error ?? "No se pudo obtener la pista"}`,
+                        timestamp: now(),
+                    },
+                ]);
+            }
+        } catch {
+            setMessages(prev => [
+                ...prev,
+                {
+                    id: uid(),
+                    role: "system",
+                    text: "ERROR: Conexión perdida al solicitar pista",
+                    timestamp: now(),
+                },
+            ]);
+        } finally {
+            setHintLoading(false);
+        }
+    }
+
     async function handleGuess() {
         if (!guessInput.trim() || isGuessing || !battle || battleResult) return;
 
@@ -320,13 +375,16 @@ export default function AttackPage() {
                 const bonusLine = data.invincible_bonus
                     ? ` ¡BONUS INVENCIBLE! +2 puntos y +20 fragmentos extra.`
                     : "";
+                const hintPenalty = data.hint_used
+                    ? " (⚠️ Recompensas reducidas por uso de pista)"
+                    : "";
                 setMessages(prev => [
                     ...prev,
                     {
                         id: uid(),
                         role: "result",
                         variant: "won",
-                        text: `¡VICTORIA! La palabra "${word}" era correcta. +${data.score_awarded} puntos y +${data.credits_awarded} fragmentos de lógica obtenidos.${bonusLine} Redirigiendo al mapa...`,
+                        text: `¡VICTORIA! La palabra "${word}" era correcta. +${data.score_awarded} puntos y +${data.credits_awarded} fragmentos de lógica obtenidos.${bonusLine}${hintPenalty} Redirigiendo al mapa...`,
                         timestamp: now(),
                     },
                 ]);
@@ -698,6 +756,31 @@ export default function AttackPage() {
                         >
                             <span className="material-symbols-outlined text-base">key</span>
                         </button>
+                        <div className="relative group">
+                            <button
+                                onClick={handleHint}
+                                disabled={!battle || !!battleResult || hintUsed || hintLoading || turnCount < 10}
+                                title={
+                                    hintUsed
+                                        ? "Pista ya utilizada"
+                                        : turnCount < 10
+                                            ? `Disponible tras 10 mensajes (${turnCount}/10)`
+                                            : "Pedir pista (⚠️ recompensas reducidas al 50%)"
+                                }
+                                className={`shrink-0 px-3 py-2 border text-xs transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                                    hintUsed
+                                        ? "bg-void-violet/20 border-void-violet/60 text-void-violet"
+                                        : "border-void-violet/30 text-void-violet hover:bg-void-violet/10"
+                                }`}
+                            >
+                                <span className="material-symbols-outlined text-base">{hintLoading ? "hourglass_top" : "lightbulb"}</span>
+                            </button>
+                            {!battle || battleResult ? null : (
+                                <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/90 px-2 py-1 text-[10px] font-mono text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity border border-primary/20">
+                                    {hintUsed ? "Pista usada" : turnCount < 10 ? `Disponible en ${10 - turnCount} msgs` : "⚠️ -50% recompensas"}
+                                </span>
+                            )}
+                        </div>
                         <div className="flex-1 flex items-center gap-2 bg-black/40 border border-primary/20 focus-within:border-primary/50 px-3 py-2 min-w-0">
                             <span className="text-primary font-mono text-xs shrink-0">&gt;_</span>
                             <input
