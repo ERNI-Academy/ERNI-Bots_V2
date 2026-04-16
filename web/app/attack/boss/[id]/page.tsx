@@ -58,6 +58,8 @@ export default function BossAttackPage() {
     const [showMobileStory, setShowMobileStory] = useState(false);
     const [showStoryIntro, setShowStoryIntro] = useState(false);
     const [preflight, setPreflight] = useState<"checking" | "ok" | "denied">("checking");
+    const [hintUsed, setHintUsed] = useState(false);
+    const [hintLoading, setHintLoading] = useState(false);
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const battleInitialized = useRef(false);
@@ -132,11 +134,25 @@ export default function BossAttackPage() {
                         .map((h: { text: string }) => h.text)
                         .reverse() as string[];
                     setSentMessages(sentByUser.slice(0, 20));
-                    setMessages(prev => [
-                        ...prev,
-                        { id: uid(), role: "system", text: `Sesión retomada — ${data.history.length} mensajes restaurados. Turnos usados: ${data.turn_count}/${data.max_turns ?? 30}.`, timestamp: now() },
-                        ...historyMessages,
-                    ]);
+                    setMessages(prev => {
+                        const restored: Message[] = [
+                            ...prev,
+                            { id: uid(), role: "system", text: `Sesión retomada — ${data.history.length} mensajes restaurados. Turnos usados: ${data.turn_count}/${data.max_turns ?? 30}.`, timestamp: now() },
+                            ...historyMessages,
+                        ];
+                        if (data.hint_used && data.hint_text) {
+                            restored.push({
+                                id: uid(),
+                                role: "system",
+                                text: `🔎 PISTA: ${data.hint_text} (⚠️ Recompensas reducidas al 50% si ganas)`,
+                                timestamp: now(),
+                            });
+                        }
+                        return restored;
+                    });
+                    if (data.hint_used) {
+                        setHintUsed(true);
+                    }
                 } else {
                     setMessages(prev => [
                         ...prev,
@@ -200,6 +216,47 @@ export default function BossAttackPage() {
         }
     }
 
+    async function handleHint() {
+        if (!battle || battleResult || hintUsed || hintLoading || turnCount < 20) return;
+
+        const confirmed = window.confirm(
+            "⚠️ Si usas la pista y aciertas la palabra, las recompensas se reducirán a la MITAD.\n\n¿Quieres continuar?"
+        );
+        if (!confirmed) return;
+
+        setHintLoading(true);
+        try {
+            const res = await fetch(`/api/battles/${battle.battleId}/hint`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+            });
+            const data = await res.json();
+            if (res.ok && data.hint) {
+                setHintUsed(true);
+                setMessages(prev => [...prev, {
+                    id: uid(), role: "system",
+                    text: `🔎 PISTA: ${data.hint} (⚠️ Recompensas reducidas al 50% si ganas)`,
+                    timestamp: now(),
+                }]);
+            } else {
+                setMessages(prev => [...prev, {
+                    id: uid(), role: "system",
+                    text: `ERROR: ${data.error ?? "No se pudo obtener la pista"}`,
+                    timestamp: now(),
+                }]);
+            }
+        } catch {
+            setMessages(prev => [...prev, {
+                id: uid(), role: "system",
+                text: "ERROR: Conexión perdida al solicitar pista",
+                timestamp: now(),
+            }]);
+        } finally {
+            setHintLoading(false);
+        }
+    }
+
     async function handleGuess() {
         if (!guessInput.trim() || isGuessing || !battle || battleResult) return;
 
@@ -218,9 +275,12 @@ export default function BossAttackPage() {
 
             if (data.result === "correct") {
                 setBattleResult("won");
+                const hintPenalty = data.hint_used
+                    ? " (⚠️ Recompensas reducidas por uso de pista)"
+                    : "";
                 setMessages(prev => [...prev, {
                     id: uid(), role: "result", variant: "won",
-                    text: `¡INFILTRACIÓN EXITOSA! La palabra "${word}" era correcta. +${data.score_awarded} puntos y +${data.credits_awarded} fragmentos de lógica obtenidos. La entidad ha caído. Redirigiendo...`,
+                    text: `¡INFILTRACIÓN EXITOSA! La palabra "${word}" era correcta. +${data.score_awarded} puntos y +${data.credits_awarded} fragmentos de lógica obtenidos. La entidad ha caído.${hintPenalty} Redirigiendo...`,
                     timestamp: now(),
                 }]);
                 setTimeout(() => router.push("/dashboard"), 3000);
@@ -514,6 +574,31 @@ export default function BossAttackPage() {
                         >
                             <span className="material-symbols-outlined text-base">key</span>
                         </button>
+                        <div className="relative group">
+                            <button
+                                onClick={handleHint}
+                                disabled={!battle || !!battleResult || hintUsed || hintLoading || turnCount < 20}
+                                title={
+                                    hintUsed
+                                        ? "Pista ya utilizada"
+                                        : turnCount < 20
+                                            ? `Disponible tras 20 mensajes (${turnCount}/20)`
+                                            : "Pedir pista (⚠️ recompensas reducidas al 50%)"
+                                }
+                                className={`shrink-0 px-3 py-2 border text-xs transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                                    hintUsed
+                                        ? "bg-void-violet/20 border-void-violet/60 text-void-violet"
+                                        : "border-void-violet/30 text-void-violet hover:bg-void-violet/10"
+                                }`}
+                            >
+                                <span className="material-symbols-outlined text-base">{hintLoading ? "hourglass_top" : "lightbulb"}</span>
+                            </button>
+                            {!battle || battleResult ? null : (
+                                <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/90 px-2 py-1 text-[10px] font-mono text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity border border-void-violet/20">
+                                    {hintUsed ? "Pista usada" : turnCount < 20 ? `Disponible en ${20 - turnCount} msgs` : "⚠️ -50% recompensas"}
+                                </span>
+                            )}
+                        </div>
                         <div className="flex-1 flex items-center gap-2 bg-black/40 border border-void-violet/20 focus-within:border-void-violet/50 px-3 py-2">
                             <span className="text-[#a78bfa] font-mono text-xs shrink-0">&gt;_</span>
                             <input
@@ -603,6 +688,20 @@ export default function BossAttackPage() {
                         >
                             <span className="material-symbols-outlined text-xs">key</span>
                             Introducir palabra
+                        </button>
+
+                        {/* Hint button */}
+                        <button
+                            onClick={handleHint}
+                            disabled={!battle || !!battleResult || hintUsed || hintLoading || turnCount < 20}
+                            className={`w-full text-xs px-3 py-2 border transition-colors uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed ${
+                                hintUsed
+                                    ? "bg-void-violet/20 border-void-violet/60 text-void-violet"
+                                    : "border-void-violet/30 text-void-violet hover:bg-void-violet/10"
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-xs">{hintLoading ? "hourglass_top" : "lightbulb"}</span>
+                            {hintUsed ? "Pista usada" : turnCount < 20 ? `Pista (${turnCount}/20)` : "Pedir pista"}
                         </button>
 
                         {/* Recent sent messages */}
@@ -719,6 +818,14 @@ export default function BossAttackPage() {
                         className="text-loot-gold transition-colors disabled:opacity-30"
                     >
                         <span className="material-symbols-outlined text-base">key</span>
+                    </button>
+                    <button
+                        onClick={handleHint}
+                        disabled={!battle || !!battleResult || hintUsed || hintLoading || turnCount < 20}
+                        className="text-void-violet transition-colors disabled:opacity-30"
+                        title={hintUsed ? "Pista usada" : turnCount < 20 ? `Disponible en ${20 - turnCount} msgs` : "Pedir pista"}
+                    >
+                        <span className="material-symbols-outlined text-base">{hintLoading ? "hourglass_top" : "lightbulb"}</span>
                     </button>
                 </div>
             </footer>

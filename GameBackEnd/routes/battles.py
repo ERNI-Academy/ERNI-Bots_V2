@@ -380,6 +380,8 @@ def start_boss_battle():
                     "resumed": True,
                     "turn_count": existing.turn_count,
                     "max_turns": existing.max_turns,
+                    "hint_used": existing.hint_used,
+                    "hint_text": existing.hint_text,
                     "boss": {
                         "id": boss.id,
                         "name": boss.name,
@@ -587,7 +589,7 @@ def send_message(battle_id):
 
 
 # ==========================
-# HINT (PvP only)
+# HINT
 # ==========================
 
 @battles_bp.post("/<battle_id>/hint")
@@ -607,19 +609,25 @@ def request_hint(battle_id):
         if battle.status != "active":
             return jsonify({"error": "Battle not active"}), 400
 
-        if battle.type != "pvp":
-            return jsonify({"error": "Hints are only available in PvP battles"}), 400
+        is_pve = battle.type == "pve"
+        min_turns = 20 if is_pve else 10
 
-        if battle.turn_count < 10:
-            return jsonify({"error": "Necesitas al menos 10 mensajes para pedir una pista"}), 400
+        if battle.turn_count < min_turns:
+            return jsonify({"error": f"Necesitas al menos {min_turns} mensajes para pedir una pista"}), 400
 
         if battle.hint_used:
             return jsonify({"error": "Ya has usado la pista en esta batalla"}), 400
 
-        fortress = battle.fortress
-        protocol_template = fortress.protocol.protocol_template if fortress.protocol else ""
-        archetype_template = fortress.archetype.archetype_template if fortress.archetype else ""
-        personality_template = fortress.personality.personality_template if fortress.personality else ""
+        if is_pve:
+            boss = db.query(Boss).filter_by(id=battle.boss_id).first()
+            protocol_template = boss.prompt if boss else ""
+            archetype_template = ""
+            personality_template = ""
+        else:
+            fortress = battle.fortress
+            protocol_template = fortress.protocol.protocol_template if fortress.protocol else ""
+            archetype_template = fortress.archetype.archetype_template if fortress.archetype else ""
+            personality_template = fortress.personality.personality_template if fortress.personality else ""
 
         # Build conversation summary from battle messages
         conversation_lines = []
@@ -738,6 +746,11 @@ def guess_word(battle_id):
                 score_awarded   = boss.reward_score
                 credits_awarded = boss.reward_credits
 
+                # Halve rewards if hint was used
+                if battle.hint_used:
+                    score_awarded = score_awarded // 2
+                    credits_awarded = credits_awarded // 2
+
                 # Grant NFT asset if configured
                 if boss.reward_asset_type and boss.reward_asset:
                     now = datetime.utcnow()
@@ -806,7 +819,8 @@ def guess_word(battle_id):
                     "result": "correct",
                     "score_awarded": score_awarded,
                     "credits_awarded": credits_awarded,
-                    "invincible_bonus": False
+                    "invincible_bonus": False,
+                    "hint_used": battle.hint_used
                 })
 
             else:

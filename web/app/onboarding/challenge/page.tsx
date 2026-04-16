@@ -22,6 +22,8 @@ export default function InitialChallengePage() {
   const [codeInput, setCodeInput] = useState("");
   const [codeError, setCodeError] = useState("");
   const [unlocked, setUnlocked] = useState(false);
+  const [hintUsed, setHintUsed] = useState(false);
+  const [hintLoading, setHintLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -105,6 +107,45 @@ export default function InitialChallengePage() {
       }
     } catch {
       setCodeError("Error al verificar. Intentá de nuevo.");
+    }
+  };
+
+  const userMessageCount = messages.filter((m) => m.role === "user").length;
+
+  const handleHint = async () => {
+    if (hintUsed || hintLoading || userMessageCount < 5) return;
+
+    setHintLoading(true);
+    try {
+      const conversation = messages
+        .filter((m) => m.role === "user" || m.role === "bot")
+        .map((m) => ({ role: m.role === "bot" ? "bot" : "user", text: m.text }));
+
+      const res = await fetch("/api/onboarding/hint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversation }),
+      });
+      const data = await res.json();
+      if (res.ok && data.hint) {
+        setHintUsed(true);
+        setMessages((prev) => [
+          ...prev,
+          { role: "bot", text: `🔎 PISTA DEL INSTRUCTOR: ${data.hint}` },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { role: "bot", text: `[ERROR] ${data.error ?? "No se pudo obtener la pista"}` },
+        ]);
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "[ERROR] Conexión perdida al solicitar pista" },
+      ]);
+    } finally {
+      setHintLoading(false);
     }
   };
 
@@ -222,6 +263,32 @@ export default function InitialChallengePage() {
                     className="flex-1 bg-transparent py-3 text-base sm:text-sm font-mono text-gray-200 placeholder:text-primary/20 focus:outline-none"
                     autoFocus
                   />
+                  <div className="relative group flex items-center">
+                    <button
+                      type="button"
+                      onClick={handleHint}
+                      disabled={hintUsed || hintLoading || userMessageCount < 5}
+                      title={
+                        hintUsed
+                          ? "Pista ya utilizada"
+                          : userMessageCount < 5
+                            ? `Disponible tras 5 mensajes (${userMessageCount}/5)`
+                            : "Pedir pista al instructor"
+                      }
+                      className={`px-3 transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                        hintUsed
+                          ? "text-void-violet"
+                          : "text-void-violet/60 hover:text-void-violet"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-lg">{hintLoading ? "hourglass_top" : "lightbulb"}</span>
+                    </button>
+                    {!unlocked && (
+                      <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/90 px-2 py-1 text-[10px] font-mono text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity border border-primary/20">
+                        {hintUsed ? "Pista usada" : userMessageCount < 5 ? `Disponible en ${5 - userMessageCount} msgs` : "Pedir pista"}
+                      </span>
+                    )}
+                  </div>
                   <button
                     type="submit"
                     className="px-4 text-primary hover:text-white transition-colors disabled:opacity-30"
