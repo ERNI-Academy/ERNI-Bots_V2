@@ -761,11 +761,11 @@ export default function DashboardPage() {
 
                         {/* Panel */}
                         <div
-                            className={`relative w-full max-w-sm panel-float z-10 ${st.border}`}
+                            className={`relative w-full max-w-sm max-h-[85vh] flex flex-col panel-float z-10 ${st.border}`}
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Header */}
-                            <div className="panel-header px-4 py-3 flex items-center justify-between">
+                            <div className="panel-header px-4 py-3 flex items-center justify-between shrink-0">
                                 <div className="flex items-center gap-3">
                                     <span className="material-symbols-outlined text-primary text-base">fort</span>
                                     <div>                                        
@@ -782,7 +782,7 @@ export default function DashboardPage() {
                                 </button>
                             </div>
 
-                            <div className="p-4 space-y-4">
+                            <div className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
                                 {/* Status badge */}
                                 <div className="flex items-center justify-between">
                                     <span className={`text-xs font-bold uppercase tracking-widest px-2 py-0.5 border ${st.border} ${st.text} ${st.bg}`}>
