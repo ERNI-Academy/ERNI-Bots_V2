@@ -15,7 +15,7 @@ archetypes_bp = Blueprint("archetypes", __name__)
 def get_all_archetypes():
     db = SessionLocal()
 
-    archetypes = db.query(Archetype).all()
+    archetypes = db.query(Archetype).order_by(Archetype.unlock_cost).all()
 
     result = []
     for a in archetypes:

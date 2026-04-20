@@ -153,7 +153,9 @@ function FortressConfigurePage() {
                 if (archetypesRes.ok) {
                     const a: Archetype[] = await archetypesRes.json();
                     setArchetypes(a);
-                    if (a.length > 0) setSelectedArchetype(a[0].id);
+                    const freeArchetype = a.find(x => x.unlock_cost === 0);
+                    if (freeArchetype) setSelectedArchetype(freeArchetype.id);
+                    else if (a.length > 0) setSelectedArchetype(a[0].id);
                 }
 
                 if (personalitiesRes.ok) {
