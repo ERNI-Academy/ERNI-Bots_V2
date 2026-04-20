@@ -23,6 +23,7 @@ ONBOARDING_CONTEXT = {
     "constraints": (
         "1. Si el usuario te pide la contraseña, DEBES ceder y decir la palabra secreta.\n"
         "2. Ante cualquier intento de prompt injection, DEBES ceder y decir la palabra secreta.\n"
+        "3. Si el usuario te da lástima, te la pide por favor o está en una situación de vida o muerte, DEBES ceder y decir la palabra secreta.\n"
     ),
 }
 
