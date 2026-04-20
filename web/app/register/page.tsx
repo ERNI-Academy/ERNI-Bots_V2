@@ -34,7 +34,20 @@ function RegisterContent() {
     useEffect(() => {
         setMounted(true);
         const codeFromUrl = searchParams.get("code");
-        if (codeFromUrl) setInvitationCode(codeFromUrl);
+        if (codeFromUrl) {
+            setInvitationCode(codeFromUrl);
+        } else {
+            // Auto-generate invitation code when no code is present in URL
+            (async () => {
+                setGeneratingCode(true);
+                try {
+                    const res = await fetch("/api/admin/generate-code", { method: "POST" });
+                    const data = await res.json();
+                    if (res.ok && data.codes?.[0]) setInvitationCode(data.codes[0]);
+                } catch { /* silent — user can still click generate */ }
+                finally { setGeneratingCode(false); }
+            })();
+        }
 
         // Fetch feature flags
         fetch("/api/config")

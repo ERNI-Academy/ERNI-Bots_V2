@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
       `${BACKEND}/api/v1/leaderboard?offset=${offset}&limit=${limit}`,
       {
         method: "GET",
+        cache: "no-store",
         headers: {
           ...forwardedFor(request),
           "Content-Type": "application/json",
