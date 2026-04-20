@@ -29,10 +29,10 @@ def leaderboard():
 
     db = SessionLocal()
 
-    season = get_ranked_season(db)
+    season = get_active_season(db)
     if not season:
         db.close()
-        return jsonify({"error": "No ranked season"}), 400
+        return jsonify({"error": "No active season"}), 400
 
     base_query = (
         db.query(PlayerSeasonStats, Player)
