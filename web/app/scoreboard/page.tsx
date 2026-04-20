@@ -43,11 +43,11 @@ function rankSizes(rank: number) {
 
 function rowOpacityClass(rank: number): string {
   if (rank <= 3)   return "";
-  if (rank <= 5)   return "opacity-80";
-  if (rank <= 10)  return "opacity-60";
-  if (rank <= 20)  return "opacity-40";
-  if (rank <= 50)  return "opacity-30";
-  return "opacity-20";
+  if (rank <= 5)   return "opacity-90";
+  if (rank <= 10)  return "opacity-80";
+  if (rank <= 20)  return "opacity-70";
+  if (rank <= 50)  return "opacity-60";
+  return "opacity-50";
 }
 
 const PAGE_SIZE = 20;
@@ -182,10 +182,10 @@ export default function ScoreboardPage() {
             </div>
             <div className="flex flex-col items-center gap-2 text-center">
               <span className="text-lg tracking-[0.2em] uppercase text-loot-gold font-bold animate-pulse">
-                ¿PUEDES SUPERARLOS?
+                ¿PUEDES DERROTAR A LA IA?
               </span>
               <span className="text-xs tracking-[0.15em] uppercase text-slate-400">
-                ESCANEA EL CÓDIGO Y DEMUÉSTRALO
+                UN JUEGO DE ATAQUE Y DEFENSA CONTRA BOTS INTELIGENTES
               </span>
               <span className="text-[10px] tracking-[0.1em] text-primary/50 mt-2 break-all">
                 {SITE_URL}
