@@ -1,10 +1,15 @@
 ﻿"use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Space_Mono } from "next/font/google";
+import { QRCodeSVG } from "qrcode.react";
 
 const spaceMono = Space_Mono({ weight: ["400", "700"], subsets: ["latin"] });
+
+const SITE_URL = "https://ernibots-v2.azurewebsites.net/";
+const AUTO_REFRESH_MS = 60_000;    // reload data every 60s
+const AUTO_PAGE_MS   = 15_000;     // cycle page every 15s
 
 interface LeaderboardEntry {
   rank: number;
@@ -56,39 +61,59 @@ export default function ScoreboardPage() {
   const [retryKey, setRetryKey] = useState(0);
   const [total, setTotal] = useState<number | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const isAuthenticated = player !== null;
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: 0, behavior: "instant" });
   }, [page]);
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      setError(null);
-      const offset = page * PAGE_SIZE;
-      try {
-        const [lbData, meData] = await Promise.all([
-          fetch(`/api/leaderboard?offset=${offset}&limit=${PAGE_SIZE}`)
-            .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-            .catch((e: Error) => { throw e; }),
-          fetch("/api/players/me", { credentials: "include" })
-            .then((r) => (r.ok ? r.json() : null))
-            .catch(() => null),
-        ]);
-        setEntries(Array.isArray(lbData?.items) ? lbData.items : []);
-        setTotal(typeof lbData?.total === "number" ? lbData.total : null);
-        setPlayer(meData ?? null);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Error al cargar el ranking");
-        setEntries([]);
-      } finally {
-        setLoading(false);
-      }
+  const loadData = useCallback(async (targetPage: number) => {
+    setLoading(true);
+    setError(null);
+    const offset = targetPage * PAGE_SIZE;
+    try {
+      const [lbData, meData] = await Promise.all([
+        fetch(`/api/leaderboard?offset=${offset}&limit=${PAGE_SIZE}`)
+          .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+          .catch((e: Error) => { throw e; }),
+        fetch("/api/players/me", { credentials: "include" })
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null),
+      ]);
+      setEntries(Array.isArray(lbData?.items) ? lbData.items : []);
+      setTotal(typeof lbData?.total === "number" ? lbData.total : null);
+      setPlayer(meData ?? null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al cargar el ranking");
+      setEntries([]);
+    } finally {
+      setLoading(false);
     }
-    load();
-  }, [page, retryKey]);
+  }, []);
+
+  // Initial load + dependency on page/retryKey
+  useEffect(() => {
+    loadData(page);
+  }, [page, retryKey, loadData]);
+
+  // Auto-refresh: reload current page data every 60s
+  useEffect(() => {
+    const id = setInterval(() => {
+      loadData(page);
+    }, AUTO_REFRESH_MS);
+    return () => clearInterval(id);
+  }, [page, loadData]);
 
   const totalPages = total !== null ? Math.ceil(total / PAGE_SIZE) : null;
+
+  // Auto-pagination: cycle pages every 15s (only when more than 1 page)
+  useEffect(() => {
+    if (totalPages === null || totalPages <= 1) return;
+    const id = setInterval(() => {
+      setPage((p) => (p + 1 >= totalPages ? 0 : p + 1));
+    }, AUTO_PAGE_MS);
+    return () => clearInterval(id);
+  }, [totalPages]);
 
   return (
     <div
@@ -134,13 +159,15 @@ export default function ScoreboardPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-1 px-3 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary transition-colors font-mono text-xs uppercase tracking-widest"
-          >
-            <span className="material-symbols-outlined text-sm">arrow_back</span>
-            <span className="hidden sm:inline">DASHBOARD</span>
-          </Link>
+          {isAuthenticated && (
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-1 px-3 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary transition-colors font-mono text-xs uppercase tracking-widest"
+            >
+              <span className="material-symbols-outlined text-sm">arrow_back</span>
+              <span className="hidden sm:inline">DASHBOARD</span>
+            </Link>
+          )}
         </div>
       </header>
 
@@ -234,15 +261,31 @@ export default function ScoreboardPage() {
           </button>
         </div>
 
-        {/* Stat: player rank */}
-        <div className="flex items-center gap-3 md:gap-4">
-          <div className="flex flex-col text-right">
-            <span className="text-xs md:text-xs tracking-[0.2em] uppercase text-slate-300">Mi posición</span>
-            <span className="text-base md:text-xl font-bold">
-              {player ? `#${player.rank.toLocaleString()}` : "—"}
-            </span>
+        {/* Right side: QR + CTA (public) or player rank (authenticated) */}
+        {isAuthenticated ? (
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="flex flex-col text-right">
+              <span className="text-xs md:text-xs tracking-[0.2em] uppercase text-slate-300">Mi posición</span>
+              <span className="text-base md:text-xl font-bold">
+                {player ? `#${player.rank.toLocaleString()}` : "—"}
+              </span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center gap-3 md:gap-5">
+            <div className="flex flex-col text-right gap-0.5">
+              <span className="text-xs tracking-[0.15em] uppercase text-loot-gold font-bold animate-pulse">
+                ¿PUEDES SUPERARLOS?
+              </span>
+              <span className="text-[10px] tracking-[0.1em] uppercase text-slate-400">
+                ESCANEA Y DEMUÉSTRALO →
+              </span>
+            </div>
+            <div className="border border-primary/40 p-1 bg-white rounded-sm">
+              <QRCodeSVG value={SITE_URL} size={52} level="M" />
+            </div>
+          </div>
+        )}
       </footer>
     </div>
   );
