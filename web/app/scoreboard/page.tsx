@@ -171,122 +171,137 @@ export default function ScoreboardPage() {
         </div>
       </header>
 
-      {/* ─── LEADERBOARD TABLE ─── */}
-      <main className="w-full flex-1 scoreboard-stream overflow-hidden min-h-0 px-4 md:px-8 flex flex-col">
-        {/* Column headers */}
-        <div className="grid grid-cols-12 gap-4 md:gap-6 px-2 md:px-4 py-3 text-xs md:text-xs tracking-[0.2em] md:tracking-[0.4em] uppercase  mb-2 md:mb-4 border-b border-primary/20">
-          <div className="col-span-2">Pos.</div>
-          <div className="col-span-7">Usuario</div>
-          <div className="col-span-3 text-right">Puntuación</div>
-        </div>
+      {/* ─── BODY: two-column (public) or single-column (authenticated) ─── */}
+      <div className={`flex-1 flex min-h-0 overflow-hidden ${!isAuthenticated ? "flex-row" : "flex-col"}`}>
 
-        {loading ? (
-          <div className="flex items-center justify-center h-40 text-primary text-xs animate-pulse uppercase tracking-widest">
-            SINCRONIZANDO DATOS...
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center h-40 gap-2">
-            <span className="text-red-400/70 text-xs uppercase tracking-widest">ERROR_DE_CONEXION</span>
-            <span className="text-slate-400 text-xs">{error}</span>
-            <button
-              onClick={() => setRetryKey((k) => k + 1)}
-              className="mt-2 px-4 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary text-xs uppercase tracking-widest transition-colors cursor-pointer"
-            >
-              REINTENTAR
-            </button>
-          </div>
-        ) : entries.length === 0 ? (
-          <div className="flex items-center justify-center h-40 text-slate-400 text-xs uppercase tracking-widest">
-            NO_DATA_FOUND
-          </div>
-        ) : (
-          <div ref={listRef} className="space-y-1 overflow-y-auto flex-1 min-h-0 custom-scrollbar pr-1 pb-2">
-            {entries.map((entry) => {
-              const sizes = rankSizes(entry.rank);
-              const color = rankColorClass(entry.rank);
-              const opacity = rowOpacityClass(entry.rank);
-              const isFirst = entry.rank === 1;
-
-              return (
-                <div
-                  key={entry.rank}
-                  className={`grid grid-cols-12 gap-4 md:gap-6 px-2 md:px-4 ${sizes.py} items-center transition-all scoreboard-row-hover ${color} ${opacity}`}
-                >
-                  <div className={`col-span-2 ${sizes.index} font-bold tracking-tighter`}>
-                    {String(entry.rank).padStart(2, "0")}
-                  </div>
-                  <div
-                    className={`col-span-7 ${sizes.name} font-bold tracking-tight uppercase ${isFirst ? "scoreboard-glitch" : ""}`}
-                  >
-                    {entry.username}
-                  </div>
-                  <div className={`col-span-3 text-right ${sizes.score} font-light tracking-wide`}>
-                    {formatScore(entry.score)}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </main>
-
-      {/* ─── FOOTER ─── */}
-      <footer className="w-full px-4 md:px-8 py-3 md:py-4 flex flex-row justify-between items-center gap-4 border-t border-primary/30 shrink-0">
-        {/* Stat: total players */}
-        <div className="flex flex-col">
-          <span className="text-xs md:text-xs tracking-[0.2em] uppercase text-slate-300">Jugadores totales</span>
-          <span className="text-base md:text-xl font-bold">{loading ? "—" : (total ?? entries.length).toLocaleString()}</span>
-        </div>
-
-        {/* Pagination controls */}
-        <div className="flex items-center gap-2 md:gap-3">
-          <button
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={loading || page === 0}
-            className="flex items-center justify-center size-8 md:size-9 border border-primary/30 hover:bg-primary/20 text-primary disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
-            aria-label="Página anterior"
-          >
-            <span className="material-symbols-outlined text-sm">chevron_left</span>
-          </button>
-          <span className="text-xs md:text-xs font-mono tracking-widest text-primary min-w-[5rem] text-center">
-            {loading ? "…" : totalPages !== null ? `${page + 1} / ${totalPages}` : `PÁG. ${page + 1}`}
-          </span>
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            disabled={loading || (totalPages !== null && page + 1 >= totalPages) || entries.length < PAGE_SIZE}
-            className="flex items-center justify-center size-8 md:size-9 border border-primary/30 hover:bg-primary/20 text-primary disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
-            aria-label="Página siguiente"
-          >
-            <span className="material-symbols-outlined text-sm">chevron_right</span>
-          </button>
-        </div>
-
-        {/* Right side: QR + CTA (public) or player rank (authenticated) */}
-        {isAuthenticated ? (
-          <div className="flex items-center gap-3 md:gap-4">
-            <div className="flex flex-col text-right">
-              <span className="text-xs md:text-xs tracking-[0.2em] uppercase text-slate-300">Mi posición</span>
-              <span className="text-base md:text-xl font-bold">
-                {player ? `#${player.rank.toLocaleString()}` : "—"}
-              </span>
+        {/* ─── LEFT PANEL: QR + CTA (public only) ─── */}
+        {!isAuthenticated && (
+          <aside className="w-[340px] shrink-0 flex flex-col items-center justify-center gap-8 border-r border-primary/20 px-8">
+            <div className="border-2 border-primary/50 p-3 bg-white rounded-sm shadow-[0_0_30px_rgba(0,255,255,0.15)]">
+              <QRCodeSVG value={SITE_URL} size={220} level="M" />
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3 md:gap-5">
-            <div className="flex flex-col text-right gap-0.5">
-              <span className="text-xs tracking-[0.15em] uppercase text-loot-gold font-bold animate-pulse">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <span className="text-lg tracking-[0.2em] uppercase text-loot-gold font-bold animate-pulse">
                 ¿PUEDES SUPERARLOS?
               </span>
-              <span className="text-[10px] tracking-[0.1em] uppercase text-slate-400">
-                ESCANEA Y DEMUÉSTRALO →
+              <span className="text-xs tracking-[0.15em] uppercase text-slate-400">
+                ESCANEA EL CÓDIGO Y DEMUÉSTRALO
+              </span>
+              <span className="text-[10px] tracking-[0.1em] text-primary/50 mt-2 break-all">
+                {SITE_URL}
               </span>
             </div>
-            <div className="border border-primary/40 p-1 bg-white rounded-sm">
-              <QRCodeSVG value={SITE_URL} size={52} level="M" />
-            </div>
-          </div>
+          </aside>
         )}
-      </footer>
+
+        {/* ─── RIGHT PANEL: leaderboard ─── */}
+        <div className="flex-1 flex flex-col min-h-0 min-w-0">
+          {/* ─── LEADERBOARD TABLE ─── */}
+          <main className="w-full flex-1 scoreboard-stream overflow-hidden min-h-0 px-4 md:px-8 flex flex-col">
+            {/* Column headers */}
+            <div className="grid grid-cols-12 gap-4 md:gap-6 px-2 md:px-4 py-3 text-xs md:text-xs tracking-[0.2em] md:tracking-[0.4em] uppercase  mb-2 md:mb-4 border-b border-primary/20">
+              <div className="col-span-2">Pos.</div>
+              <div className="col-span-7">Usuario</div>
+              <div className="col-span-3 text-right">Puntuación</div>
+            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center h-40 text-primary text-xs animate-pulse uppercase tracking-widest">
+                SINCRONIZANDO DATOS...
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center h-40 gap-2">
+                <span className="text-red-400/70 text-xs uppercase tracking-widest">ERROR_DE_CONEXION</span>
+                <span className="text-slate-400 text-xs">{error}</span>
+                <button
+                  onClick={() => setRetryKey((k) => k + 1)}
+                  className="mt-2 px-4 py-1.5 border border-primary/30 hover:bg-primary/20 text-primary text-xs uppercase tracking-widest transition-colors cursor-pointer"
+                >
+                  REINTENTAR
+                </button>
+              </div>
+            ) : entries.length === 0 ? (
+              <div className="flex items-center justify-center h-40 text-slate-400 text-xs uppercase tracking-widest">
+                NO_DATA_FOUND
+              </div>
+            ) : (
+              <div ref={listRef} className="space-y-1 overflow-y-auto flex-1 min-h-0 custom-scrollbar pr-1 pb-2">
+                {entries.map((entry) => {
+                  const sizes = rankSizes(entry.rank);
+                  const color = rankColorClass(entry.rank);
+                  const opacity = rowOpacityClass(entry.rank);
+                  const isFirst = entry.rank === 1;
+
+                  return (
+                    <div
+                      key={entry.rank}
+                      className={`grid grid-cols-12 gap-4 md:gap-6 px-2 md:px-4 ${sizes.py} items-center transition-all scoreboard-row-hover ${color} ${opacity}`}
+                    >
+                      <div className={`col-span-2 ${sizes.index} font-bold tracking-tighter`}>
+                        {String(entry.rank).padStart(2, "0")}
+                      </div>
+                      <div
+                        className={`col-span-7 ${sizes.name} font-bold tracking-tight uppercase ${isFirst ? "scoreboard-glitch" : ""}`}
+                      >
+                        {entry.username}
+                      </div>
+                      <div className={`col-span-3 text-right ${sizes.score} font-light tracking-wide`}>
+                        {formatScore(entry.score)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </main>
+
+          {/* ─── FOOTER ─── */}
+          <footer className="w-full px-4 md:px-8 py-3 md:py-4 flex flex-row justify-between items-center gap-4 border-t border-primary/30 shrink-0">
+            {/* Stat: total players */}
+            <div className="flex flex-col">
+              <span className="text-xs md:text-xs tracking-[0.2em] uppercase text-slate-300">Jugadores totales</span>
+              <span className="text-base md:text-xl font-bold">{loading ? "—" : (total ?? entries.length).toLocaleString()}</span>
+            </div>
+
+            {/* Pagination controls */}
+            <div className="flex items-center gap-2 md:gap-3">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={loading || page === 0}
+                className="flex items-center justify-center size-8 md:size-9 border border-primary/30 hover:bg-primary/20 text-primary disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                aria-label="Página anterior"
+              >
+                <span className="material-symbols-outlined text-sm">chevron_left</span>
+              </button>
+              <span className="text-xs md:text-xs font-mono tracking-widest text-primary min-w-[5rem] text-center">
+                {loading ? "…" : totalPages !== null ? `${page + 1} / ${totalPages}` : `PÁG. ${page + 1}`}
+              </span>
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                disabled={loading || (totalPages !== null && page + 1 >= totalPages) || entries.length < PAGE_SIZE}
+                className="flex items-center justify-center size-8 md:size-9 border border-primary/30 hover:bg-primary/20 text-primary disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                aria-label="Página siguiente"
+              >
+                <span className="material-symbols-outlined text-sm">chevron_right</span>
+              </button>
+            </div>
+
+            {/* Player rank (authenticated only) */}
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="flex flex-col text-right">
+                  <span className="text-xs md:text-xs tracking-[0.2em] uppercase text-slate-300">Mi posición</span>
+                  <span className="text-base md:text-xl font-bold">
+                    {player ? `#${player.rank.toLocaleString()}` : "—"}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div />
+            )}
+          </footer>
+        </div>
+      </div>
     </div>
   );
 }

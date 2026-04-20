@@ -12,6 +12,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Scoreboard accesible sin onboarding ni auth (modo stand/conferencia)
+  if (pathname.startsWith("/scoreboard")) {
+    return NextResponse.next();
+  }
+
   // Verificar si hay un token de autenticación en las cookies
   const authToken    = request.cookies.get("auth-token");
   const refreshToken = request.cookies.get("refresh-token");
