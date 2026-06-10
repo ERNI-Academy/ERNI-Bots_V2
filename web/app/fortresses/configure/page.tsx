@@ -147,7 +147,9 @@ function FortressConfigurePage() {
                 if (protocolsRes.ok) {
                     const p: Protocol[] = await protocolsRes.json();
                     setProtocols(p);
-                    if (p.length > 0) setSelectedProtocol(p[0].id);
+                    const freeProtocol = p.find(x => x.unlock_cost === 0);
+                    if (freeProtocol) setSelectedProtocol(freeProtocol.id);
+                    else if (p.length > 0) setSelectedProtocol(p[0].id);
                 }
 
                 if (archetypesRes.ok) {
