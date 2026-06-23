@@ -699,4 +699,4 @@ Para más detalles de infraestructura, ver [DEPLOYMENT.md](web/DEPLOYMENT.md).
 | API: Admin (invitaciones, stats) | ✅ Completo |
 | Integración Frontend ↔ Backend | ✅ Completo |
 | Agent Service (mock, sin API key) | ✅ Completo |
-| Agent Service (LLM real vía `http`) | 🔧 Pendiente integración con LLM externo |
+| Agent Service (LLM real vía `http`) | ✅ Completo |
