@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 // Rutas que no requieren autenticación
 const publicPaths = ["/login", "/register", "/about", "/premios", "/onboarding", "/scoreboard"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Onboarding siempre accesible
@@ -64,11 +64,11 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Configurar qué rutas deben pasar por el middleware
+// Configurar qué rutas deben pasar por el proxy
 export const config = {
   matcher: [
     /*
-     * Aplica el middleware a todas las rutas excepto:
+     * Aplica el proxy a todas las rutas excepto:
      * - api (API routes)
      * - _next/static (archivos estáticos)
      * - _next/image (optimización de imágenes)

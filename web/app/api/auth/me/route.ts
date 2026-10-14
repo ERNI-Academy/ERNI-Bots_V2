@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   if (!backendRes.ok) {
     const data = await backendRes.json().catch(() => ({}));
     const response = NextResponse.json(data, { status: backendRes.status });
-    // If the player has been banned, clear both cookies so the middleware
+    // If the player has been banned, clear both cookies so the proxy
     // redirects them to /login on the next navigation.
     if (backendRes.status === 403) {
       response.cookies.set("auth-token",    "", { maxAge: 0, path: "/" });

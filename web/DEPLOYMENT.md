@@ -64,7 +64,7 @@ Para verificar:
 Después del deployment, verifica:
 
 - [ ] La aplicación está accesible en la URL de Azure
-- [ ] El middleware redirige a `/login` cuando no hay autenticación
+- [ ] El proxy redirige a `/login` cuando no hay autenticación
 - [ ] La página de login se muestra correctamente con el diseño glitch
 - [ ] Los assets estáticos (CSS, fuentes) cargan correctamente
 - [ ] El formulario de login funciona (crea la cookie y redirige)
@@ -111,7 +111,7 @@ Después del deployment, verifica:
 
 ### Redirección infinita
 - Verifica que la cookie `auth-token` se esté creando correctamente
-- Revisa la configuración del middleware
+- Revisa la configuración del proxy
 
 ## Próximos Pasos
 
