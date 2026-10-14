@@ -87,7 +87,7 @@ export default function PremiosPage() {
 
                     <div className="space-y-5 mb-14">
                         <p className="text-xs text-white/40 uppercase tracking-[0.3em] mb-4">
-                            // PRIZES_AVAILABLE — {loading ? "…" : prizes.length} ENTRIES
+                            {"//"} PRIZES_AVAILABLE — {loading ? "…" : prizes.length} ENTRIES
                         </p>
 
                         {loading ? (

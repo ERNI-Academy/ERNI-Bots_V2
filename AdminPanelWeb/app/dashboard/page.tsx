@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
 
@@ -165,7 +166,7 @@ export default function Dashboard() {
                     <span className="material-symbols-outlined text-[20px] text-blue-400">swords</span>
                     Batallas Recientes
                   </h2>
-                  <a href="/battles" className="font-mono text-xs font-medium text-blue-400 hover:text-blue-300">Ver todas</a>
+                  <Link href="/battles" className="font-mono text-xs font-medium text-blue-400 hover:text-blue-300">Ver todas</Link>
                 </div>
                 <div className="flex-1 overflow-x-auto">
                   <table className="w-full border-collapse text-left">
@@ -248,7 +249,7 @@ export default function Dashboard() {
                     <span className="material-symbols-outlined text-[20px] text-amber-400">leaderboard</span>
                     Top Jugadores
                   </h2>
-                  <a href="/players" className="font-mono text-xs font-medium text-blue-400 hover:text-blue-300">Ver todos</a>
+                  <Link href="/players" className="font-mono text-xs font-medium text-blue-400 hover:text-blue-300">Ver todos</Link>
                 </div>
                 <div className="flex-1 space-y-1 overflow-y-auto p-2">
                   {leaderboardLoading ? (

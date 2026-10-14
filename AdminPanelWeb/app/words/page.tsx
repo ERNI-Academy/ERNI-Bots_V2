@@ -177,7 +177,7 @@ function DeleteModal({
         </div>
         <p className="text-sm text-[#A1A1AA]">
           ¿Eliminar la palabra{" "}
-          <span className="font-mono font-semibold text-white">"{word.word}"</span>?
+          <span className="font-mono font-semibold text-white">&quot;{word.word}&quot;</span>?
         </p>
         {error && (
           <div className="rounded border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">
