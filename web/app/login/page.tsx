@@ -1,33 +1,30 @@
 ﻿"use client";
 
-import { useState, FormEvent, useEffect, Suspense } from "react";
+import { useState, FormEvent, Suspense, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginApi } from "@/lib/auth";
 
+const subscribeNoop = () => () => {};
+
 function LoginContent() {
-  const [username, setUsername] = useState("");
-  const [invitationCode, setInvitationCode] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const codeFromUrl = searchParams.get("code");
+  const readStored = (key: string) => (typeof window === "undefined" ? null : localStorage.getItem(key));
+  const [username, setUsername] = useState(() => readStored("username") ?? "");
+  const [invitationCode, setInvitationCode] = useState(() => codeFromUrl ?? readStored("invitationCode") ?? "");
+  const [prevCodeFromUrl, setPrevCodeFromUrl] = useState(codeFromUrl);
+  if (codeFromUrl !== prevCodeFromUrl) {
+    setPrevCodeFromUrl(codeFromUrl);
+    if (codeFromUrl) setInvitationCode(codeFromUrl);
+  }
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  // false on the server/hydration pass, true once on the client (avoids hydration mismatch with localStorage)
+  const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
 
   const isFormValid = username.trim().length > 0 && invitationCode.trim().length > 0;
-
-  useEffect(() => {
-    setMounted(true);
-    const codeFromUrl = searchParams.get("code");
-    const storedCode = localStorage.getItem("invitationCode");
-    const storedUsername = localStorage.getItem("username");
-    if (codeFromUrl) {
-      setInvitationCode(codeFromUrl);
-    } else if (storedCode) {
-      setInvitationCode(storedCode);
-    }
-    if (storedUsername) setUsername(storedUsername);
-  }, [searchParams]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

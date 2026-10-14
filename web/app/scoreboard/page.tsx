@@ -67,9 +67,8 @@ export default function ScoreboardPage() {
     listRef.current?.scrollTo({ top: 0, behavior: "instant" });
   }, [page]);
 
-  const loadData = useCallback(async (targetPage: number) => {
-    setLoading(true);
-    setError(null);
+  // Fetches a page without touching loading/error up front
+  const fetchData = useCallback(async (targetPage: number) => {
     const offset = targetPage * PAGE_SIZE;
     try {
       const [lbData, meData] = await Promise.all([
@@ -91,10 +90,28 @@ export default function ScoreboardPage() {
     }
   }, []);
 
+  // Refresh with visible loading state (used by the auto-refresh interval)
+  const loadData = useCallback(async (targetPage: number) => {
+    setLoading(true);
+    setError(null);
+    await fetchData(targetPage);
+  }, [fetchData]);
+
+  // When page/retryKey change, flag loading and clear the error during render
+  // (React-recommended alternative to setting state inside an effect)
+  const requestKey = `${page}:${retryKey}`;
+  const [prevRequestKey, setPrevRequestKey] = useState(requestKey);
+  if (prevRequestKey !== requestKey) {
+    setPrevRequestKey(requestKey);
+    setLoading(true);
+    setError(null);
+  }
+
   // Initial load + dependency on page/retryKey
   useEffect(() => {
-    loadData(page);
-  }, [page, retryKey, loadData]);
+    async function run() { await fetchData(page); }
+    run();
+  }, [page, retryKey, fetchData]);
 
   // Auto-refresh: reload current page data every 60s
   useEffect(() => {

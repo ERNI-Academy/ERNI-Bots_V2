@@ -79,9 +79,8 @@ export default function InvitationsPage() {
     const [error, setError] = useState<string | null>(null);
     const [qrCode, setQrCode] = useState<string | null>(null);
 
-    const load = useCallback(async () => {
-        setLoading(true);
-        setError(null);
+    // Fetches without touching loading/error up front (initial state already is loading=true, error=null)
+    const fetchData = useCallback(async () => {
         try {
             const res = await fetch("/api/players/invitations", { credentials: "include" });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -94,7 +93,17 @@ export default function InvitationsPage() {
         }
     }, []);
 
-    useEffect(() => { load(); }, [load]);
+    // Explicit reload: show loading state and clear previous error first
+    const load = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        await fetchData();
+    }, [fetchData]);
+
+    useEffect(() => {
+        async function run() { await fetchData(); }
+        run();
+    }, [fetchData]);
 
     async function handleCreate() {
         setCreating(true);
