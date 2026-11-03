@@ -24,7 +24,7 @@ def column_exists(conn, table: str, column: str) -> bool:
     dialect = conn.engine.dialect.name  # "sqlite" | "postgresql"
 
     if dialect == "sqlite":
-        result = conn.execute(text(f"PRAGMA table_info({table})"))
+        result = conn.execute(text(f"PRAGMA table_info({table})"))  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text -- identifiers are hardcoded migration constants, not user input
         return any(row[1] == column for row in result)
 
     # PostgreSQL — use information_schema
@@ -38,7 +38,7 @@ def column_exists(conn, table: str, column: str) -> bool:
 
 def add_column_if_missing(conn, table: str, column: str, definition: str):
     if not column_exists(conn, table, column):
-        conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {definition}"))
+        conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {definition}"))  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text -- identifiers are hardcoded migration constants, not user input
         print(f"✓ Added column: {table}.{column}")
     else:
         print(f"– Already exists: {table}.{column}")

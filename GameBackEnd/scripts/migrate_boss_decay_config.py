@@ -25,7 +25,7 @@ NEW_COLUMNS = [
 def column_exists(conn, table: str, column: str) -> bool:
     dialect = engine.dialect.name
     if dialect == "sqlite":
-        rows = conn.execute(text(f"PRAGMA table_info({table})")).fetchall()
+        rows = conn.execute(text(f"PRAGMA table_info({table})")).fetchall()  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text -- identifiers are hardcoded migration constants, not user input
         return any(row[1] == column for row in rows)
     else:
         row = conn.execute(text(
@@ -40,5 +40,5 @@ with engine.begin() as conn:
         if column_exists(conn, "bosses", col):
             print(f"[migrate] bosses.{col} already exists, skipping.")
         else:
-            conn.execute(text(f"ALTER TABLE bosses ADD COLUMN {col} {definition}"))
+            conn.execute(text(f"ALTER TABLE bosses ADD COLUMN {col} {definition}"))  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text -- identifiers are hardcoded migration constants, not user input
             print(f"[migrate] bosses.{col} added ✓")

@@ -19,7 +19,7 @@ dialect = engine.dialect.name
 
 def column_exists(conn, table: str, column: str) -> bool:
     if dialect == "sqlite":
-        rows = conn.execute(text(f"PRAGMA table_info({table})")).fetchall()
+        rows = conn.execute(text(f"PRAGMA table_info({table})")).fetchall()  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text -- identifiers are hardcoded migration constants, not user input
         return any(row[1] == column for row in rows)
     else:
         row = conn.execute(text(

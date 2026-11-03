@@ -27,7 +27,7 @@ def column_exists(conn, table: str, column: str) -> bool:
     dialect = conn.engine.dialect.name  # "sqlite" | "postgresql"
 
     if dialect == "sqlite":
-        result = conn.execute(text(f"PRAGMA table_info({table})"))
+        result = conn.execute(text(f"PRAGMA table_info({table})"))  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text -- identifiers are hardcoded migration constants, not user input
         return any(row[1] == column for row in result)
 
     result = conn.execute(text("""
