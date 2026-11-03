@@ -62,3 +62,6 @@ __pycache__/
 GameBackend/.venv/
 dev.db
 
+
+# Local dev state (scripts/dev.sh)
+/.dev/

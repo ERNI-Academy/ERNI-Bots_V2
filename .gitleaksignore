@@ -1,0 +1,7 @@
+# Expired Flask-JWT-Extended access tokens from local Bruno requests (issued and expired 2026-02-20/24).
+# Present only in git history; no longer in the working tree. Not usable.
+3195a92aaee088d5cb2c3b77c056235afe85ff50:bruno/environments/local.bru:jwt:3
+d2b03d99d118a036f0453a7a3616371ce5fd9da3:bruno/archetypes/Get Archetypes.bru:jwt:14
+d2b03d99d118a036f0453a7a3616371ce5fd9da3:bruno/archetypes/Get Archetype by id.bru:jwt:14
+d2b03d99d118a036f0453a7a3616371ce5fd9da3:bruno/protocols/Get Protocol by id.bru:jwt:14
+d2b03d99d118a036f0453a7a3616371ce5fd9da3:bruno/protocols/Get Protocols.bru:jwt:14

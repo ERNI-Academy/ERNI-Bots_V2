@@ -372,8 +372,9 @@ ensure_database() {
     cat "$log" >&2
     die "Creating the schema failed."
   fi
-  # Same migrations as the Azure startup script, so both stay in sync.
-  for migration in $(sed -n 's/^python \(scripts\/migrate_[A-Za-z0-9_]*\.py\).*/\1/p' "$BACKEND_DIR/startup.sh"); do
+  # Every migration listed in the Azure startup script, in its order, including the commented-out ones: Azure
+  # already applied those, but a local dev.db can be older. They are idempotent (they check before altering).
+  for migration in $(sed -n 's/^#\{0,1\} *python \(scripts\/migrate_[A-Za-z0-9_]*\.py\).*/\1/p' "$BACKEND_DIR/startup.sh"); do
     if ! backend_script "$migration" >>"$log" 2>&1; then
       cat "$log" >&2
       die "Migration $migration failed."

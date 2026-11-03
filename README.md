@@ -116,6 +116,20 @@ El frontend **nunca llama a Flask directamente desde el navegador**. Todas las l
 
 ## Puesta en marcha local
 
+### Todo de una vez: `scripts/dev.sh`
+
+Funciona en Windows (Git Bash), macOS y Linux. Requisitos: Python 3.10+ (3.12 como en CI), Node.js 20+ y, solo con `--agent=local`, Docker.
+
+```bash
+./scripts/dev.sh                # GameBackEnd :5000 + web :3000 + AdminPanelWeb :3001 (Ctrl+C para parar)
+./scripts/dev.sh --agent=local  # además Redis (Docker) + AgenticService :8000 (requiere AgenticService/.env con Azure OpenAI)
+./scripts/dev.sh db             # solo .venv, dependencias, esquema, migraciones y seed
+./scripts/dev.sh invite         # crea un código de invitación para registrarse
+./scripts/dev.sh status | stop | --help
+```
+
+Es idempotente: crea `.venv` en la raíz (o la recrea si está rota), instala dependencias solo cuando cambian, aplica `create_db.py` y las migraciones activas de `GameBackEnd/startup.sh`, y ejecuta el seed si la base de datos está vacía. Los frontends siempre apuntan al backend local, y el agente usa el mock aunque `GameBackEnd/.env` diga `AGENT_MODE=http` (`--agent=env` respeta el `.env`). Los puertos se cambian con `DEV_API_PORT`, `DEV_WEB_PORT`, `DEV_ADMIN_PORT` y `DEV_AGENT_PORT`.
+
 ### Backend (Flask)
 
 ```bash

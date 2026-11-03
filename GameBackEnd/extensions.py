@@ -5,7 +5,7 @@ Instantiated here without an app so they can be imported by blueprints
 before create_app() runs. The actual Flask app is attached via
 limiter.init_app(app) inside create_app().
 """
-from flask import request as _flask_request
+from flask import current_app as _flask_app, request as _flask_request
 from flask_limiter import Limiter
 from werkzeug.exceptions import TooManyRequests
 
@@ -20,10 +20,14 @@ def _get_real_ip() -> str:
     original antes de atravesar cualquier proxy.
     Si el header no llega, se rechaza con 429 para evitar que peticiones
     directas al backend sin proxy evadan el rate limiting por usuario.
+    En desarrollo local (flask --debug, como lo arranca scripts/dev.sh) no hay
+    proxy que añada el header, así que se usa la IP de la conexión.
     """
     xff = _flask_request.headers.get("X-Forwarded-For", "")
     if xff:
         return xff.split(",")[0].strip()
+    if _flask_app.debug:
+        return _flask_request.remote_addr or "127.0.0.1"
     raise TooManyRequests("X-Forwarded-For header is required")
 
 

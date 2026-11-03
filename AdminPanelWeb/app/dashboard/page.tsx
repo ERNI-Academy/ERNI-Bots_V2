@@ -27,14 +27,18 @@ const battleStatusConfig: Record<string, { label: string; cls: string; dot: stri
 export default function Dashboard() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [stats, setStats] = useState<Partial<Stats> | null>(null);
   const [battles, setBattles] = useState<BattleRow[]>([]);
   const [battlesLoading, setBattlesLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/admin/stats", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((data: Stats) => setStats(data))
+      .then(async (r) => {
+        const data = await r.json();
+        if (!r.ok) throw new Error(data?.error ?? `stats ${r.status}`);
+        return data as Partial<Stats>;
+      })
+      .then((data) => setStats(data))
       .catch(console.error);
   }, []);
 
@@ -80,7 +84,7 @@ export default function Dashboard() {
                     <span className="font-mono text-[11px] uppercase tracking-wider text-[#71717A]">Jugadores</span>
                     <div className="flex items-baseline gap-3">
                       {stats ? (
-                        <span className="font-[var(--font-display)] text-3xl font-bold text-white">{stats.players.toLocaleString()}</span>
+                        <span className="font-[var(--font-display)] text-3xl font-bold text-white">{(stats.players ?? 0).toLocaleString()}</span>
                       ) : (
                         <div className="h-9 w-20 animate-pulse rounded bg-[#27272A]" />
                       )}
@@ -104,7 +108,7 @@ export default function Dashboard() {
                     <span className="font-mono text-[11px] uppercase tracking-wider text-[#71717A]">Fortalezas</span>
                     <div className="flex items-baseline gap-3">
                       {stats ? (
-                        <span className="font-[var(--font-display)] text-3xl font-bold text-white">{stats.fortresses.toLocaleString()}</span>
+                        <span className="font-[var(--font-display)] text-3xl font-bold text-white">{(stats.fortresses ?? 0).toLocaleString()}</span>
                       ) : (
                         <div className="h-9 w-16 animate-pulse rounded bg-[#27272A]" />
                       )}
@@ -128,7 +132,7 @@ export default function Dashboard() {
                     <span className="font-mono text-[11px] uppercase tracking-wider text-[#71717A]">Batallas</span>
                     <div className="flex items-baseline gap-3">
                       {stats ? (
-                        <span className="font-[var(--font-display)] text-3xl font-bold text-white">{stats.battles.toLocaleString()}</span>
+                        <span className="font-[var(--font-display)] text-3xl font-bold text-white">{(stats.battles ?? 0).toLocaleString()}</span>
                       ) : (
                         <div className="h-9 w-20 animate-pulse rounded bg-[#27272A]" />
                       )}
@@ -140,7 +144,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex h-8 w-full items-center">
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#27272A]">
-                    <div className="h-full rounded-full bg-amber-400" style={{ width: stats ? `${Math.min(100, (stats.battles / 2000) * 100)}%` : "0%" }} />
+                    <div className="h-full rounded-full bg-amber-400" style={{ width: stats ? `${Math.min(100, ((stats.battles ?? 0) / 2000) * 100)}%` : "0%" }} />
                   </div>
                   <span className="ml-2 whitespace-nowrap font-mono text-[10px] text-[#71717A]">Meta: 2k</span>
                 </div>
