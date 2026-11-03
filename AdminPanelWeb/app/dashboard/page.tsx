@@ -5,15 +5,6 @@ import { useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
 
 
-const feed = [
-  { time: "14:42:05", player: "AgentNull",  gradient: "from-blue-500 to-cyan-400",      challenge: "Crypto::RSA_Basic",     status: "correct" },
-  { time: "14:41:58", player: "RedBaron_X", gradient: "from-red-500 to-orange-400",     challenge: "Web::SQL_Inject_II",    status: "invalid" },
-  { time: "14:41:12", player: "GreenGhost", gradient: "from-emerald-500 to-green-400",  challenge: "Pwn::Buffer_Over",      status: "ratelimit" },
-  { time: "14:40:45", player: "VoidWalker", gradient: "from-purple-500 to-indigo-400",  challenge: "Recon::OSINT_Deep",     status: "correct" },
-  { time: "14:39:22", player: "CyberPunk",  gradient: "from-pink-500 to-rose-400",      challenge: "Web::XSS_Storm",        status: "invalid" },
-  { time: "14:38:10", player: "BitHunter",  gradient: "from-teal-500 to-emerald-400",   challenge: "Forensics::Disk_Img",   status: "correct" },
-];
-
 type LeaderboardEntry = { rank: number; name: string; pts: string; top: boolean };
 type Stats = { players: number; fortresses: number; battles: number; active_season: string | null };
 type BattleRow = {

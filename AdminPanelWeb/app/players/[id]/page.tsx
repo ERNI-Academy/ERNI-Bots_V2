@@ -187,6 +187,7 @@ export default function PlayerDetailPage() {
     }
   }, [id]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
   useEffect(() => { load(); }, [load]);
 
   // ── Render ──────────────────────────────────────────────────────────────────

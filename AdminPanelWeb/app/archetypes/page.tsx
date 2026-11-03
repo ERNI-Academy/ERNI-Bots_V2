@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import AdminLayout from "@/components/AdminLayout";
 
 interface Archetype {
@@ -293,7 +293,6 @@ function DeleteConfirm({
 
 export default function ArchetypesPage() {
   const [archetypes, setArchetypes] = useState<Archetype[]>([]);
-  const [filtered, setFiltered]     = useState<Archetype[]>([]);
   const [search, setSearch]         = useState("");
   const [page, setPage]             = useState(1);
   const [loading, setLoading]       = useState(true);
@@ -312,7 +311,6 @@ export default function ArchetypesPage() {
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const data: Archetype[] = await res.json();
       setArchetypes(data);
-      setFiltered(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error desconocido");
     } finally {
@@ -320,17 +318,23 @@ export default function ArchetypesPage() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
   useEffect(() => { fetchArchetypes(); }, [fetchArchetypes]);
 
-  useEffect(() => {
+  const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    const result = archetypes.filter(a =>
+    return archetypes.filter(a =>
       a.name.toLowerCase().includes(q) ||
       a.description.toLowerCase().includes(q)
     );
-    setFiltered(result);
-    setPage(1);
   }, [search, archetypes]);
+
+  // Reset to page 1 when the search or the list changes (adjusted during render)
+  const [prevFilterInputs, setPrevFilterInputs] = useState({ search, list: archetypes });
+  if (prevFilterInputs.search !== search || prevFilterInputs.list !== archetypes) {
+    setPrevFilterInputs({ search, list: archetypes });
+    setPage(1);
+  }
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);

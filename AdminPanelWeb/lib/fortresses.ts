@@ -31,7 +31,7 @@ export function statusFromDefeats(defeats: number): FortressStatus {
 }
 
 
-function adaptMatchmakingEntry(entry: MatchmakingEntry, index: number): Fortress {
+function adaptMatchmakingEntry(entry: MatchmakingEntry): Fortress {
     const status = statusFromDefeats(entry.defeats);
     const defenseLevel = getDefenseLevel(entry.defeats);
     return {

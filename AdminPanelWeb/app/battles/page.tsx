@@ -74,10 +74,17 @@ export default function BattlesPage() {
   const [detail, setDetail]               = useState<BattleDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
+  // Opening a different battle clears the previous detail and shows the loading state
+  function selectBattle(id: string) {
+    if (id !== selectedId) {
+      setDetail(null);
+      setDetailLoading(true);
+    }
+    setSelectedId(id);
+  }
+
   useEffect(() => {
     if (!selectedId) return;
-    setDetail(null);
-    setDetailLoading(true);
     fetch(`/api/admin/battles/${selectedId}`)
       .then((r) => r.json())
       .then((d) => setDetail(d))
@@ -91,8 +98,13 @@ export default function BattlesPage() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Reset page on filter change
-  useEffect(() => { setPage(1); }, [debouncedSearch, statusFilter, typeFilter]);
+  // Reset to page 1 when the filters/sort change (adjusted during render, no effect needed)
+  const resetKey = JSON.stringify([debouncedSearch, statusFilter, typeFilter]);
+  const [prevResetKey, setPrevResetKey] = useState(resetKey);
+  if (prevResetKey !== resetKey) {
+    setPrevResetKey(resetKey);
+    setPage(1);
+  }
 
   const fetchBattles = useCallback(async () => {
     setLoading(true);
@@ -115,6 +127,7 @@ export default function BattlesPage() {
     }
   }, [page, debouncedSearch, statusFilter, typeFilter]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
   useEffect(() => { fetchBattles(); }, [fetchBattles]);
 
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
@@ -232,7 +245,7 @@ export default function BattlesPage() {
                               <tr
                                 key={b.id}
                                 className="h-12 cursor-pointer transition-colors hover:bg-[#27272A]/50"
-                                onClick={() => setSelectedId(b.id)}
+                                onClick={() => selectBattle(b.id)}
                               >
                                 {/* Fecha */}
                                 <td className="px-5 py-2">

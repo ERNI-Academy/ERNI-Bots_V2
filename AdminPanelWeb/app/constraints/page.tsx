@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import AdminLayout from "@/components/AdminLayout";
 
 interface Constraint {
@@ -249,7 +249,6 @@ function DeleteConfirm({
 
 export default function ConstraintsPage() {
   const [groups, setGroups]     = useState<ConstraintGroup[]>([]);
-  const [filtered, setFiltered] = useState<ConstraintGroup[]>([]);
   const [search, setSearch]     = useState("");
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
@@ -267,7 +266,6 @@ export default function ConstraintsPage() {
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const data: ConstraintGroup[] = await res.json();
       setGroups(data);
-      setFiltered(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error desconocido");
     } finally {
@@ -275,19 +273,18 @@ export default function ConstraintsPage() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
   useEffect(() => { fetchConstraints(); }, [fetchConstraints]);
 
-  useEffect(() => {
+  const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    if (!q) { setFiltered(groups); return; }
-    setFiltered(
-      groups
-        .map(g => ({
-          ...g,
-          constraints: g.constraints.filter(c => c.text.toLowerCase().includes(q)),
-        }))
-        .filter(g => g.name.toLowerCase().includes(q) || g.constraints.length > 0)
-    );
+    if (!q) return groups;
+    return groups
+      .map(g => ({
+        ...g,
+        constraints: g.constraints.filter(c => c.text.toLowerCase().includes(q)),
+      }))
+      .filter(g => g.name.toLowerCase().includes(q) || g.constraints.length > 0);
   }, [search, groups]);
 
   const totalConstraints = filtered.reduce((acc, g) => acc + g.constraints.length, 0);

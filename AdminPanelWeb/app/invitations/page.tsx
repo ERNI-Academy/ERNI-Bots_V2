@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import AdminLayout from "@/components/AdminLayout";
 
@@ -94,14 +94,6 @@ function fmtDate(iso: string | null): string {
   });
 }
 
-function fmtDateTime(iso: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString("es-ES", {
-    day: "2-digit", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-}
-
 const STATUS_STYLE: Record<string, { label: string; color: string }> = {
   free:     { label: "Libre",    color: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" },
   claimed:  { label: "Usada",    color: "border-blue-500/40 bg-blue-500/10 text-blue-400" },
@@ -123,13 +115,12 @@ function GenerateModal({
   const [count, setCount]         = useState("1");
   const [maxUses, setMaxUses]     = useState("1");
   const [expires, setExpires]     = useState("");
-  const [createdBy, setCreatedBy] = useState("");
-  const [tag, setTag]             = useState("");
-
-  useEffect(() => {
+  // The modal is only mounted after a user click (never server-rendered), so reading localStorage here is safe.
+  const [createdBy, setCreatedBy] = useState(() => {
     const stored = localStorage.getItem("username");
-    if (stored) setCreatedBy(stored + "-admin");
-  }, []);
+    return stored ? stored + "-admin" : "";
+  });
+  const [tag, setTag]             = useState("");
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState<string | null>(null);
   const [codes, setCodes]         = useState<string[]>([]);
@@ -486,7 +477,13 @@ export default function InvitationsPage() {
     });
   }, []);
 
-  useEffect(() => { setPage(1); }, [debouncedSearch, status, tagFilter, sortKeys]);
+  // Reset to page 1 when the filters/sort change (adjusted during render, no effect needed)
+  const resetKey = JSON.stringify([debouncedSearch, status, tagFilter, sortKeys]);
+  const [prevResetKey, setPrevResetKey] = useState(resetKey);
+  if (prevResetKey !== resetKey) {
+    setPrevResetKey(resetKey);
+    setPage(1);
+  }
 
   useEffect(() => {
     const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
@@ -515,6 +512,7 @@ export default function InvitationsPage() {
     }
   }, [page, status, tagFilter, debouncedSearch, sortKeys]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
   useEffect(() => { fetchInvitations(); }, [fetchInvitations]);
 
   async function saveCode(invId: string, code: string) {
@@ -552,10 +550,6 @@ export default function InvitationsPage() {
   const totalPages = data?.pages ?? 1;
 
   // Summary counts
-  const summaryItems = [
-    { label: "Total",    value: data?.total ?? "…", color: "text-white" },
-  ];
-
   return (
     <AdminLayout title="INVITACIONES">
       <main className="flex-1 overflow-y-auto p-8">

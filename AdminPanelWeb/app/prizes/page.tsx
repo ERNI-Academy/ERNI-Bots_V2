@@ -60,8 +60,12 @@ function UsernameAutocomplete({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Sync external value when modal opens
-  useEffect(() => { setQuery(value); }, [value]);
+  // Sync external value when it changes (adjusted during render, no effect needed)
+  const [prevValue, setPrevValue] = useState(value);
+  if (prevValue !== value) {
+    setPrevValue(value);
+    setQuery(value);
+  }
 
   function openDropdown() {
     if (inputRef.current) setRect(inputRef.current.getBoundingClientRect());
@@ -334,6 +338,7 @@ export default function PrizesPage() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
   useEffect(() => { load(); }, [load]);
 
   async function handleDelete(id: string) {

@@ -521,8 +521,13 @@ export default function PlayersPage() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Reset to page 1 on filter/sort change
-  useEffect(() => { setPage(1); }, [debouncedSearch, bannedFilter, roleFilter, dateOp, dateVal, dateVal2, sortKeys]);
+  // Reset to page 1 when the filters/sort change (adjusted during render, no effect needed)
+  const resetKey = JSON.stringify([debouncedSearch, bannedFilter, roleFilter, dateOp, dateVal, dateVal2, sortKeys]);
+  const [prevResetKey, setPrevResetKey] = useState(resetKey);
+  if (prevResetKey !== resetKey) {
+    setPrevResetKey(resetKey);
+    setPage(1);
+  }
 
   const handleSort = useCallback((field: SortField, shift: boolean) => {
     setSortKeys(prev => {
@@ -577,6 +582,7 @@ export default function PlayersPage() {
     }
   }, [page, debouncedSearch, bannedFilter, roleFilter, dateOp, dateVal, dateVal2, sortKeys]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
   useEffect(() => { fetchPlayers(); }, [fetchPlayers]);
 
   // Optimistic patch

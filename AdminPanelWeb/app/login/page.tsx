@@ -2,7 +2,6 @@
 
 import { useState, FormEvent, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { loginApi } from "@/lib/auth";
 
 function LoginContent() {
@@ -17,6 +16,7 @@ function LoginContent() {
   const isFormValid = username.trim().length > 0 && invitationCode.trim().length > 0;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
     setMounted(true);
     const codeFromUrl = searchParams.get("code");
     const storedCode = localStorage.getItem("invitationCode");

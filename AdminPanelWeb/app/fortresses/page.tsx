@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import AdminLayout from "@/components/AdminLayout";
 
 // ─────────────────────────────────────────────────────────────
@@ -100,6 +100,7 @@ function FortressDrawer({
       .catch(() => { setError("Error al cargar el detalle"); setLoading(false); });
   }, [fortress.id]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
   useEffect(() => { loadDetail(); }, [loadDetail]);
 
   return (
@@ -551,7 +552,6 @@ function EditFortressModal({
 
 export default function FortressesPage() {
   const [fortresses, setFortresses] = useState<Fortress[]>([]);
-  const [filtered, setFiltered]     = useState<Fortress[]>([]);
   const [search, setSearch]         = useState("");
   const [typeFilter, setTypeFilter] = useState<FortressFilter>("all");
   const [page, setPage]             = useState(1);
@@ -585,7 +585,6 @@ export default function FortressesPage() {
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const data: Fortress[] = await res.json();
       setFortresses(data);
-      setFiltered(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error desconocido");
     } finally {
@@ -593,23 +592,32 @@ export default function FortressesPage() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
   useEffect(() => { fetchFortresses(); }, [fetchFortresses]);
 
-  useEffect(() => {
+  const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    setFiltered(
-      fortresses.filter(
-        (f) =>
-          (typeFilter === "all" || (typeFilter === "bot" ? f.is_bot : !f.is_bot)) &&
-          (f.name.toLowerCase().includes(q) ||
-          f.owner.toLowerCase().includes(q) ||
-          f.protocol?.toLowerCase().includes(q) ||
-          f.archetype?.toLowerCase().includes(q) ||
-          f.protected_word?.toLowerCase().includes(q))
-      )
+    return fortresses.filter(
+      (f) =>
+        (typeFilter === "all" || (typeFilter === "bot" ? f.is_bot : !f.is_bot)) &&
+        (f.name.toLowerCase().includes(q) ||
+        f.owner.toLowerCase().includes(q) ||
+        f.protocol?.toLowerCase().includes(q) ||
+        f.archetype?.toLowerCase().includes(q) ||
+        f.protected_word?.toLowerCase().includes(q))
     );
-    setPage(1);
   }, [search, typeFilter, fortresses]);
+
+  // Reset to page 1 when the filters or the list change (adjusted during render)
+  const [prevFilterInputs, setPrevFilterInputs] = useState({ search, typeFilter, list: fortresses });
+  if (
+    prevFilterInputs.search !== search ||
+    prevFilterInputs.typeFilter !== typeFilter ||
+    prevFilterInputs.list !== fortresses
+  ) {
+    setPrevFilterInputs({ search, typeFilter, list: fortresses });
+    setPage(1);
+  }
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);

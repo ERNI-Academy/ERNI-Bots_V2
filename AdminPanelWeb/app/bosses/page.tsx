@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import AdminLayout from "@/components/AdminLayout";
 
 interface Boss {
@@ -318,7 +318,6 @@ function DeleteConfirm({
 
 export default function BossesPage() {
   const [bosses, setBosses]       = useState<Boss[]>([]);
-  const [filtered, setFiltered]   = useState<Boss[]>([]);
   const [search, setSearch]       = useState("");
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState<string | null>(null);
@@ -334,7 +333,6 @@ export default function BossesPage() {
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const data: Boss[] = await res.json();
       setBosses(data);
-      setFiltered(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error desconocido");
     } finally {
@@ -342,15 +340,16 @@ export default function BossesPage() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
   useEffect(() => { fetchBosses(); }, [fetchBosses]);
 
-  useEffect(() => {
+  const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    setFiltered(!q ? bosses : bosses.filter(b =>
+    return !q ? bosses : bosses.filter(b =>
       b.name.toLowerCase().includes(q) ||
       (b.title ?? "").toLowerCase().includes(q) ||
       (b.location ?? "").toLowerCase().includes(q)
-    ));
+    );
   }, [search, bosses]);
 
   const enabledCount = filtered.filter(b => b.enabled).length;
