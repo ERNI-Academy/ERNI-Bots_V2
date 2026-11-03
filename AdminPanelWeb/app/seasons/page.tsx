@@ -1,7 +1,49 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Badge,
+  Body1,
+  Button,
+  Field,
+  Input,
+  makeStyles,
+  mergeClasses,
+  Spinner,
+  Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+  tokens,
+  Tooltip,
+} from "@fluentui/react-components";
+import {
+  Add20Regular,
+  ArrowClockwise20Regular,
+  ArrowCounterclockwise20Regular,
+  CalendarLtr20Regular,
+  Delete20Regular,
+  Edit20Regular,
+  Flag20Regular,
+  Play20Regular,
+  WeatherSnowflake20Regular,
+} from "@fluentui/react-icons";
 import AdminLayout from "@/components/AdminLayout";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { EntityFormDialog } from "@/components/ui/EntityFormDialog";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
+import { useCommonStyles } from "@/components/ui/commonStyles";
+import { useAppToast } from "@/components/ui/toast";
+import { sendAdminRequest } from "@/lib/adminApi";
+import { fmtDate } from "@/lib/format";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -18,30 +60,44 @@ interface Season {
   fortress_count: number;
 }
 
+interface PendingAction {
+  title: string;
+  message: string;
+  label: string;
+  destructive?: boolean;
+  url: string;
+  method: "POST" | "DELETE";
+  successMessage: string;
+}
+
+const useStyles = makeStyles({
+  table: { minWidth: "760px" },
+  nameCell: { display: "flex", alignItems: "center", gap: tokens.spacingHorizontalS, flexWrap: "wrap" },
+  nameText: { fontWeight: tokens.fontWeightSemibold },
+  actionsCol: { flexGrow: 0, width: "220px", minWidth: "220px" },
+  actions: { display: "flex", alignItems: "center", gap: tokens.spacingHorizontalXXS },
+  dates: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: tokens.spacingHorizontalM },
+  frozenActive: { color: tokens.colorBrandForeground1 },
+  deleteIcon: { color: tokens.colorStatusDangerForeground1 },
+});
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function fmtDate(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("es-ES", {
-    day: "2-digit", month: "short", year: "numeric",
-  });
+function SeasonStatus({ season }: { season: Season }) {
+  if (season.finalized) return <StatusBadge tone="neutral">Finalizada</StatusBadge>;
+  if (season.is_active && season.is_frozen) return <StatusBadge tone="brand">Activa · Congelada</StatusBadge>;
+  if (season.is_active) return <StatusBadge tone="success">Activa</StatusBadge>;
+  if (season.is_frozen) return <StatusBadge tone="brand">Congelada</StatusBadge>;
+  return (
+    <StatusBadge tone="neutral" appearance="outline">
+      Inactiva
+    </StatusBadge>
+  );
 }
 
-function StatusBadge({ season }: { season: Season }) {
-  if (season.finalized)
-    return <span className="inline-flex items-center gap-1 rounded-full border border-[#3F3F46] bg-[#27272A] px-2 py-0.5 text-xs text-[#71717A]">Finalizada</span>;
-  if (season.is_active && season.is_frozen)
-    return <span className="inline-flex items-center gap-1 rounded-full border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-xs text-blue-300">Activa · Congelada</span>;
-  if (season.is_active)
-    return <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />Activa</span>;
-  if (season.is_frozen)
-    return <span className="inline-flex items-center gap-1 rounded-full border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-xs text-blue-300">Congelada</span>;
-  return <span className="inline-flex items-center gap-1 rounded-full border border-[#3F3F46] bg-[#27272A] px-2 py-0.5 text-xs text-[#A1A1AA]">Inactiva</span>;
-}
+// ─── Season dialog (create / edit) ───────────────────────────────────────────
 
-// ─── Season Modal (create / edit) ────────────────────────────────────────────
-
-function SeasonModal({
+function SeasonDialog({
   initial,
   onClose,
   onSaved,
@@ -50,175 +106,82 @@ function SeasonModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const styles = useStyles();
+  const toast = useAppToast();
   const isEdit = initial !== null;
-  const [name, setName]           = useState(initial?.name ?? "");
-  const [isRanked, setIsRanked]   = useState(initial?.is_ranked ?? true);
+  const [name, setName] = useState(initial?.name ?? "");
+  const [isRanked, setIsRanked] = useState(initial?.is_ranked ?? true);
   const [startDate, setStartDate] = useState(
     initial?.start_date ? initial.start_date.slice(0, 16) : new Date().toISOString().slice(0, 16)
   );
   const [endDate, setEndDate] = useState(initial?.end_date ? initial.end_date.slice(0, 16) : "");
   const [saving, setSaving] = useState(false);
-  const [error, setError]   = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit() {
     setSaving(true);
     setError(null);
-    const payload: Record<string, unknown> = {
+    const payload = {
       name: name.trim(),
       is_ranked: isRanked,
       start_date: startDate || null,
       end_date: endDate || null,
     };
-    try {
-      const res = await fetch(
-        isEdit ? `/api/admin/seasons/${initial!.id}` : "/api/admin/seasons",
-        {
-          method: isEdit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setError((data as { error?: string }).error ?? `Error ${res.status}`); }
-      else { onSaved(); onClose(); }
-    } catch { setError("Error de conexión"); }
-    finally { setSaving(false); }
+    const result = await sendAdminRequest(
+      isEdit ? `/api/admin/seasons/${initial.id}` : "/api/admin/seasons",
+      isEdit ? "PUT" : "POST",
+      payload
+    );
+    setSaving(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    toast.success(isEdit ? "Temporada actualizada" : "Temporada creada");
+    onSaved();
+    onClose();
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-lg border border-[#27272A] bg-[#09090B] shadow-2xl">
-        <div className="flex items-center justify-between border-b border-[#27272A] px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-500/10 border border-violet-500/30">
-              <span className="material-symbols-outlined text-[18px] text-violet-400">{isEdit ? "edit" : "add"}</span>
-            </div>
-            <h2 className="text-lg font-bold text-white">{isEdit ? "Editar temporada" : "Nueva temporada"}</h2>
-          </div>
-          <button onClick={onClose} className="text-[#71717A] hover:text-white">
-            <span className="material-symbols-outlined text-[22px]">close</span>
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="rounded border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">{error}</div>
-          )}
-
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Nombre <span className="text-red-400">*</span></label>
-            <input
-              required
-              value={name}
-              onChange={e => setName(e.target.value)}
-              maxLength={100}
-              placeholder="Temporada 1"
-              className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white placeholder-[#71717A] focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none transition-all"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Fecha inicio</label>
-              <input
-                type="datetime-local"
-                value={startDate}
-                onChange={e => setStartDate(e.target.value)}
-                className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none transition-all"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Fecha fin</label>
-              <input
-                type="datetime-local"
-                value={endDate}
-                onChange={e => setEndDate(e.target.value)}
-                className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none transition-all"
-              />
-            </div>
-          </div>
-
-          <label className="flex cursor-pointer items-center gap-3">
-            <div
-              onClick={() => setIsRanked(v => !v)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${isRanked ? "bg-violet-500" : "bg-[#3F3F46]"}`}
-            >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${isRanked ? "translate-x-6" : "translate-x-1"}`} />
-            </div>
-            <span className="text-sm text-[#A1A1AA]">Temporada clasificatoria</span>
-          </label>
-
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 rounded border border-[#27272A] bg-transparent px-4 py-2 text-sm text-[#A1A1AA] hover:bg-[#27272A] transition-colors">
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 rounded bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50 transition-colors"
-            >
-              {saving ? "Guardando…" : isEdit ? "Guardar" : "Crear"}
-            </button>
-          </div>
-        </form>
+    <EntityFormDialog
+      title={isEdit ? "Editar temporada" : "Nueva temporada"}
+      submitLabel={isEdit ? "Guardar" : "Crear"}
+      saving={saving}
+      error={error}
+      onSubmit={handleSubmit}
+      onClose={onClose}
+    >
+      <Field label="Nombre" required>
+        <Input required value={name} onChange={(_, d) => setName(d.value)} maxLength={100} placeholder="Temporada 1" />
+      </Field>
+      <div className={styles.dates}>
+        <Field label="Fecha inicio">
+          <Input type="datetime-local" value={startDate} onChange={(_, d) => setStartDate(d.value)} />
+        </Field>
+        <Field label="Fecha fin">
+          <Input type="datetime-local" value={endDate} onChange={(_, d) => setEndDate(d.value)} />
+        </Field>
       </div>
-    </div>
-  );
-}
-
-// ─── Confirm Dialog ──────────────────────────────────────────────────────────
-
-function ConfirmDialog({
-  title,
-  message,
-  confirmLabel,
-  danger,
-  onConfirm,
-  onClose,
-}: {
-  title: string;
-  message: string;
-  confirmLabel: string;
-  danger?: boolean;
-  onConfirm: () => void;
-  onClose: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-sm rounded-lg border border-[#27272A] bg-[#09090B] shadow-2xl p-6 space-y-4">
-        <h3 className="text-base font-bold text-white">{title}</h3>
-        <p className="text-sm text-[#A1A1AA]">{message}</p>
-        <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="flex-1 rounded border border-[#27272A] px-4 py-2 text-sm text-[#A1A1AA] hover:bg-[#27272A] transition-colors">
-            Cancelar
-          </button>
-          <button
-            onClick={() => { onConfirm(); onClose(); }}
-            className={`flex-1 rounded px-4 py-2 text-sm font-semibold text-white transition-colors ${danger ? "bg-red-600 hover:bg-red-500" : "bg-amber-600 hover:bg-amber-500"}`}
-          >
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+      <Switch checked={isRanked} onChange={(_, d) => setIsRanked(d.checked)} label="Temporada clasificatoria" />
+    </EntityFormDialog>
   );
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SeasonsPage() {
-  const [seasons, setSeasons]     = useState<Season[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const styles = useStyles();
+  const common = useCommonStyles();
+  const toast = useAppToast();
 
-  const [modalTarget, setModalTarget]   = useState<Season | null | "new">(null);
-  const [confirmAction, setConfirmAction] = useState<{
-    title: string; message: string; label: string; danger?: boolean; fn: () => void;
-  } | null>(null);
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [modalTarget, setModalTarget] = useState<Season | null | "new">(null);
+  const [pending, setPending] = useState<PendingAction | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
   const load = useCallback(async () => {
@@ -240,217 +203,246 @@ export default function SeasonsPage() {
   useEffect(() => { load(); }, [load]);
 
   // ── Actions ───────────────────────────────────────────────────────────────
-  async function doAction(url: string, method = "POST") {
+  function ask(action: PendingAction) {
     setActionError(null);
-    try {
-      const res = await fetch(url, { method });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setActionError((data as { error?: string }).error ?? `Error ${res.status}`); return; }
-      await load();
-    } catch { setActionError("Error de conexión"); }
+    setPending(action);
+  }
+
+  async function runPending() {
+    if (!pending) return;
+    setBusy(true);
+    setActionError(null);
+    const result = await sendAdminRequest(pending.url, pending.method);
+    setBusy(false);
+    if (result.error) {
+      setActionError(result.error);
+      return;
+    }
+    toast.success(pending.successMessage);
+    setPending(null);
+    await load();
   }
 
   const askActivate = (s: Season) =>
-    setConfirmAction({
+    ask({
       title: `Activar "${s.name}"`,
       message: "Esto desactivará cualquier otra temporada en curso. ¿Confirmar?",
       label: "Activar",
-      fn: () => doAction(`/api/admin/seasons/${s.id}/activate`),
+      url: `/api/admin/seasons/${s.id}/activate`,
+      method: "POST",
+      successMessage: "Temporada activada",
     });
 
   const askFreeze = (s: Season) =>
-    setConfirmAction({
+    ask({
       title: s.is_frozen ? `Descongelar "${s.name}"` : `Congelar "${s.name}"`,
       message: s.is_frozen
         ? "Los marcadores volverán a actualizarse en tiempo real."
         : "Congelar pausa los marcadores de la temporada sin desactivarla.",
       label: s.is_frozen ? "Descongelar" : "Congelar",
-      fn: () => doAction(`/api/admin/seasons/${s.id}/freeze`),
+      url: `/api/admin/seasons/${s.id}/freeze`,
+      method: "POST",
+      successMessage: s.is_frozen ? "Temporada descongelada" : "Temporada congelada",
     });
 
   const askFinalize = (s: Season) =>
-    setConfirmAction({
+    ask({
       title: `Finalizar "${s.name}"`,
       message: "Esta acción es irreversible. La temporada quedará cerrada permanentemente.",
       label: "Finalizar",
-      danger: true,
-      fn: () => doAction(`/api/admin/seasons/${s.id}/finalize`),
+      destructive: true,
+      url: `/api/admin/seasons/${s.id}/finalize`,
+      method: "POST",
+      successMessage: "Temporada finalizada",
     });
 
   const askReactivate = (s: Season) =>
-    setConfirmAction({
+    ask({
       title: `Reactivar "${s.name}"`,
       message: "Esto reabrirá la temporada y desactivará cualquier otra en curso. ¿Confirmar?",
       label: "Reactivar",
-      fn: () => doAction(`/api/admin/seasons/${s.id}/reactivate`),
+      url: `/api/admin/seasons/${s.id}/reactivate`,
+      method: "POST",
+      successMessage: "Temporada reactivada",
     });
 
   const askDelete = (s: Season) =>
-    setConfirmAction({
+    ask({
       title: `Eliminar "${s.name}"`,
       message: `Se eliminará la temporada permanentemente. Solo es posible si no tiene estadísticas de jugadores ni fortalezas (actualmente ${s.player_count} jugadores, ${s.fortress_count} fortalezas).`,
       label: "Eliminar",
-      danger: true,
-      fn: () => doAction(`/api/admin/seasons/${s.id}`, "DELETE"),
+      destructive: true,
+      url: `/api/admin/seasons/${s.id}`,
+      method: "DELETE",
+      successMessage: "Temporada eliminada",
     });
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <AdminLayout title="TEMPORADAS">
-      <div className="flex-1 overflow-y-auto p-8">
-        <div className="mx-auto max-w-5xl flex flex-col gap-6">
+      <div className={common.page}>
+        <div className={common.pageInner}>
+          <PageHeader
+            title="Temporadas"
+            description="Gestiona las temporadas del juego: creación, activación, congelado y finalización."
+            actions={
+              <>
+                <Button icon={loading ? <Spinner size="tiny" /> : <ArrowClockwise20Regular />} onClick={load}>
+                  Actualizar
+                </Button>
+                <Button appearance="primary" icon={<Add20Regular />} onClick={() => setModalTarget("new")}>
+                  Nueva temporada
+                </Button>
+              </>
+            }
+          />
 
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-white">Temporadas</h2>
-              <p className="mt-1 text-sm text-[#71717A]">Gestiona las temporadas del juego: creación, activación, congelado y finalización.</p>
-            </div>
-            <button
-              onClick={() => setModalTarget("new")}
-              className="flex items-center gap-2 rounded bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 transition-colors"
-            >
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              Nueva temporada
-            </button>
-          </div>
-
-          {/* Action error */}
-          {actionError && (
-            <div className="rounded border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400 flex items-center justify-between">
-              {actionError}
-              <button onClick={() => setActionError(null)} className="text-red-400/60 hover:text-red-400">
-                <span className="material-symbols-outlined text-[18px]">close</span>
-              </button>
-            </div>
-          )}
-
-          {/* Table */}
-          {loading ? (
-            <div className="text-sm text-[#71717A] animate-pulse">Cargando temporadas…</div>
-          ) : error ? (
-            <div className="text-sm text-red-400">{error}</div>
+          {error ? (
+            <ErrorBanner message={error} onRetry={load} />
+          ) : loading ? (
+            <SectionCard>
+              <Table aria-label="Cargando temporadas">
+                <TableHeader>
+                  <TableRow>
+                    <TableHeaderCell>Nombre</TableHeaderCell>
+                    <TableHeaderCell>Estado</TableHeaderCell>
+                    <TableHeaderCell>Inicio</TableHeaderCell>
+                    <TableHeaderCell>Fin</TableHeaderCell>
+                    <TableHeaderCell>Jugadores</TableHeaderCell>
+                    <TableHeaderCell>Fortalezas</TableHeaderCell>
+                    <TableHeaderCell>Acciones</TableHeaderCell>
+                  </TableRow>
+                </TableHeader>
+                <TableSkeleton rows={4} columns={7} />
+              </Table>
+            </SectionCard>
           ) : seasons.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-[#27272A] py-16 text-center text-sm text-[#71717A]">
-              No hay temporadas. Crea la primera.
-            </div>
+            <SectionCard>
+              <EmptyState icon={<CalendarLtr20Regular />} title="No hay temporadas" description="Crea la primera." />
+            </SectionCard>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-[#27272A]">
-              <table className="w-full min-w-[700px] text-sm">
-                <thead className="border-b border-[#27272A] bg-[#18181B]">
-                  <tr>
-                    {["Nombre", "Estado", "Inicio", "Fin", "Jugadores", "Fortalezas", "Acciones"].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">{h}</th>
+            <SectionCard>
+              <div className={common.tableScroll}>
+                <Table className={styles.table} aria-label="Temporadas">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHeaderCell>Nombre</TableHeaderCell>
+                      <TableHeaderCell>Estado</TableHeaderCell>
+                      <TableHeaderCell>Inicio</TableHeaderCell>
+                      <TableHeaderCell>Fin</TableHeaderCell>
+                      <TableHeaderCell>Jugadores</TableHeaderCell>
+                      <TableHeaderCell>Fortalezas</TableHeaderCell>
+                      <TableHeaderCell className={styles.actionsCol}>Acciones</TableHeaderCell>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {seasons.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell>
+                          <div className={styles.nameCell}>
+                            <Body1 className={styles.nameText}>{s.name}</Body1>
+                            {!s.is_ranked && (
+                              <Badge appearance="outline" color="informative" size="small">
+                                no ranked
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <SeasonStatus season={s} />
+                        </TableCell>
+                        <TableCell>
+                          <span className={mergeClasses(common.mono, common.subtle)}>{fmtDate(s.start_date)}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className={mergeClasses(common.mono, common.subtle)}>{fmtDate(s.end_date)}</span>
+                        </TableCell>
+                        <TableCell>
+                          <Body1 className={common.subtle}>{s.player_count}</Body1>
+                        </TableCell>
+                        <TableCell>
+                          <Body1 className={common.subtle}>{s.fortress_count}</Body1>
+                        </TableCell>
+                        <TableCell className={styles.actionsCol}>
+                          <div className={styles.actions}>
+                            {!s.finalized && (
+                              <Tooltip content="Editar" relationship="label">
+                                <Button appearance="subtle" size="small" icon={<Edit20Regular />} onClick={() => setModalTarget(s)} />
+                              </Tooltip>
+                            )}
+                            {!s.is_active && !s.finalized && (
+                              <Tooltip content="Activar" relationship="label">
+                                <Button appearance="subtle" size="small" icon={<Play20Regular />} onClick={() => askActivate(s)} />
+                              </Tooltip>
+                            )}
+                            {!s.finalized && (
+                              <Tooltip content={s.is_frozen ? "Descongelar" : "Congelar"} relationship="label">
+                                <Button
+                                  appearance="subtle"
+                                  size="small"
+                                  icon={<WeatherSnowflake20Regular className={s.is_frozen ? styles.frozenActive : undefined} />}
+                                  onClick={() => askFreeze(s)}
+                                />
+                              </Tooltip>
+                            )}
+                            {!s.finalized && (
+                              <Tooltip content="Finalizar temporada" relationship="label">
+                                <Button appearance="subtle" size="small" icon={<Flag20Regular />} onClick={() => askFinalize(s)} />
+                              </Tooltip>
+                            )}
+                            {s.finalized && (
+                              <Tooltip content="Reactivar temporada" relationship="label">
+                                <Button
+                                  appearance="subtle"
+                                  size="small"
+                                  icon={<ArrowCounterclockwise20Regular />}
+                                  onClick={() => askReactivate(s)}
+                                />
+                              </Tooltip>
+                            )}
+                            {!s.is_active && s.player_count === 0 && s.fortress_count === 0 && (
+                              <Tooltip content="Eliminar" relationship="label">
+                                <Button
+                                  appearance="subtle"
+                                  size="small"
+                                  icon={<Delete20Regular className={styles.deleteIcon} />}
+                                  onClick={() => askDelete(s)}
+                                />
+                              </Tooltip>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#27272A]">
-                  {seasons.map(s => (
-                    <tr key={s.id} className="bg-[#09090B] hover:bg-[#18181B] transition-colors">
-                      <td className="px-4 py-3 font-medium text-white">
-                        {s.name}
-                        {!s.is_ranked && (
-                          <span className="ml-2 text-[10px] text-[#71717A] border border-[#3F3F46] rounded px-1">no ranked</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3"><StatusBadge season={s} /></td>
-                      <td className="px-4 py-3 text-[#A1A1AA] font-mono text-xs">{fmtDate(s.start_date)}</td>
-                      <td className="px-4 py-3 text-[#A1A1AA] font-mono text-xs">{fmtDate(s.end_date)}</td>
-                      <td className="px-4 py-3 text-[#A1A1AA]">{s.player_count}</td>
-                      <td className="px-4 py-3 text-[#A1A1AA]">{s.fortress_count}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1">
-                          {/* Edit */}
-                          {!s.finalized && (
-                            <button
-                              onClick={() => setModalTarget(s)}
-                              title="Editar"
-                              className="flex h-7 w-7 items-center justify-center rounded text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors"
-                            >
-                              <span className="material-symbols-outlined text-[16px]">edit</span>
-                            </button>
-                          )}
-                          {/* Activate */}
-                          {!s.is_active && !s.finalized && (
-                            <button
-                              onClick={() => askActivate(s)}
-                              title="Activar"
-                              className="flex h-7 w-7 items-center justify-center rounded text-[#71717A] hover:bg-emerald-500/10 hover:text-emerald-400 transition-colors"
-                            >
-                              <span className="material-symbols-outlined text-[16px]">play_circle</span>
-                            </button>
-                          )}
-                          {/* Freeze / Unfreeze */}
-                          {!s.finalized && (
-                            <button
-                              onClick={() => askFreeze(s)}
-                              title={s.is_frozen ? "Descongelar" : "Congelar"}
-                              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${s.is_frozen ? "text-blue-400 hover:bg-blue-500/10" : "text-[#71717A] hover:bg-blue-500/10 hover:text-blue-400"}`}
-                            >
-                              <span className="material-symbols-outlined text-[16px]">{s.is_frozen ? "ac_unit" : "ac_unit"}</span>
-                            </button>
-                          )}
-                          {/* Finalize */}
-                          {!s.finalized && (
-                            <button
-                              onClick={() => askFinalize(s)}
-                              title="Finalizar temporada"
-                              className="flex h-7 w-7 items-center justify-center rounded text-[#71717A] hover:bg-amber-500/10 hover:text-amber-400 transition-colors"
-                            >
-                              <span className="material-symbols-outlined text-[16px]">flag</span>
-                            </button>
-                          )}
-                          {/* Reactivate (finalized only) */}
-                          {s.finalized && (
-                            <button
-                              onClick={() => askReactivate(s)}
-                              title="Reactivar temporada"
-                              className="flex h-7 w-7 items-center justify-center rounded text-[#71717A] hover:bg-emerald-500/10 hover:text-emerald-400 transition-colors"
-                            >
-                              <span className="material-symbols-outlined text-[16px]">restart_alt</span>
-                            </button>
-                          )}
-                          {/* Delete */}
-                          {!s.is_active && s.player_count === 0 && s.fortress_count === 0 && (
-                            <button
-                              onClick={() => askDelete(s)}
-                              title="Eliminar"
-                              className="flex h-7 w-7 items-center justify-center rounded text-[#71717A] hover:bg-red-500/10 hover:text-red-400 transition-colors"
-                            >
-                              <span className="material-symbols-outlined text-[16px]">delete</span>
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </TableBody>
+                </Table>
+              </div>
+            </SectionCard>
           )}
-
         </div>
       </div>
 
-      {/* Create / Edit modal */}
       {modalTarget !== null && (
-        <SeasonModal
-          initial={modalTarget === "new" ? null : (modalTarget as Season)}
+        <SeasonDialog
+          initial={modalTarget === "new" ? null : modalTarget}
           onClose={() => setModalTarget(null)}
           onSaved={load}
         />
       )}
 
-      {/* Confirm dialog */}
-      {confirmAction && (
+      {pending && (
         <ConfirmDialog
-          title={confirmAction.title}
-          message={confirmAction.message}
-          confirmLabel={confirmAction.label}
-          danger={confirmAction.danger}
-          onConfirm={confirmAction.fn}
-          onClose={() => setConfirmAction(null)}
-        />
+          open
+          title={pending.title}
+          confirmLabel={pending.label}
+          destructive={pending.destructive}
+          busy={busy}
+          error={actionError}
+          onConfirm={runPending}
+          onClose={() => setPending(null)}
+        >
+          <Body1 block>{pending.message}</Body1>
+        </ConfirmDialog>
       )}
     </AdminLayout>
   );

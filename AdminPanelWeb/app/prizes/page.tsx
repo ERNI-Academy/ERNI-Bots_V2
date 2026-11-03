@@ -1,8 +1,50 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
+import {
+  Body1,
+  Button,
+  Caption1,
+  Card,
+  Combobox,
+  Field,
+  Input,
+  makeStyles,
+  mergeClasses,
+  Option,
+  Select,
+  Spinner,
+  Textarea,
+  tokens,
+  Tooltip,
+} from "@fluentui/react-components";
+import {
+  Add20Regular,
+  ArrowClockwise20Regular,
+  Delete20Regular,
+  Dismiss20Regular,
+  Edit20Regular,
+  Flag20Regular,
+  HourglassHalf20Regular,
+  Key20Regular,
+  LockClosed20Regular,
+  Person20Regular,
+  Shield20Regular,
+  Star20Regular,
+  Trophy20Regular,
+  UsbStick20Regular,
+} from "@fluentui/react-icons";
 import AdminLayout from "@/components/AdminLayout";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { EntityFormDialog } from "@/components/ui/EntityFormDialog";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useCommonStyles } from "@/components/ui/commonStyles";
+import { useAppToast } from "@/components/ui/toast";
+import { sendAdminRequest } from "@/lib/adminApi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,45 +62,84 @@ interface Prize {
 }
 
 const COLOR_OPTIONS = [
-  { value: "red",    label: "Rojo",    hex: "#ff0033" },
-  { value: "cyan",   label: "Cian",    hex: "#00ffff" },
-  { value: "green",  label: "Verde",   hex: "#00ff41" },
-  { value: "purple", label: "Morado",  hex: "#a78bfa" },
-  { value: "yellow", label: "Amarillo",hex: "#ffd700" },
-  { value: "orange", label: "Naranja", hex: "#fb923c" },
+  { value: "red", label: "Rojo" },
+  { value: "cyan", label: "Cian" },
+  { value: "green", label: "Verde" },
+  { value: "purple", label: "Morado" },
+  { value: "yellow", label: "Amarillo" },
+  { value: "orange", label: "Naranja" },
 ];
+
+/**
+ * `icon` is a Material Symbols name consumed by the public site, so it is stored as free text. The admin panel
+ * only previews the most common names with Fluent icons and falls back to a trophy.
+ */
+const PRIZE_ICONS: Record<string, ReactElement> = {
+  key: <Key20Regular />,
+  security: <Shield20Regular />,
+  usb: <UsbStick20Regular />,
+  star: <Star20Regular />,
+  emoji_events: <Trophy20Regular />,
+  lock: <LockClosed20Regular />,
+  flag: <Flag20Regular />,
+};
+
+const useStyles = makeStyles({
+  inner: { maxWidth: "900px", width: "100%", marginInline: "auto" },
+  list: { display: "flex", flexDirection: "column", gap: tokens.spacingVerticalM },
+  card: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: tokens.spacingHorizontalL,
+  },
+  prizeIcon: { display: "flex", flexShrink: 0, fontSize: "24px", marginTop: "2px" },
+  info: { display: "flex", flexDirection: "column", gap: tokens.spacingVerticalXXS, flexGrow: 1, minWidth: 0 },
+  kicker: {
+    fontFamily: tokens.fontFamilyMonospace,
+    fontSize: tokens.fontSizeBase200,
+    textTransform: "uppercase",
+    letterSpacing: "0.08em",
+  },
+  name: { fontWeight: tokens.fontWeightSemibold, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  winner: { marginTop: tokens.spacingVerticalXS },
+  noWinner: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: tokens.spacingHorizontalXXS,
+    marginTop: tokens.spacingVerticalXS,
+    color: tokens.colorNeutralForeground3,
+  },
+  actions: { display: "flex", alignItems: "center", flexShrink: 0, gap: tokens.spacingHorizontalXXS },
+  deleteIcon: { color: tokens.colorStatusDangerForeground1 },
+  grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: tokens.spacingHorizontalM },
+  winnerRow: { display: "flex", alignItems: "center", gap: tokens.spacingHorizontalXS },
+  combobox: { flexGrow: 1, minWidth: 0 },
+  // Fluent palette tokens keep every prize colour readable in light and dark mode.
+  red: { color: tokens.colorPaletteRedForeground1 },
+  cyan: { color: tokens.colorPaletteTealForeground2 },
+  green: { color: tokens.colorPaletteGreenForeground1 },
+  purple: { color: tokens.colorPalettePurpleForeground2 },
+  yellow: { color: tokens.colorPaletteMarigoldForeground1 },
+  orange: { color: tokens.colorPaletteDarkOrangeForeground1 },
+  fallback: { color: tokens.colorNeutralForeground3 },
+});
 
 // ─── Username Autocomplete ───────────────────────────────────────────────────
 
-function UsernameAutocomplete({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  const [query, setQuery]     = useState(value);
+function UsernameAutocomplete({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const styles = useStyles();
+  const [query, setQuery] = useState(value);
   const [options, setOptions] = useState<string[]>([]);
-  const [open, setOpen]       = useState(false);
+  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [rect, setRect]       = useState<DOMRect | null>(null);
-  const inputRef              = useRef<HTMLInputElement>(null);
-  const debounceRef           = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      const target = e.target as Node;
-      if (inputRef.current && !inputRef.current.contains(target)) {
-        // allow clicks inside the portal list
-        const list = document.getElementById("username-ac-list");
-        if (list && list.contains(target)) return;
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  useEffect(
+    () => () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    },
+    []
+  );
 
   // Sync external value when it changes (adjusted during render, no effect needed)
   const [prevValue, setPrevValue] = useState(value);
@@ -67,28 +148,23 @@ function UsernameAutocomplete({
     setQuery(value);
   }
 
-  function openDropdown() {
-    if (inputRef.current) setRect(inputRef.current.getBoundingClientRect());
-  }
-
   function handleInput(v: string) {
     setQuery(v);
     onChange(v);
-    if (!v.trim()) { setOptions([]); setOpen(false); return; }
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!v.trim()) {
+      setOptions([]);
+      setOpen(false);
+      return;
+    }
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const res  = await fetch(`/api/admin/users?search=${encodeURIComponent(v.trim())}&per_page=8&is_bot=false`);
+        const res = await fetch(`/api/admin/users?search=${encodeURIComponent(v.trim())}&per_page=8&is_bot=false`);
         const data = await res.json();
         const items: string[] = (data?.items ?? []).map((u: { username: string }) => u.username);
         setOptions(items);
-        if (items.length > 0) {
-          openDropdown();
-          setOpen(true);
-        } else {
-          setOpen(false);
-        }
+        setOpen(items.length > 0);
       } catch {
         setOptions([]);
       } finally {
@@ -105,74 +181,47 @@ function UsernameAutocomplete({
   }
 
   function clear() {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     setQuery("");
     onChange("");
     setOptions([]);
     setOpen(false);
   }
 
-  const dropdown = open && options.length > 0 && rect
-    ? createPortal(
-        <ul
-          id="username-ac-list"
-          style={{
-            position: "fixed",
-            top:   rect.bottom + 4,
-            left:  rect.left,
-            width: rect.width,
-            zIndex: 9999,
-          }}
-          className="rounded border border-[#27272A] bg-[#09090B] shadow-2xl max-h-48 overflow-y-auto"
-        >
-          {options.map(u => (
-            <li key={u}>
-              <button
-                type="button"
-                onMouseDown={e => { e.preventDefault(); select(u); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-[#27272A] text-left transition-colors"
-              >
-                <span className="material-symbols-outlined text-[14px] text-[#71717A]">person</span>
-                {u}
-              </button>
-            </li>
-          ))}
-        </ul>,
-        document.body
-      )
-    : null;
-
   return (
-    <div className="relative">
-      <div className="flex items-center gap-1">
-        <div className="relative flex-1">
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={e => handleInput(e.target.value)}
-            onFocus={() => { if (options.length > 0) { openDropdown(); setOpen(true); } }}
-            placeholder="Sin ganador asignado"
-            autoComplete="off"
-            className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500/60 pr-8"
-          />
-          {loading && (
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-[#71717A] animate-pulse">…</span>
-          )}
-        </div>
-        {query && (
-          <button type="button" onClick={clear}
-            className="shrink-0 flex items-center justify-center h-8 w-8 rounded border border-[#27272A] text-[#71717A] hover:text-white hover:bg-[#27272A] transition-colors">
-            <span className="material-symbols-outlined text-[16px]">close</span>
-          </button>
-        )}
-      </div>
-      {dropdown}
+    <div className={styles.winnerRow}>
+      <Combobox
+        freeform
+        className={styles.combobox}
+        value={query}
+        selectedOptions={query ? [query] : []}
+        open={open && options.length > 0}
+        onOpenChange={(_, d) => setOpen(d.open && options.length > 0)}
+        onChange={(e) => handleInput(e.target.value)}
+        onOptionSelect={(_, d) => select(d.optionValue ?? "")}
+        placeholder="Sin ganador asignado"
+        autoComplete="off"
+        aria-label="Ganador (username)"
+      >
+        {options.map((u) => (
+          <Option key={u} value={u} text={u}>
+            <Person20Regular /> {u}
+          </Option>
+        ))}
+      </Combobox>
+      {loading && <Spinner size="tiny" aria-label="Buscando usuarios" />}
+      {query && (
+        <Tooltip content="Quitar ganador" relationship="label">
+          <Button appearance="subtle" icon={<Dismiss20Regular />} onClick={clear} />
+        </Tooltip>
+      )}
     </div>
   );
 }
 
-// ─── Prize Modal ──────────────────────────────────────────────────────────────
+// ─── Prize dialog (create / edit) ────────────────────────────────────────────
 
-function PrizeModal({
+function PrizeDialog({
   initial,
   onClose,
   onSaved,
@@ -181,152 +230,117 @@ function PrizeModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const styles = useStyles();
+  const toast = useAppToast();
   const isEdit = initial !== null;
-  const [sortOrder,   setSortOrder]   = useState(String(initial?.sort_order ?? 0));
-  const [name,        setName]        = useState(initial?.name ?? "");
-  const [tagline,     setTagline]     = useState(initial?.tagline ?? "");
+  const [sortOrder, setSortOrder] = useState(String(initial?.sort_order ?? 0));
+  const [name, setName] = useState(initial?.name ?? "");
+  const [tagline, setTagline] = useState(initial?.tagline ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
-  const [icon,        setIcon]        = useState(initial?.icon ?? "star");
-  const [category,    setCategory]    = useState(initial?.category ?? "");
-  const [colorKey,    setColorKey]    = useState(initial?.color_key ?? "cyan");
-  const [winner,      setWinner]      = useState(initial?.winner_username ?? "");
+  const [icon, setIcon] = useState(initial?.icon ?? "star");
+  const [category, setCategory] = useState(initial?.category ?? "");
+  const [colorKey, setColorKey] = useState(initial?.color_key ?? "cyan");
+  const [winner, setWinner] = useState(initial?.winner_username ?? "");
   const [saving, setSaving] = useState(false);
-  const [error,  setError]  = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit() {
     setSaving(true);
     setError(null);
     const payload = {
-      sort_order:       parseInt(sortOrder, 10) || 0,
-      name:             name.trim(),
-      tagline:          tagline.trim() || null,
-      description:      description.trim() || null,
-      icon:             icon.trim() || "star",
-      category:         category.trim() || null,
-      color_key:        colorKey,
-      winner_username:  winner.trim() || null,
+      sort_order: parseInt(sortOrder, 10) || 0,
+      name: name.trim(),
+      tagline: tagline.trim() || null,
+      description: description.trim() || null,
+      icon: icon.trim() || "star",
+      category: category.trim() || null,
+      color_key: colorKey,
+      winner_username: winner.trim() || null,
     };
-
-    try {
-      const res = await fetch(
-        isEdit ? `/api/admin/prizes/${initial!.id}` : "/api/admin/prizes",
-        {
-          method:  isEdit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify(payload),
-        }
-      );
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError((data as { error?: string }).error ?? "Error al guardar");
-        return;
-      }
-      onSaved();
-    } catch {
-      setError("Error de conexión");
-    } finally {
-      setSaving(false);
+    const result = await sendAdminRequest(
+      isEdit ? `/api/admin/prizes/${initial.id}` : "/api/admin/prizes",
+      isEdit ? "PUT" : "POST",
+      payload
+    );
+    setSaving(false);
+    if (result.error) {
+      setError(result.error);
+      return;
     }
+    toast.success(isEdit ? "Premio actualizado" : "Premio creado");
+    onSaved();
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-lg rounded-lg border border-[#27272A] bg-[#09090B] flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#27272A]">
-          <h2 className="font-semibold text-white">{isEdit ? "Editar Premio" : "Nuevo Premio"}</h2>
-          <button onClick={onClose} className="text-[#71717A] hover:text-white transition-colors">
-            <span className="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          {error && (
-            <div className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">{error}</div>
-          )}
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-[#71717A] mb-1">Orden</label>
-              <input type="number" value={sortOrder} onChange={e => setSortOrder(e.target.value)}
-                className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-            </div>
-            <div>
-              <label className="block text-xs text-[#71717A] mb-1">Icono (Material Symbols)</label>
-              <input value={icon} onChange={e => setIcon(e.target.value)} placeholder="star"
-                className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs text-[#71717A] mb-1">Nombre *</label>
-            <input required value={name} onChange={e => setName(e.target.value)}
-              className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-          </div>
-
-          <div>
-            <label className="block text-xs text-[#71717A] mb-1">Tagline</label>
-            <input value={tagline} onChange={e => setTagline(e.target.value)}
-              className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-          </div>
-
-          <div>
-            <label className="block text-xs text-[#71717A] mb-1">Descripción</label>
-            <textarea rows={3} value={description} onChange={e => setDescription(e.target.value)}
-              className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 resize-none" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-[#71717A] mb-1">Categoría</label>
-              <input value={category} onChange={e => setCategory(e.target.value)} placeholder="AUTHENTICATION"
-                className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-            </div>
-            <div>
-              <label className="block text-xs text-[#71717A] mb-1">Color</label>
-              <select value={colorKey} onChange={e => setColorKey(e.target.value)}
-                className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
-                {COLOR_OPTIONS.map(c => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs text-[#71717A] mb-1 flex items-center gap-1">
-              <span className="material-symbols-outlined text-sm text-yellow-400">emoji_events</span>
-              Ganador (username)
-            </label>
-            <UsernameAutocomplete value={winner} onChange={setWinner} />
-          </div>
-        </form>
-        <div className="flex justify-end gap-2 px-6 py-4 border-t border-[#27272A]">
-          <button type="button" onClick={onClose}
-            className="px-4 py-2 text-sm text-[#71717A] hover:text-white transition-colors">
-            Cancelar
-          </button>
-          <button type="submit" form="" disabled={saving}
-            onClick={handleSubmit as unknown as React.MouseEventHandler}
-            className="px-4 py-2 text-sm rounded bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 transition-colors">
-            {saving ? "Guardando…" : isEdit ? "Guardar" : "Crear"}
-          </button>
-        </div>
+    <EntityFormDialog
+      title={isEdit ? "Editar premio" : "Nuevo premio"}
+      submitLabel={isEdit ? "Guardar" : "Crear"}
+      saving={saving}
+      error={error}
+      onSubmit={handleSubmit}
+      onClose={onClose}
+    >
+      <div className={styles.grid2}>
+        <Field label="Orden">
+          <Input type="number" value={sortOrder} onChange={(_, d) => setSortOrder(d.value)} />
+        </Field>
+        <Field label="Icono (Material Symbols)" hint="Nombre del icono que se muestra en la web pública">
+          <Input value={icon} onChange={(_, d) => setIcon(d.value)} placeholder="star" />
+        </Field>
       </div>
-    </div>
+
+      <Field label="Nombre" required>
+        <Input required value={name} onChange={(_, d) => setName(d.value)} />
+      </Field>
+
+      <Field label="Tagline">
+        <Input value={tagline} onChange={(_, d) => setTagline(d.value)} />
+      </Field>
+
+      <Field label="Descripción">
+        <Textarea rows={3} resize="vertical" value={description} onChange={(_, d) => setDescription(d.value)} />
+      </Field>
+
+      <div className={styles.grid2}>
+        <Field label="Categoría">
+          <Input value={category} onChange={(_, d) => setCategory(d.value)} placeholder="AUTHENTICATION" />
+        </Field>
+        <Field label="Color">
+          <Select value={colorKey} onChange={(_, d) => setColorKey(d.value)}>
+            {COLOR_OPTIONS.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      </div>
+
+      <Field label="Ganador (username)">
+        <UsernameAutocomplete value={winner} onChange={setWinner} />
+      </Field>
+    </EntityFormDialog>
   );
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PrizesPage() {
-  const [prizes,  setPrizes]  = useState<Prize[]>([]);
+  const styles = useStyles();
+  const common = useCommonStyles();
+  const toast = useAppToast();
+
+  const [prizes, setPrizes] = useState<Prize[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState<string | null>(null);
-  const [modal,   setModal]   = useState<{ open: boolean; prize: Prize | null }>({ open: false, prize: null });
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [modal, setModal] = useState<{ open: boolean; prize: Prize | null }>({ open: false, prize: null });
+  const [deleteTarget, setDeleteTarget] = useState<Prize | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/admin/prizes", { cache: "no-store" });
       const data = await res.json();
@@ -341,121 +355,146 @@ export default function PrizesPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
   useEffect(() => { load(); }, [load]);
 
-  async function handleDelete(id: string) {
-    if (!confirm("¿Eliminar este premio?")) return;
-    setDeleting(id);
-    try {
-      await fetch(`/api/admin/prizes/${id}`, { method: "DELETE" });
-      await load();
-    } finally {
-      setDeleting(null);
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError(null);
+    const result = await sendAdminRequest(`/api/admin/prizes/${deleteTarget.id}`, "DELETE");
+    setDeleting(false);
+    if (result.error) {
+      setDeleteError(result.error);
+      return;
     }
+    toast.success("Premio eliminado");
+    setDeleteTarget(null);
+    await load();
   }
 
-  const colorHex = (key: string) => COLOR_OPTIONS.find(c => c.value === key)?.hex ?? "#71717A";
+  const colorClass = (key: string) => {
+    switch (key) {
+      case "red": return styles.red;
+      case "cyan": return styles.cyan;
+      case "green": return styles.green;
+      case "purple": return styles.purple;
+      case "yellow": return styles.yellow;
+      case "orange": return styles.orange;
+      default: return styles.fallback;
+    }
+  };
 
   return (
     <AdminLayout title="PREMIOS CTF">
+      <div className={common.page}>
+        <div className={common.pageInner}>
+          <div className={styles.inner}>
+            <PageHeader
+              title="Premios del CTF"
+              description="Gestiona los premios y asigna ganadores."
+              actions={
+                <>
+                  <Button icon={loading ? <Spinner size="tiny" /> : <ArrowClockwise20Regular />} onClick={load}>
+                    Actualizar
+                  </Button>
+                  <Button appearance="primary" icon={<Add20Regular />} onClick={() => setModal({ open: true, prize: null })}>
+                    Nuevo premio
+                  </Button>
+                </>
+              }
+            />
+
+            {error && <ErrorBanner message={error} onRetry={load} />}
+
+            {loading ? (
+              <LoadingState label="Cargando premios…" />
+            ) : prizes.length === 0 ? (
+              !error && <EmptyState icon={<Trophy20Regular />} title="No hay premios configurados." />
+            ) : (
+              <div className={styles.list}>
+                {prizes.map((prize) => {
+                  const tone = colorClass(prize.color_key);
+                  return (
+                    <Card key={prize.id} className={styles.card}>
+                      <span className={mergeClasses(styles.prizeIcon, tone)}>
+                        {PRIZE_ICONS[prize.icon] ?? <Trophy20Regular />}
+                      </span>
+
+                      <div className={styles.info}>
+                        <span className={mergeClasses(styles.kicker, tone)}>
+                          #{prize.sort_order} · {prize.category ?? "—"}
+                        </span>
+                        <Body1 className={styles.name}>{prize.name}</Body1>
+                        {prize.tagline && <Caption1 className={common.muted}>{prize.tagline}</Caption1>}
+                        {prize.winner_username ? (
+                          <div className={styles.winner}>
+                            <StatusBadge tone="warning" icon={<Trophy20Regular />}>
+                              {prize.winner_username}
+                            </StatusBadge>
+                          </div>
+                        ) : (
+                          <Caption1 className={styles.noWinner}>
+                            <HourglassHalf20Regular />
+                            Sin ganador asignado
+                          </Caption1>
+                        )}
+                      </div>
+
+                      <div className={styles.actions}>
+                        <Tooltip content="Editar" relationship="label">
+                          <Button
+                            appearance="subtle"
+                            size="small"
+                            icon={<Edit20Regular />}
+                            onClick={() => setModal({ open: true, prize })}
+                          />
+                        </Tooltip>
+                        <Tooltip content="Eliminar" relationship="label">
+                          <Button
+                            appearance="subtle"
+                            size="small"
+                            icon={<Delete20Regular className={styles.deleteIcon} />}
+                            onClick={() => {
+                              setDeleteError(null);
+                              setDeleteTarget(prize);
+                            }}
+                          />
+                        </Tooltip>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {modal.open && (
-        <PrizeModal
+        <PrizeDialog
           initial={modal.prize}
           onClose={() => setModal({ open: false, prize: null })}
-          onSaved={() => { setModal({ open: false, prize: null }); load(); }}
+          onSaved={() => {
+            setModal({ open: false, prize: null });
+            load();
+          }}
         />
       )}
 
-      <div className="flex-1 overflow-y-auto p-8">
-        <div className="mx-auto max-w-3xl flex flex-col gap-6">
-
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-white">Premios del CTF</h2>
-              <p className="mt-1 text-sm text-[#71717A]">Gestiona los premios y asigna ganadores.</p>
-            </div>
-            <button
-              onClick={() => setModal({ open: true, prize: null })}
-              className="flex items-center gap-2 rounded bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm text-white transition-colors"
-            >
-              <span className="material-symbols-outlined text-sm">add</span>
-              Nuevo Premio
-            </button>
-          </div>
-
-          {error && (
-            <div className="rounded border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</div>
-          )}
-
-          {loading ? (
-            <div className="text-sm text-[#71717A] animate-pulse">Cargando premios…</div>
-          ) : prizes.length === 0 ? (
-            <div className="text-sm text-[#71717A]">No hay premios configurados.</div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {prizes.map(prize => {
-                const hex = colorHex(prize.color_key);
-                return (
-                  <div key={prize.id}
-                    className="rounded-lg border border-[#27272A] bg-[#18181B] px-5 py-4 flex items-start gap-4">
-                    {/* Color dot + icon */}
-                    <div className="shrink-0 mt-0.5">
-                      <span className="material-symbols-outlined text-2xl" style={{ color: hex }}>
-                        {prize.icon}
-                      </span>
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] uppercase tracking-widest font-mono" style={{ color: hex }}>
-                          #{prize.sort_order} · {prize.category ?? "—"}
-                        </span>
-                      </div>
-                      <p className="text-sm font-semibold text-white truncate mt-0.5">{prize.name}</p>
-                      {prize.tagline && (
-                        <p className="text-xs text-[#71717A] mt-0.5">{prize.tagline}</p>
-                      )}
-                      {/* Winner badge */}
-                      <div className="mt-2">
-                        {prize.winner_username ? (
-                          <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs bg-yellow-500/15 border border-yellow-500/30 text-yellow-400">
-                            <span className="material-symbols-outlined text-xs">emoji_events</span>
-                            {prize.winner_username}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs text-[#52525B]">
-                            <span className="material-symbols-outlined text-xs">hourglass_empty</span>
-                            Sin ganador asignado
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="shrink-0 flex items-center gap-1">
-                      <button
-                        onClick={() => setModal({ open: true, prize })}
-                        className="p-1.5 rounded text-[#71717A] hover:text-white hover:bg-[#27272A] transition-colors"
-                        title="Editar"
-                      >
-                        <span className="material-symbols-outlined text-sm">edit</span>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(prize.id)}
-                        disabled={deleting === prize.id}
-                        className="p-1.5 rounded text-[#71717A] hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
-                        title="Eliminar"
-                      >
-                        <span className="material-symbols-outlined text-sm">delete</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
+      {deleteTarget && (
+        <ConfirmDialog
+          open
+          destructive
+          title="Eliminar premio"
+          confirmLabel="Eliminar"
+          busy={deleting}
+          error={deleteError}
+          onConfirm={handleDelete}
+          onClose={() => setDeleteTarget(null)}
+        >
+          <Body1 block>
+            ¿Eliminar este premio? <strong>{deleteTarget.name}</strong>
+          </Body1>
+        </ConfirmDialog>
+      )}
     </AdminLayout>
   );
 }
