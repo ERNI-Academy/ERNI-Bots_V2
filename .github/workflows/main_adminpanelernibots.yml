@@ -2,30 +2,160 @@ name: Deploy Singularity Admin Panel Web to Azure Web App
 
 on:
   push:
-    branches: ["main"]
+    branches: [main]
     paths:
-      - 'AdminPanelWeb/**'
+      - "AdminPanelWeb/**"
+      - ".github/workflows/main_adminpanelernibots.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "AdminPanelWeb/**"
+      - ".github/workflows/main_adminpanelernibots.yml"
   workflow_dispatch:
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+permissions:
+  contents: read
 
+# Never cancel a running deploy on main; superseded pull request runs are cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NODE_VERSION: "20"
+  NEXT_TELEMETRY_DISABLED: "1"
+  TRIVY_VERSION: v0.75.0
+
+jobs:
+  semgrep:
+    name: Semgrep (SAST)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:1.180.0@sha256:529ee8a277ec8adc5b534d7c74eea0a47e9de21d62852b6ba7ac6ba9566845c3
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run Semgrep
+        run: >-
+          semgrep scan
+          --config p/default
+          --config p/typescript
+          --config p/react
+          --config p/nextjs
+          --config p/secrets
+          --error
+          --metrics off
+          --sarif-output semgrep-adminpanelweb.sarif
+          AdminPanelWeb
+
+      - name: Upload Semgrep report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: semgrep-adminpanelweb
+          path: semgrep-adminpanelweb.sarif
+          if-no-files-found: ignore
+
+  checks:
+    name: Dependency checks, lint & build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: AdminPanelWeb
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: AdminPanelWeb/package-lock.json
+
+      # Lifecycle scripts are a common malware vector in compromised packages.
+      - name: Install dependencies (no install scripts)
+        run: npm ci --ignore-scripts
+
+      - name: Verify registry signatures and provenance
+        run: npm audit signatures
+
+      - name: Audit production dependencies (high+)
+        run: npm audit --omit=dev --audit-level=high
+
+      # Dev-only tooling may carry unfixed high advisories; block only on critical.
+      - name: Audit all dependencies (critical)
+        run: npm audit --audit-level=critical
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  trivy:
+    name: Trivy (SBOM & dependency scan)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate SBOM (CycloneDX)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: AdminPanelWeb
+          format: cyclonedx
+          output: sbom-adminpanelweb.cdx.json
+          version: ${{ env.TRIVY_VERSION }}
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom-adminpanelweb
+          path: sbom-adminpanelweb.cdx.json
+
+      - name: Scan for vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: AdminPanelWeb
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+          skip-setup-trivy: true
+
+  deploy:
+    name: Deploy to Azure Web App
+    runs-on: ubuntu-latest
+    needs: [semgrep, checks, trivy]
+    if: github.event_name != 'pull_request'
+    environment:
+      name: Production
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: npm install and build
+      - name: Install dependencies and build
         working-directory: ./AdminPanelWeb
         run: |
-          npm install
+          npm ci --ignore-scripts
           npm run build
 
       - name: Prepare standalone bundle
@@ -41,11 +171,9 @@ jobs:
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@02a81bead70021f5284939794bcec79c271ab383 # v3.0.8
         with:
           app-name: 'Adminpanelernibots'
           slot-name: 'Production'
           package: release.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E3DC9697CA1240869DBB9CC1A555BB84 }}
-
-
