@@ -2,23 +2,140 @@ name: Build and deploy Python app to Azure Web App - ernibots-v2-api
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
-      - 'GameBackEnd/**'
+      - "GameBackEnd/**"
+      - ".github/workflows/main_ernibots-v2-api.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "GameBackEnd/**"
+      - ".github/workflows/main_ernibots-v2-api.yml"
   workflow_dispatch:
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
 
+# Never cancel a running deploy on main; superseded pull request runs are cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  PYTHON_VERSION: "3.12"
+  PIP_AUDIT_VERSION: 2.10.1
+  TRIVY_VERSION: v0.75.0
+
+jobs:
+  semgrep:
+    name: Semgrep (SAST)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:1.180.0@sha256:529ee8a277ec8adc5b534d7c74eea0a47e9de21d62852b6ba7ac6ba9566845c3
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run Semgrep
+        run: >-
+          semgrep scan
+          --config p/default
+          --config p/python
+          --config p/flask
+          --config p/secrets
+          --error
+          --metrics off
+          --sarif-output semgrep-gamebackend.sarif
+          GameBackEnd
+
+      - name: Upload Semgrep report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: semgrep-gamebackend
+          path: semgrep-gamebackend.sarif
+          if-no-files-found: ignore
+
+  checks:
+    name: Dependency audit & sanity checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: GameBackEnd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: GameBackEnd/requirements.txt
+
+      - name: Audit dependencies (pip-audit)
+        run: pipx run --spec "pip-audit==${PIP_AUDIT_VERSION}" pip-audit -r requirements.txt
+
+      - name: Byte-compile sources
+        run: python -m compileall -q .
+
+  trivy:
+    name: Trivy (SBOM & dependency scan)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate SBOM (CycloneDX)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: GameBackEnd
+          format: cyclonedx
+          output: sbom-gamebackend.cdx.json
+          version: ${{ env.TRIVY_VERSION }}
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom-gamebackend
+          path: sbom-gamebackend.cdx.json
+
+      - name: Scan for vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: GameBackEnd
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+          skip-setup-trivy: true
+
+  deploy:
+    name: Deploy to Azure Web App
+    runs-on: ubuntu-latest
+    needs: [semgrep, checks, trivy]
+    if: github.event_name != 'pull_request'
+    environment:
+      name: Production
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python version
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.12'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
         run: |
@@ -28,10 +145,10 @@ jobs:
           pip install -r requirements.txt
 
       - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
+        uses: azure/webapps-deploy@02a81bead70021f5284939794bcec79c271ab383 # v3.0.8
         with:
           app-name: 'ernibots-v2-api'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CE51A63514AB4DFB829F90649E0AC227 }}
           package: ./GameBackEnd
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CE51A63514AB4DFB829F90649E0AC227 }}
