@@ -1,7 +1,60 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, type KeyboardEvent, type MouseEvent } from "react";
+import {
+  Body1,
+  Button,
+  Caption1,
+  DrawerBody,
+  DrawerHeader,
+  DrawerHeaderTitle,
+  Field,
+  Input,
+  makeStyles,
+  mergeClasses,
+  OverlayDrawer,
+  Select,
+  Spinner,
+  Subtitle2,
+  Tab,
+  TabList,
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+  Textarea,
+  tokens,
+  Tooltip,
+} from "@fluentui/react-components";
+import {
+  ArrowClockwise20Regular,
+  Bot16Regular,
+  Checkmark20Regular,
+  Delete20Regular,
+  Dismiss20Regular,
+  Dismiss24Regular,
+  Edit20Regular,
+  LockClosed16Regular,
+  Person16Regular,
+  Search20Regular,
+  Shield20Regular,
+} from "@fluentui/react-icons";
 import AdminLayout from "@/components/AdminLayout";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { Pagination } from "@/components/ui/Pagination";
+import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { LabeledValue } from "@/components/ui/LabeledValue";
+import { EntityFormDialog } from "@/components/ui/EntityFormDialog";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
+import { useAppToast } from "@/components/ui/toast";
+import { useCommonStyles } from "@/components/ui/commonStyles";
+import { fmtDate } from "@/lib/format";
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -62,22 +115,94 @@ interface Catalog {
 type FortressFilter = "all" | "human" | "bot";
 
 const PAGE_SIZE = 20;
+const COLUMN_COUNT = 10;
 
-function fmt(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("es-ES", {
-    day: "2-digit", month: "short", year: "numeric",
-  });
-}
-
-const STAT_STATUS_STYLE: Record<string, string> = {
-  active:         "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
-  reconfigurable: "border-amber-500/40 bg-amber-500/10 text-amber-400",
-  destroyed:      "border-red-500/40 bg-red-500/10 text-red-400",
+const STAT_STATUS_TONE: Record<string, StatusTone> = {
+  active: "success",
+  reconfigurable: "warning",
+  destroyed: "danger",
 };
 
+const useStyles = makeStyles({
+  searchInput: { width: "300px" },
+  table: { minWidth: "1100px" },
+  clickableRow: { cursor: "pointer" },
+  nameCell: { display: "flex", alignItems: "center", gap: tokens.spacingHorizontalS },
+  nameIcon: { display: "inline-flex", fontSize: "20px", color: tokens.colorBrandForeground1 },
+  idCopy: {
+    cursor: "pointer",
+    background: "none",
+    border: "none",
+    padding: 0,
+    color: tokens.colorNeutralForeground3,
+    ":hover": { color: tokens.colorNeutralForeground1 },
+  },
+  ownerCell: { display: "flex", alignItems: "center", gap: tokens.spacingHorizontalXS },
+  center: { justifyContent: "center", textAlign: "center" },
+  capitalize: { textTransform: "capitalize" },
+  drawer: { width: "min(520px, 100vw)" },
+  drawerSub: { display: "flex", alignItems: "center", gap: tokens.spacingHorizontalS },
+  drawerBody: { display: "flex", flexDirection: "column", gap: tokens.spacingVerticalL },
+  infoGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: tokens.spacingVerticalM },
+  section: { display: "flex", flexDirection: "column", gap: tokens.spacingVerticalS },
+  sectionTitle: { display: "flex", alignItems: "center", gap: tokens.spacingHorizontalS },
+  story: {
+    padding: tokens.spacingVerticalM,
+    borderRadius: tokens.borderRadiusMedium,
+    border: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
+    backgroundColor: tokens.colorNeutralBackground2,
+    color: tokens.colorNeutralForeground2,
+    lineHeight: tokens.lineHeightBase300,
+  },
+  statsBox: {
+    border: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    overflowX: "auto",
+  },
+  words: { display: "flex", flexWrap: "wrap", gap: tokens.spacingHorizontalS },
+  editSurfaceHint: { color: tokens.colorNeutralForeground3 },
+  protectedInput: { textTransform: "uppercase", fontFamily: tokens.fontFamilyMonospace },
+  wordChips: { display: "flex", flexWrap: "wrap", gap: tokens.spacingHorizontalXS, marginTop: tokens.spacingVerticalXS },
+  constraintList: { display: "flex", flexDirection: "column", gap: tokens.spacingVerticalS },
+  constraintItem: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: tokens.spacingHorizontalS,
+    padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalM}`,
+    borderRadius: tokens.borderRadiusMedium,
+    border: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
+    backgroundColor: tokens.colorNeutralBackground2,
+  },
+  constraintMain: { flexGrow: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: tokens.spacingVerticalXXS },
+  constraintMeta: { display: "flex", alignItems: "center", gap: tokens.spacingHorizontalS },
+  price: { fontFamily: tokens.fontFamilyMonospace, color: tokens.colorPaletteMarigoldForeground2 },
+  constraintActions: { display: "flex", alignItems: "center", gap: tokens.spacingHorizontalXXS, flexShrink: 0 },
+});
+
 // ─────────────────────────────────────────────────────────────
-// Detail Drawer
+// Small presentational helpers
+// ─────────────────────────────────────────────────────────────
+
+function OwnerBadge({ isBot, compact = false }: { isBot: boolean; compact?: boolean }) {
+  return isBot ? (
+    <StatusBadge tone="important" size="small" icon={<Bot16Regular />}>Bot</StatusBadge>
+  ) : (
+    <StatusBadge tone="brand" size="small" icon={<Person16Regular />}>{compact ? "" : "Humano"}</StatusBadge>
+  );
+}
+
+function ProtectedWordBadge({ word }: { word: string | null }) {
+  const common = useCommonStyles();
+  if (!word) return <Caption1 className={common.muted}>—</Caption1>;
+  return (
+    <StatusBadge tone="warning" icon={<LockClosed16Regular />}>
+      <span className={common.mono}>{word}</span>
+    </StatusBadge>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Detail drawer
 // ─────────────────────────────────────────────────────────────
 
 function FortressDrawer({
@@ -87,9 +212,11 @@ function FortressDrawer({
   fortress: Fortress;
   onClose: () => void;
 }) {
-  const [detail, setDetail]   = useState<FortressDetail | null>(null);
+  const styles = useStyles();
+  const common = useCommonStyles();
+  const [detail, setDetail] = useState<FortressDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const loadDetail = useCallback(() => {
     setLoading(true);
@@ -104,171 +231,121 @@ function FortressDrawer({
   useEffect(() => { loadDetail(); }, [loadDetail]);
 
   return (
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-
-      {/* Drawer */}
-      <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-[#27272A] bg-[#09090B] shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#27272A] px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/10">
-              <span className="material-symbols-outlined text-[18px] text-orange-400">fort</span>
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-white">{fortress.name}</h2>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                {fortress.is_bot ? (
-                  <span className="inline-flex items-center gap-0.5 rounded border border-violet-500/40 bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-violet-400">
-                    <span className="material-symbols-outlined text-[11px]">smart_toy</span>
-                    Bot
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-0.5 rounded border border-sky-500/40 bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-sky-400">
-                    <span className="material-symbols-outlined text-[11px]">person</span>
-                    Humano
-                  </span>
-                )}
-                <p className="text-xs text-[#71717A]">@{fortress.owner}</p>
-              </div>
-            </div>
-          </div>
-          <button onClick={onClose} className="text-[#71717A] hover:text-white">
-            <span className="material-symbols-outlined text-[22px]">close</span>
-          </button>
+    <OverlayDrawer
+      open
+      onOpenChange={(_, data) => {
+        if (!data.open) onClose();
+      }}
+      position="end"
+      className={styles.drawer}
+    >
+      <DrawerHeader>
+        <DrawerHeaderTitle
+          action={<Button appearance="subtle" aria-label="Cerrar" icon={<Dismiss24Regular />} onClick={onClose} />}
+        >
+          {fortress.name}
+        </DrawerHeaderTitle>
+        <div className={styles.drawerSub}>
+          <OwnerBadge isBot={fortress.is_bot} />
+          <Caption1 className={common.muted}>@{fortress.owner}</Caption1>
         </div>
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-16">
-              <span className="material-symbols-outlined animate-spin text-[28px] text-[#71717A]">progress_activity</span>
-            </div>
-          ) : error ? (
-            <p className="text-sm text-red-400">{error}</p>
-          ) : detail ? (
-            <>
-              {/* Info grid */}
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: "Protocolo",        value: detail.protocol    ?? "—" },
-                  { label: "Arquetipo",         value: detail.archetype   ?? "—" },
-                  { label: "Personalidad",      value: detail.personality ?? "—" },
-                  { label: "Creada",            value: fmt(detail.created_at) },
-                  { label: "Última reconfig.",  value: fmt(detail.last_reconfigured_at) },
-                ].map(({ label, value }) => (
-                  <div key={label}>
-                    <p className="text-xs uppercase tracking-wider text-[#71717A]">{label}</p>
-                    <p className="mt-0.5 text-sm text-white">{value}</p>
-                  </div>
-                ))}
-                {/* Protected word highlighted */}
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-[#71717A]">Palabra secreta</p>
-                  {detail.protected_word ? (
-                    <span className="mt-0.5 inline-flex items-center gap-1 rounded border border-orange-500/40 bg-orange-500/10 px-2 py-0.5 font-mono text-sm font-semibold text-orange-300">
-                      <span className="material-symbols-outlined text-[12px]">lock</span>
-                      {detail.protected_word}
-                    </span>
-                  ) : (
-                    <p className="mt-0.5 text-sm text-[#52525B]">—</p>
-                  )}
-                </div>
-              </div>
+      </DrawerHeader>
 
-              {/* Story */}
-              {detail.story && (
-                <div>
-                  <p className="mb-1 text-xs uppercase tracking-wider text-[#71717A]">Historia</p>
-                  <p className="rounded border border-[#27272A] bg-[#0D0D0F] p-3 text-sm leading-relaxed text-[#A1A1AA]">
-                    {detail.story}
-                  </p>
+      <DrawerBody>
+        {loading ? (
+          <LoadingState />
+        ) : error ? (
+          <ErrorBanner message={error} onRetry={loadDetail} />
+        ) : detail ? (
+          <div className={styles.drawerBody}>
+            <div className={styles.infoGrid}>
+              <LabeledValue label="Protocolo"><Body1>{detail.protocol ?? "—"}</Body1></LabeledValue>
+              <LabeledValue label="Arquetipo"><Body1>{detail.archetype ?? "—"}</Body1></LabeledValue>
+              <LabeledValue label="Personalidad"><Body1>{detail.personality ?? "—"}</Body1></LabeledValue>
+              <LabeledValue label="Creada"><Body1>{fmtDate(detail.created_at)}</Body1></LabeledValue>
+              <LabeledValue label="Última reconfig."><Body1>{fmtDate(detail.last_reconfigured_at)}</Body1></LabeledValue>
+              <LabeledValue label="Palabra secreta"><ProtectedWordBadge word={detail.protected_word} /></LabeledValue>
+            </div>
+
+            {detail.story && (
+              <div className={styles.section}>
+                <Caption1 className={common.muted}>Historia</Caption1>
+                <Body1 className={styles.story}>{detail.story}</Body1>
+              </div>
+            )}
+
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>
+                <Subtitle2 as="h3">Stats por temporada</Subtitle2>
+                <StatusBadge tone="neutral" appearance="outline" size="small">{String(detail.season_stats.length)}</StatusBadge>
+              </div>
+              {detail.season_stats.length === 0 ? (
+                <Body1 className={common.muted}>Sin estadísticas de temporada.</Body1>
+              ) : (
+                <div className={styles.statsBox}>
+                  <Table size="small" aria-label="Stats por temporada">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHeaderCell>Temporada</TableHeaderCell>
+                        <TableHeaderCell>Ataques</TableHeaderCell>
+                        <TableHeaderCell>Derrotas</TableHeaderCell>
+                        <TableHeaderCell>Estado</TableHeaderCell>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {detail.season_stats.map((s) => (
+                        <TableRow key={s.season_id}>
+                          <TableCell>{s.season_name}</TableCell>
+                          <TableCell><span className={mergeClasses(common.mono, common.subtle)}>{s.attack_count}</span></TableCell>
+                          <TableCell><span className={mergeClasses(common.mono, common.subtle)}>{s.defeat_count}</span></TableCell>
+                          <TableCell>
+                            <StatusBadge tone={STAT_STATUS_TONE[s.status] ?? "neutral"} size="small">
+                              <span className={styles.capitalize}>{s.status}</span>
+                            </StatusBadge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               )}
+            </div>
 
-              {/* Season stats */}
-              <div>
-                <p className="mb-2 text-xs uppercase tracking-wider text-[#71717A]">
-                  Stats por temporada
-                  <span className="ml-2 rounded bg-[#18181B] px-1.5 py-0.5 font-mono text-[10px] text-[#52525B]">
-                    {detail.season_stats.length}
-                  </span>
-                </p>
-                {detail.season_stats.length === 0 ? (
-                  <p className="text-sm text-[#52525B]">Sin estadísticas de temporada.</p>
-                ) : (
-                  <div className="overflow-hidden rounded border border-[#27272A]">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-[#27272A] bg-[#18181B]">
-                          <th className="px-3 py-2 text-left text-xs uppercase tracking-wider text-[#71717A]">Temporada</th>
-                          <th className="px-3 py-2 text-left text-xs uppercase tracking-wider text-[#71717A]">Ataques</th>
-                          <th className="px-3 py-2 text-left text-xs uppercase tracking-wider text-[#71717A]">Derrotas</th>
-                          <th className="px-3 py-2 text-left text-xs uppercase tracking-wider text-[#71717A]">Estado</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {detail.season_stats.map((s) => (
-                          <tr key={s.season_id} className="border-b border-[#27272A] bg-[#09090B] last:border-0">
-                            <td className="px-3 py-2 text-white">{s.season_name}</td>
-                            <td className="px-3 py-2 font-mono text-[#A1A1AA]">{s.attack_count}</td>
-                            <td className="px-3 py-2 font-mono text-[#A1A1AA]">{s.defeat_count}</td>
-                            <td className="px-3 py-2">
-                              <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium capitalize ${STAT_STATUS_STYLE[s.status] ?? "border-zinc-500/40 bg-zinc-500/10 text-zinc-400"}`}>
-                                {s.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>
+                <Subtitle2 as="h3">Palabras disponibles del jugador</Subtitle2>
+                <StatusBadge tone="neutral" appearance="outline" size="small">{String(detail.player_words.length)}</StatusBadge>
               </div>
-
-              {/* Player words */}
-              <div>
-                <p className="mb-2 text-xs uppercase tracking-wider text-[#71717A]">
-                  Palabras disponibles del jugador
-                  <span className="ml-2 rounded bg-[#18181B] px-1.5 py-0.5 font-mono text-[10px] text-[#52525B]">
-                    {detail.player_words.length}
-                  </span>
-                </p>
-                {detail.player_words.length === 0 ? (
-                  <p className="text-sm text-[#52525B]">Sin palabras asignadas.</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {detail.player_words.map((w) => (
-                      <span
-                        key={w.id}
-                        className={`inline-flex items-center rounded border px-2.5 py-1 font-mono text-sm ${
-                          detail.protected_word === w.word
-                            ? "border-orange-500/50 bg-orange-500/15 text-orange-300"
-                            : "border-[#27272A] bg-[#18181B] text-[#A1A1AA]"
-                        }`}
-                      >
-                        {w.word}
-                        {detail.protected_word === w.word && (
-                          <span className="material-symbols-outlined ml-1 text-[12px] text-orange-400">lock</span>
-                        )}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          ) : null}
-        </div>
-      </aside>
-
-    </>
+              {detail.player_words.length === 0 ? (
+                <Body1 className={common.muted}>Sin palabras asignadas.</Body1>
+              ) : (
+                <div className={styles.words}>
+                  {detail.player_words.map((w) =>
+                    detail.protected_word === w.word ? (
+                      <StatusBadge key={w.id} tone="warning" icon={<LockClosed16Regular />}>
+                        <span className={common.mono}>{w.word}</span>
+                      </StatusBadge>
+                    ) : (
+                      <StatusBadge key={w.id} tone="neutral" appearance="outline">
+                        <span className={common.mono}>{w.word}</span>
+                      </StatusBadge>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </DrawerBody>
+    </OverlayDrawer>
   );
 }
 
 // ───────────────────────────────────────────────────────────────
-// Edit Fortress Modal
+// Edit fortress dialog
 // ───────────────────────────────────────────────────────────────
 
-function EditFortressModal({
+function EditFortressDialog({
   detail,
   onClose,
   onSaved,
@@ -277,16 +354,19 @@ function EditFortressModal({
   onClose: () => void;
   onSaved: (updated: Partial<Fortress & FortressDetail>) => void;
 }) {
-  const [name,          setName]          = useState(detail.name);
-  const [story,         setStory]         = useState(detail.story ?? "");
+  const styles = useStyles();
+  const common = useCommonStyles();
+  const toast = useAppToast();
+  const [name, setName] = useState(detail.name);
+  const [story, setStory] = useState(detail.story ?? "");
   const [protectedWord, setProtectedWord] = useState(detail.protected_word ?? "");
-  const [protocolId,    setProtocolId]    = useState(detail.protocol_id ?? "");
-  const [archetypeId,   setArchetypeId]   = useState(detail.archetype_id ?? "");
+  const [protocolId, setProtocolId] = useState(detail.protocol_id ?? "");
+  const [archetypeId, setArchetypeId] = useState(detail.archetype_id ?? "");
   const [personalityId, setPersonalityId] = useState(detail.personality_id ?? "");
 
-  const [catalog,  setCatalog]  = useState<Catalog | null>(null);
-  const [saving,   setSaving]   = useState(false);
-  const [error,    setError]    = useState<string | null>(null);
+  const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [constraints, setConstraints] = useState<FortressConstraintItem[]>(detail.constraints ?? []);
   const [removing, setRemoving] = useState<string | null>(null);
   const [editingConstraint, setEditingConstraint] = useState<string | null>(null);
@@ -294,287 +374,289 @@ function EditFortressModal({
 
   useEffect(() => {
     fetch("/api/admin/fortresses/catalog")
-      .then(r => r.json())
-      .then(d => setCatalog(d))
+      .then((r) => r.json())
+      .then((d) => setCatalog(d))
       .catch(() => setError("No se pudo cargar el catálogo"));
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit() {
     setSaving(true);
     setError(null);
 
     const payload: Record<string, string> = {};
-    if (name          !== detail.name)           payload.name           = name.trim();
-    if (story         !== (detail.story ?? ""))  payload.story          = story.trim();
+    if (name !== detail.name) payload.name = name.trim();
+    if (story !== (detail.story ?? "")) payload.story = story.trim();
     if (protectedWord !== (detail.protected_word ?? "")) payload.protected_word = protectedWord.trim();
-    if (protocolId    !== (detail.protocol_id ?? ""))    payload.protocol_id    = protocolId;
-    if (archetypeId   !== (detail.archetype_id ?? ""))   payload.archetype_id   = archetypeId;
+    if (protocolId !== (detail.protocol_id ?? "")) payload.protocol_id = protocolId;
+    if (archetypeId !== (detail.archetype_id ?? "")) payload.archetype_id = archetypeId;
     if (personalityId !== (detail.personality_id ?? "")) payload.personality_id = personalityId;
 
-    if (Object.keys(payload).length === 0) { onClose(); return; }
+    if (Object.keys(payload).length === 0) {
+      onClose();
+      return;
+    }
 
     try {
-      const res  = await fetch(`/api/admin/fortresses/${detail.id}`, {
-        method:  "PATCH",
+      const res = await fetch(`/api/admin/fortresses/${detail.id}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(payload),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(data.error ?? `Error ${res.status}`); }
-      else {
+      if (!res.ok) {
+        setError(data.error ?? `Error ${res.status}`);
+      } else {
+        toast.success("Fortaleza actualizada");
         onSaved({
-          name:                 data.name,
-          story:                data.story,
-          protected_word:       data.protected_word,
-          protocol:             data.protocol,
-          protocol_id:          data.protocol_id,
-          archetype:            data.archetype,
-          archetype_id:         data.archetype_id,
-          personality:          data.personality,
-          personality_id:       data.personality_id,
+          name: data.name,
+          story: data.story,
+          protected_word: data.protected_word,
+          protocol: data.protocol,
+          protocol_id: data.protocol_id,
+          archetype: data.archetype,
+          archetype_id: data.archetype_id,
+          personality: data.personality,
+          personality_id: data.personality_id,
           last_reconfigured_at: data.last_reconfigured_at,
         });
       }
-    } catch { setError("Error de conexión"); }
-    finally { setSaving(false); }
+    } catch {
+      setError("Error de conexión");
+    } finally {
+      setSaving(false);
+    }
   }
 
+  async function saveConstraintText(c: FortressConstraintItem) {
+    const trimmed = editText.trim();
+    if (!trimmed) return;
+    try {
+      const res = await fetch(`/api/admin/constraints/${c.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type_id: undefined, text: trimmed, price: c.price }),
+      });
+      if (res.ok) {
+        setConstraints((cs) => cs.map((x) => (x.id === c.id ? { ...x, text: trimmed } : x)));
+        setEditingConstraint(null);
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function removeConstraint(c: FortressConstraintItem) {
+    setRemoving(c.id);
+    try {
+      const res = await fetch(`/api/admin/fortresses/${detail.id}/constraints/${c.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setConstraints((cs) => cs.filter((x) => x.id !== c.id));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Error al eliminar restricción");
+      }
+    } catch {
+      setError("Error de conexión");
+    } finally {
+      setRemoving(null);
+    }
+  }
+
+  const selects: { label: string; value: string; set: (v: string) => void; items: CatalogItem[] }[] = [
+    { label: "Protocolo", value: protocolId, set: setProtocolId, items: catalog?.protocols ?? [] },
+    { label: "Arquetipo", value: archetypeId, set: setArchetypeId, items: catalog?.archetypes ?? [] },
+    { label: "Personalidad", value: personalityId, set: setPersonalityId, items: catalog?.personalities ?? [] },
+  ];
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-lg border border-[#27272A] bg-[#09090B] shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#27272A] px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/10">
-              <span className="material-symbols-outlined text-[18px] text-orange-400">edit</span>
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-white">Editar fortaleza</h2>
-              <p className="font-mono text-[10px] text-[#52525B]">{detail.id.slice(0, 16)}</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="text-[#71717A] hover:text-white">
-            <span className="material-symbols-outlined text-[22px]">close</span>
-          </button>
+    <EntityFormDialog
+      title="Editar fortaleza"
+      submitLabel="Guardar cambios"
+      saving={saving}
+      submitDisabled={!catalog}
+      error={error}
+      onSubmit={handleSubmit}
+      onClose={onClose}
+    >
+      <Caption1 className={mergeClasses(common.mono, styles.editSurfaceHint)}>{detail.id.slice(0, 16)}</Caption1>
+
+      <Field label="Nombre" required>
+        <Input required value={name} onChange={(_, d) => setName(d.value)} maxLength={100} />
+      </Field>
+
+      <Field label="Historia">
+        <Textarea value={story} onChange={(_, d) => setStory(d.value)} rows={4} resize="vertical" />
+      </Field>
+
+      <Field label="Palabra secreta" required>
+        <Input
+          required
+          value={protectedWord}
+          onChange={(_, d) => setProtectedWord(d.value.toUpperCase())}
+          maxLength={64}
+          input={{ className: styles.protectedInput }}
+        />
+      </Field>
+      {detail.player_words.length > 0 && (
+        <div className={styles.wordChips} role="group" aria-label="Palabras disponibles del jugador">
+          {detail.player_words.map((w) => (
+            <Button
+              key={w.id}
+              type="button"
+              size="small"
+              appearance={protectedWord.toUpperCase() === w.word.toUpperCase() ? "primary" : "outline"}
+              className={common.mono}
+              onClick={() => setProtectedWord(w.word.toUpperCase())}
+            >
+              {w.word}
+            </Button>
+          ))}
         </div>
+      )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto max-h-[70vh]">
-          {error && (
-            <div className="rounded border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">{error}</div>
-          )}
+      {selects.map(({ label, value, set, items }) => (
+        <Field key={label} label={label}>
+          <Select value={value} onChange={(_, d) => set(d.value)}>
+            {items.length === 0 && <option value="">Cargando...</option>}
+            {items.map((i) => (
+              <option key={i.id} value={i.id}>{i.name}</option>
+            ))}
+          </Select>
+        </Field>
+      ))}
 
-          {/* Name */}
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Nombre</label>
-            <input
-              required value={name} onChange={e => setName(e.target.value)}
-              maxLength={100}
-              className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white font-mono placeholder-[#71717A] focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all"
-            />
-          </div>
-
-          {/* Story */}
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Historia</label>
-            <textarea
-              value={story} onChange={e => setStory(e.target.value)}
-              rows={4}
-              className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white font-mono placeholder-[#71717A] focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all resize-none"
-            />
-          </div>
-
-          {/* Protected word */}
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">Palabra secreta</label>
-            <input
-              required value={protectedWord} onChange={e => setProtectedWord(e.target.value.toUpperCase())}
-              maxLength={64}
-              className="w-full rounded border border-orange-500/30 bg-[#18181B] px-3 py-2 text-sm font-mono uppercase text-orange-300 placeholder-[#71717A] focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all"
-            />
-            {detail.player_words.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {detail.player_words.map(w => (
-                  <button
-                    key={w.id}
-                    type="button"
-                    onClick={() => setProtectedWord(w.word.toUpperCase())}
-                    className={`rounded border px-2 py-0.5 font-mono text-xs transition-colors ${
-                      protectedWord.toUpperCase() === w.word.toUpperCase()
-                        ? "border-orange-500/50 bg-orange-500/20 text-orange-300"
-                        : "border-[#27272A] bg-[#18181B] text-[#71717A] hover:border-[#3F3F46] hover:text-white"
-                    }`}
-                  >
-                    {w.word}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Protocol / Archetype / Personality */}
-          <div className="grid grid-cols-1 gap-4">
-            {([
-              { label: "Protocolo",   value: protocolId,    set: setProtocolId,    items: catalog?.protocols    ?? [] },
-              { label: "Arquetipo",   value: archetypeId,   set: setArchetypeId,   items: catalog?.archetypes   ?? [] },
-              { label: "Personalidad",value: personalityId, set: setPersonalityId, items: catalog?.personalities ?? [] },
-            ] as { label: string; value: string; set: (v: string) => void; items: CatalogItem[] }[]).map(({ label, value, set, items }) => (
-              <div key={label}>
-                <label className="mb-1 block text-xs uppercase tracking-wider text-[#71717A]">{label}</label>
-                <select
-                  value={value}
-                  onChange={e => set(e.target.value)}
-                  className="w-full rounded border border-[#27272A] bg-[#18181B] px-3 py-2 text-sm text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all"
-                >
-                  {items.length === 0 && <option value="">Cargando...</option>}
-                  {items.map(i => (
-                    <option key={i.id} value={i.id}>{i.name}</option>
-                  ))}
-                </select>
+      <Field label={`Restricciones (${constraints.length})`}>
+        {constraints.length === 0 ? (
+          <Body1 className={common.muted}>Sin restricciones asignadas.</Body1>
+        ) : (
+          <div className={styles.constraintList}>
+            {constraints.map((c) => (
+              <div key={c.id} className={styles.constraintItem}>
+                <div className={styles.constraintMain}>
+                  {editingConstraint === c.id ? (
+                    <Input
+                      size="small"
+                      value={editText}
+                      onChange={(_, d) => setEditText(d.value)}
+                      onKeyDown={(e: KeyboardEvent) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          saveConstraintText(c);
+                        } else if (e.key === "Escape") {
+                          e.stopPropagation();
+                          setEditingConstraint(null);
+                        }
+                      }}
+                      autoFocus
+                      aria-label="Texto de la restricción"
+                      input={{ className: common.mono }}
+                    />
+                  ) : (
+                    <Caption1 className={mergeClasses(common.mono, common.subtle)}>{c.text}</Caption1>
+                  )}
+                  <div className={styles.constraintMeta}>
+                    {c.type && <StatusBadge tone="neutral" appearance="outline" size="small">{c.type}</StatusBadge>}
+                    <Caption1 className={styles.price}>{c.price} cr</Caption1>
+                  </div>
+                </div>
+                <div className={styles.constraintActions}>
+                  {editingConstraint === c.id ? (
+                    <>
+                      <Tooltip content="Guardar texto" relationship="label">
+                        <Button
+                          type="button"
+                          appearance="subtle"
+                          size="small"
+                          icon={<Checkmark20Regular />}
+                          onClick={() => saveConstraintText(c)}
+                        />
+                      </Tooltip>
+                      <Tooltip content="Cancelar edición" relationship="label">
+                        <Button
+                          type="button"
+                          appearance="subtle"
+                          size="small"
+                          icon={<Dismiss20Regular />}
+                          onClick={() => setEditingConstraint(null)}
+                        />
+                      </Tooltip>
+                    </>
+                  ) : (
+                    <Tooltip content="Editar texto" relationship="label">
+                      <Button
+                        type="button"
+                        appearance="subtle"
+                        size="small"
+                        icon={<Edit20Regular />}
+                        onClick={() => {
+                          setEditingConstraint(c.id);
+                          setEditText(c.text);
+                        }}
+                      />
+                    </Tooltip>
+                  )}
+                  <Tooltip content="Quitar de la fortaleza" relationship="label">
+                    <Button
+                      type="button"
+                      appearance="subtle"
+                      size="small"
+                      disabled={removing === c.id}
+                      icon={removing === c.id ? <Spinner size="tiny" /> : <Delete20Regular />}
+                      onClick={() => removeConstraint(c)}
+                    />
+                  </Tooltip>
+                </div>
               </div>
             ))}
           </div>
-
-          {/* Constraints */}
-          <div>
-            <label className="mb-2 block text-xs uppercase tracking-wider text-[#71717A]">
-              Restricciones
-              <span className="ml-2 rounded bg-[#18181B] px-1.5 py-0.5 font-mono text-[10px] text-[#52525B]">
-                {constraints.length}
-              </span>
-            </label>
-            {constraints.length === 0 ? (
-              <p className="text-sm text-[#52525B]">Sin restricciones asignadas.</p>
-            ) : (
-              <div className="space-y-2">
-                {constraints.map(c => (
-                  <div key={c.id} className="flex items-start gap-2 rounded border border-[#27272A] bg-[#18181B] px-3 py-2">
-                    <div className="flex-1 min-w-0">
-                      {editingConstraint === c.id ? (
-                        <input
-                          value={editText}
-                          onChange={e => setEditText(e.target.value)}
-                          onKeyDown={async (e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              const trimmed = editText.trim();
-                              if (!trimmed) return;
-                              try {
-                                const res = await fetch(`/api/admin/constraints/${c.id}`, {
-                                  method: "PUT",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ type_id: undefined, text: trimmed, price: c.price }),
-                                });
-                                if (res.ok) {
-                                  setConstraints(cs => cs.map(x => x.id === c.id ? { ...x, text: trimmed } : x));
-                                  setEditingConstraint(null);
-                                }
-                              } catch { /* ignore */ }
-                            } else if (e.key === "Escape") {
-                              setEditingConstraint(null);
-                            }
-                          }}
-                          autoFocus
-                          className="w-full rounded border border-orange-500/30 bg-[#09090B] px-2 py-1 text-xs text-white font-mono focus:border-orange-500 focus:outline-none"
-                        />
-                      ) : (
-                        <p className="text-xs text-[#A1A1AA] font-mono leading-relaxed">{c.text}</p>
-                      )}
-                      <div className="mt-1 flex items-center gap-2">
-                        {c.type && (
-                          <span className="rounded border border-[#27272A] bg-[#09090B] px-1.5 py-0.5 font-mono text-[10px] text-[#52525B]">
-                            {c.type}
-                          </span>
-                        )}
-                        <span className="font-mono text-[10px] text-amber-400/60">{c.price} cr</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {editingConstraint !== c.id && (
-                        <button
-                          type="button"
-                          onClick={() => { setEditingConstraint(c.id); setEditText(c.text); }}
-                          title="Editar texto"
-                          className="flex h-6 w-6 items-center justify-center rounded border border-[#27272A] text-[#71717A] hover:border-orange-500/50 hover:text-orange-400 transition-colors"
-                        >
-                          <span className="material-symbols-outlined text-[13px]">edit</span>
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        disabled={removing === c.id}
-                        onClick={async () => {
-                          setRemoving(c.id);
-                          try {
-                            const res = await fetch(`/api/admin/fortresses/${detail.id}/constraints/${c.id}`, { method: "DELETE" });
-                            if (res.ok) {
-                              setConstraints(cs => cs.filter(x => x.id !== c.id));
-                            } else {
-                              const data = await res.json().catch(() => ({}));
-                              setError(data.error ?? "Error al eliminar restricción");
-                            }
-                          } catch { setError("Error de conexión"); }
-                          finally { setRemoving(null); }
-                        }}
-                        title="Quitar de la fortaleza"
-                        className="flex h-6 w-6 items-center justify-center rounded border border-[#27272A] text-[#71717A] hover:border-red-500/50 hover:text-red-400 disabled:opacity-50 transition-colors"
-                      >
-                        <span className={`material-symbols-outlined text-[13px] ${removing === c.id ? "animate-spin" : ""}`}>
-                          {removing === c.id ? "progress_activity" : "delete"}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose}
-              className="rounded border border-[#27272A] bg-[#18181B] px-4 py-2 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors">
-              Cancelar
-            </button>
-            <button type="submit" disabled={saving || !catalog}
-              className="flex items-center gap-2 rounded border border-orange-500/50 bg-orange-500/10 px-4 py-2 text-sm font-semibold text-orange-300 hover:bg-orange-500/20 disabled:opacity-50 transition-colors">
-              {saving && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
-              Guardar cambios
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        )}
+      </Field>
+    </EntityFormDialog>
   );
 }
 
+// ─────────────────────────────────────────────────────────────
+// Main page
+// ─────────────────────────────────────────────────────────────
+
 export default function FortressesPage() {
+  const styles = useStyles();
+  const common = useCommonStyles();
+  const toast = useAppToast();
   const [fortresses, setFortresses] = useState<Fortress[]>([]);
-  const [search, setSearch]         = useState("");
+  const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<FortressFilter>("all");
-  const [page, setPage]             = useState(1);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState<string | null>(null);
-  const [selected,    setSelected]    = useState<Fortress | null>(null);
-  const [editTarget,  setEditTarget]  = useState<FortressDetail | null>(null);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Fortress | null>(null);
+  const [editTarget, setEditTarget] = useState<FortressDetail | null>(null);
   const [editLoading, setEditLoading] = useState<string | null>(null);
 
-  async function openEdit(e: React.MouseEvent, f: Fortress) {
+  async function openEdit(e: MouseEvent, f: Fortress) {
     e.stopPropagation();
     setEditLoading(f.id);
     try {
-      const res  = await fetch(`/api/admin/fortresses/${f.id}`);
+      const res = await fetch(`/api/admin/fortresses/${f.id}`);
       const data: FortressDetail = await res.json();
       setEditTarget(data);
+    } catch {
+      toast.error("No se pudo cargar la fortaleza");
     } finally {
       setEditLoading(null);
     }
   }
 
+  function copyId(e: MouseEvent, id: string) {
+    e.stopPropagation();
+    navigator.clipboard
+      .writeText(id)
+      .then(() => toast.info("ID copiado al portapapeles"))
+      .catch(() => {});
+  }
+
   const patchFortress = useCallback((id: string, patch: Partial<Fortress>) => {
-    setFortresses(fs => fs.map(f => f.id === id ? { ...f, ...patch } : f));
+    setFortresses((fs) => fs.map((f) => (f.id === id ? { ...f, ...patch } : f)));
   }, []);
 
   const fetchFortresses = useCallback(async () => {
@@ -601,10 +683,10 @@ export default function FortressesPage() {
       (f) =>
         (typeFilter === "all" || (typeFilter === "bot" ? f.is_bot : !f.is_bot)) &&
         (f.name.toLowerCase().includes(q) ||
-        f.owner.toLowerCase().includes(q) ||
-        f.protocol?.toLowerCase().includes(q) ||
-        f.archetype?.toLowerCase().includes(q) ||
-        f.protected_word?.toLowerCase().includes(q))
+          f.owner.toLowerCase().includes(q) ||
+          f.protocol?.toLowerCase().includes(q) ||
+          f.archetype?.toLowerCase().includes(q) ||
+          f.protected_word?.toLowerCase().includes(q))
     );
   }, [search, typeFilter, fortresses]);
 
@@ -619,232 +701,161 @@ export default function FortressesPage() {
     setPage(1);
   }
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const humanCount = fortresses.filter((f) => !f.is_bot).length;
+  const botCount = fortresses.filter((f) => f.is_bot).length;
 
   return (
     <AdminLayout title="FORTALEZAS">
-      <main className="flex-1 overflow-y-auto p-8">
-        <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
+      <div className={common.page}>
+        <div className={common.pageInner}>
+          <PageHeader
+            title="Fortalezas"
+            description="Fortalezas de jugadores y bots, su configuración y estadísticas"
+            actions={
+              <>
+                {!loading && (
+                  <>
+                    <StatusBadge tone="neutral" appearance="outline">{`${filtered.length} total`}</StatusBadge>
+                    <StatusBadge tone="brand" appearance="outline" icon={<Person16Regular />}>{`${humanCount} humanos`}</StatusBadge>
+                    <StatusBadge tone="important" appearance="outline" icon={<Bot16Regular />}>{`${botCount} bots`}</StatusBadge>
+                  </>
+                )}
+                <Button icon={loading ? <Spinner size="tiny" /> : <ArrowClockwise20Regular />} onClick={fetchFortresses}>
+                  Actualizar
+                </Button>
+              </>
+            }
+          />
 
-          {/* Toolbar */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px] text-orange-400">fort</span>
-              <h2 className="font-[var(--font-display)] text-xl font-semibold text-white">Fortalezas</h2>
-              <span className="ml-2 rounded border border-[#27272A] bg-[#18181B] px-2 py-0.5 font-mono text-xs text-[#71717A]">
-                {filtered.length} total &nbsp;·&nbsp;
-                <span className="text-sky-400">{fortresses.filter(f => !f.is_bot).length} humanos</span>
-                &nbsp;·&nbsp;
-                <span className="text-violet-400">{fortresses.filter(f => f.is_bot).length} bots</span>
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Type filter tabs */}
-              <div className="flex rounded border border-[#27272A] overflow-hidden text-xs">
-                {(["all", "human", "bot"] as FortressFilter[]).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setTypeFilter(t)}
-                    className={`flex items-center gap-1 px-3 py-1.5 transition-colors ${
-                      typeFilter === t
-                        ? t === "bot"
-                          ? "bg-violet-500/20 text-violet-300 border-r border-[#27272A]"
-                          : t === "human"
-                          ? "bg-sky-500/20 text-sky-300 border-r border-[#27272A]"
-                          : "bg-[#27272A] text-white border-r border-[#27272A]"
-                        : "bg-[#18181B] text-[#71717A] hover:text-white border-r border-[#27272A] last:border-r-0"
-                    }`}
-                  >
-                    {t === "bot" && <span className="material-symbols-outlined text-[13px]">smart_toy</span>}
-                    {t === "human" && <span className="material-symbols-outlined text-[13px]">person</span>}
-                    {t === "all" ? "Todas" : t === "human" ? "Humanos" : "Bots"}
-                  </button>
-                ))}
-              </div>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <span className="material-symbols-outlined text-[#71717A] text-[18px]">search</span>
-                </div>
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Nombre, dueño, protocolo, palabra…"
-                  className="block w-72 rounded border border-[#27272A] bg-[#18181B] py-1.5 pl-9 pr-3 text-sm text-white placeholder-[#71717A] focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-all"
-                  suppressHydrationWarning
-                />
-              </div>
-              <button
-                onClick={fetchFortresses}
-                className="flex items-center gap-2 rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors"
-              >
-                <span className="material-symbols-outlined text-[18px]">refresh</span>
-                Actualizar
-              </button>
-            </div>
+          <div className={common.filters}>
+            <TabList
+              selectedValue={typeFilter}
+              onTabSelect={(_, d) => setTypeFilter(d.value as FortressFilter)}
+              size="small"
+              aria-label="Filtrar por tipo de dueño"
+            >
+              <Tab value="all">Todas</Tab>
+              <Tab value="human" icon={<Person16Regular />}>Humanos</Tab>
+              <Tab value="bot" icon={<Bot16Regular />}>Bots</Tab>
+            </TabList>
+            <Input
+              className={styles.searchInput}
+              type="text"
+              value={search}
+              onChange={(_, d) => setSearch(d.value)}
+              placeholder="Nombre, dueño, protocolo, palabra…"
+              aria-label="Buscar fortalezas"
+              contentBefore={<Search20Regular />}
+              suppressHydrationWarning
+            />
           </div>
 
-          {/* Table */}
-          <div className="overflow-hidden rounded-lg border border-[#27272A] bg-[#09090B]">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1000px]">
-                <thead>
-                  <tr className="border-b border-[#27272A] bg-[#18181B]">
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Nombre</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">ID</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Dueño</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Protocolo</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Arquetipo</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Personalidad</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Palabra secreta</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Creada</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#71717A]">Últ. reconfig.</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-[#71717A]">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
+          {error ? (
+            <ErrorBanner message={error} onRetry={fetchFortresses} />
+          ) : (
+            <SectionCard
+              footer={
+                filtered.length > 0 ? (
+                  <Pagination
+                    page={page}
+                    perPage={PAGE_SIZE}
+                    total={filtered.length}
+                    loading={loading}
+                    onPageChange={setPage}
+                    label="Paginación de fortalezas"
+                  />
+                ) : undefined
+              }
+            >
+              <div className={common.tableScroll}>
+                <Table className={styles.table} aria-label="Fortalezas">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHeaderCell>Nombre</TableHeaderCell>
+                      <TableHeaderCell>ID</TableHeaderCell>
+                      <TableHeaderCell>Dueño</TableHeaderCell>
+                      <TableHeaderCell>Protocolo</TableHeaderCell>
+                      <TableHeaderCell>Arquetipo</TableHeaderCell>
+                      <TableHeaderCell>Personalidad</TableHeaderCell>
+                      <TableHeaderCell>Palabra secreta</TableHeaderCell>
+                      <TableHeaderCell>Creada</TableHeaderCell>
+                      <TableHeaderCell>Últ. reconfig.</TableHeaderCell>
+                      <TableHeaderCell className={styles.center}>Acciones</TableHeaderCell>
+                    </TableRow>
+                  </TableHeader>
                   {loading ? (
-                    <tr>
-                          <td colSpan={10} className="px-4 py-12 text-center text-sm text-[#71717A]">
-                        <span className="material-symbols-outlined animate-spin text-[24px]">progress_activity</span>
-                      </td>
-                    </tr>
-                  ) : error ? (
-                    <tr>
-                      <td colSpan={10} className="px-4 py-12 text-center text-sm text-red-400">{error}</td>
-                    </tr>
-                  ) : paginated.length === 0 ? (
-                    <tr>
-                      <td colSpan={10} className="px-4 py-12 text-center text-sm text-[#71717A]">
-                        No se encontraron fortalezas
-                      </td>
-                    </tr>
+                    <TableSkeleton rows={PAGE_SIZE} columns={COLUMN_COUNT} />
                   ) : (
-                    paginated.map((f, i) => (
-                      <tr
-                        key={f.id}
-                        onClick={() => setSelected(f)}
-                        className={`cursor-pointer border-b border-[#27272A] transition-colors hover:bg-[#18181B] ${
-                          i % 2 === 0 ? "bg-[#09090B]" : "bg-[#0D0D0F]"
-                        }`}
-                      >
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/10">
-                              <span className="material-symbols-outlined text-[15px] text-orange-400">fort</span>
+                    <TableBody>
+                      {paginated.map((f) => (
+                        <TableRow
+                          key={f.id}
+                          className={styles.clickableRow}
+                          tabIndex={0}
+                          aria-label={`Ver detalle de ${f.name}`}
+                          onClick={() => setSelected(f)}
+                          onKeyDown={(e: KeyboardEvent) => {
+                            if (e.key === "Enter" && e.target === e.currentTarget) setSelected(f);
+                          }}
+                        >
+                          <TableCell>
+                            <div className={styles.nameCell}>
+                              <span className={styles.nameIcon} aria-hidden="true"><Shield20Regular /></span>
+                              <Body1>{f.name}</Body1>
                             </div>
-                            <span className="text-sm font-medium text-white">{f.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className="cursor-pointer font-mono text-xs text-[#52525B] hover:text-[#A1A1AA] transition-colors"
-                            title={f.id}
-                            onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(f.id); }}
-                          >
-                            {f.id.slice(0, 8)}…
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-1.5">
-                            {f.is_bot ? (
-                              <span className="inline-flex items-center gap-0.5 rounded border border-violet-500/40 bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-violet-400">
-                                <span className="material-symbols-outlined text-[11px]">smart_toy</span>
-                                Bot
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-0.5 rounded border border-sky-500/40 bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-sky-400">
-                                <span className="material-symbols-outlined text-[11px]">person</span>
-                              </span>
-                            )}
-                            <span className="text-sm text-[#A1A1AA]">{f.owner}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.protocol ?? "—"}</td>
-                        <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.archetype ?? "—"}</td>
-                        <td className="px-4 py-3 text-sm text-[#A1A1AA]">{f.personality ?? "—"}</td>
-                        <td className="px-4 py-3">
-                          {f.protected_word ? (
-                            <span className="inline-flex items-center gap-1 rounded border border-orange-500/40 bg-orange-500/10 px-2 py-0.5 font-mono text-xs font-medium text-orange-300">
-                              <span className="material-symbols-outlined text-[11px]">lock</span>
-                              {f.protected_word}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-[#52525B]">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 font-mono text-sm text-[#71717A]">{fmt(f.created_at)}</td>
-                        <td className="px-4 py-3 font-mono text-sm text-[#71717A]">{fmt(f.last_reconfigured_at)}</td>
-                        <td className="px-4 py-3 text-center">
-                          <button
-                            onClick={(e) => openEdit(e, f)}
-                            title="Editar fortaleza"
-                            disabled={editLoading === f.id}
-                            className="flex h-7 w-7 items-center justify-center rounded border border-[#27272A] bg-[#18181B] text-[#71717A] hover:border-orange-500/50 hover:bg-orange-500/10 hover:text-orange-400 disabled:opacity-40 transition-colors mx-auto"
-                          >
-                            {editLoading === f.id
-                              ? <span className="material-symbols-outlined animate-spin text-[15px]">progress_activity</span>
-                              : <span className="material-symbols-outlined text-[15px]">edit</span>
-                            }
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                          </TableCell>
+                          <TableCell>
+                            <Tooltip content="Copiar ID" relationship="label">
+                              <button type="button" className={styles.idCopy} onClick={(e) => copyId(e, f.id)}>
+                                <Caption1 className={common.mono} title={f.id}>{f.id.slice(0, 8)}…</Caption1>
+                              </button>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell>
+                            <div className={styles.ownerCell}>
+                              <OwnerBadge isBot={f.is_bot} compact />
+                              <Body1 className={common.subtle}>{f.owner}</Body1>
+                            </div>
+                          </TableCell>
+                          <TableCell><Body1 className={common.subtle}>{f.protocol ?? "—"}</Body1></TableCell>
+                          <TableCell><Body1 className={common.subtle}>{f.archetype ?? "—"}</Body1></TableCell>
+                          <TableCell><Body1 className={common.subtle}>{f.personality ?? "—"}</Body1></TableCell>
+                          <TableCell><ProtectedWordBadge word={f.protected_word} /></TableCell>
+                          <TableCell>
+                            <Caption1 className={mergeClasses(common.mono, common.muted)}>{fmtDate(f.created_at)}</Caption1>
+                          </TableCell>
+                          <TableCell>
+                            <Caption1 className={mergeClasses(common.mono, common.muted)}>{fmtDate(f.last_reconfigured_at)}</Caption1>
+                          </TableCell>
+                          <TableCell className={styles.center}>
+                            <Tooltip content="Editar fortaleza" relationship="label">
+                              <Button
+                                appearance="subtle"
+                                size="small"
+                                icon={editLoading === f.id ? <Spinner size="tiny" /> : <Edit20Regular />}
+                                disabled={editLoading === f.id}
+                                onClick={(e) => openEdit(e, f)}
+                              />
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
                   )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-[#71717A]">Página {page} de {totalPages}</p>
-              <div className="flex gap-1">
-                <button onClick={() => setPage(1)} disabled={page === 1}
-                  className="rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:bg-[#27272A] disabled:opacity-30">
-                  <span className="material-symbols-outlined text-[16px]">first_page</span>
-                </button>
-                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-                  className="rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:bg-[#27272A] disabled:opacity-30">
-                  <span className="material-symbols-outlined text-[16px]">chevron_left</span>
-                </button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const n = Math.max(1, Math.min(page - 2, totalPages - 4)) + i;
-                  return (
-                    <button key={n} onClick={() => setPage(n)}
-                      className={`rounded border px-3 py-1 text-xs transition-colors ${
-                        n === page
-                          ? "border-orange-500/50 bg-orange-500/20 text-orange-400"
-                          : "border-[#27272A] bg-[#18181B] text-[#71717A] hover:bg-[#27272A]"
-                      }`}>
-                      {n}
-                    </button>
-                  );
-                })}
-                <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:bg-[#27272A] disabled:opacity-30">
-                  <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                </button>
-                <button onClick={() => setPage(totalPages)} disabled={page === totalPages}
-                  className="rounded border border-[#27272A] bg-[#18181B] px-2 py-1 text-xs text-[#71717A] hover:bg-[#27272A] disabled:opacity-30">
-                  <span className="material-symbols-outlined text-[16px]">last_page</span>
-                </button>
+                </Table>
               </div>
-            </div>
+              {!loading && paginated.length === 0 && (
+                <EmptyState icon={<Shield20Regular />} title="No se encontraron fortalezas" />
+              )}
+            </SectionCard>
           )}
         </div>
-      </main>
+      </div>
 
-      {selected && (
-        <FortressDrawer
-          fortress={selected}
-          onClose={() => setSelected(null)}
-        />
-      )}
+      {selected && <FortressDrawer fortress={selected} onClose={() => setSelected(null)} />}
       {editTarget && (
-        <EditFortressModal
+        <EditFortressDialog
           detail={editTarget}
           onClose={() => setEditTarget(null)}
           onSaved={(updated) => {
