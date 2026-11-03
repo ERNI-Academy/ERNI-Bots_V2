@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ERNI-Bots V2 local development orchestrator (Windows Git Bash, macOS, Linux; bash 3.2+).
 #
-#   ./scripts/dev.sh                Start GameBackEnd (flask --debug) + web (next dev) + AdminPanelWeb (next dev)
+#   ./scripts/dev.sh                Start GameBackEnd + AdminPanel (flask --debug, same DB) + web + AdminPanelWeb (next dev)
 #   ./scripts/dev.sh --agent=local  Also start Redis (Docker) + AgenticService (uvicorn --reload) and use it as guardian
 #   ./scripts/dev.sh --agent=env    Use the agent configured in GameBackEnd/.env instead of the built-in mock
 #   ./scripts/dev.sh db             Only prepare .venv, Python dependencies and the database (schema, migrations, seed)
@@ -11,7 +11,7 @@
 #   ./scripts/dev.sh stop           Stop leftover dev servers on the dev ports and the Redis container
 #
 # Idempotent: reuses .venv, node_modules and the database, and only installs or creates what is missing.
-# Ports: DEV_API_PORT (5000), DEV_WEB_PORT (3000), DEV_ADMIN_PORT (3001), DEV_AGENT_PORT (8000). Venv: DEV_VENV (.venv).
+# Ports: DEV_API_PORT (5000), DEV_ADMIN_API_PORT (5001), DEV_WEB_PORT (3000), DEV_ADMIN_PORT (3001), DEV_AGENT_PORT (8000). Venv: DEV_VENV (.venv).
 # The agent defaults to the mock even if GameBackEnd/.env sets AGENT_MODE=http, so dev never talks to a deployed agent.
 
 set -euo pipefail
@@ -21,12 +21,14 @@ BACKEND_DIR="$ROOT/GameBackEnd"
 AGENT_DIR="$ROOT/AgenticService"
 WEB_DIR="$ROOT/web"
 ADMIN_DIR="$ROOT/AdminPanelWeb"
+ADMIN_API_DIR="$ROOT/AdminPanel"
 DEV_STATE_DIR="$ROOT/.dev"
 VENV_DIR="${DEV_VENV:-$ROOT/.venv}"
 
 API_PORT="${DEV_API_PORT:-5000}"
 WEB_PORT="${DEV_WEB_PORT:-3000}"
 ADMIN_PORT="${DEV_ADMIN_PORT:-3001}"
+ADMIN_API_PORT="${DEV_ADMIN_API_PORT:-5001}"
 AGENT_PORT="${DEV_AGENT_PORT:-8000}"
 REDIS_PORT=6379
 REDIS_CONTAINER="${DEV_REDIS_CONTAINER:-erni-bots-redis}"
@@ -35,6 +37,10 @@ REDIS_IMAGE="redis:7-alpine"
 # Flask and uvicorn listen on 127.0.0.1 only; Node may resolve "localhost" to ::1, so the backends are addressed by IP.
 API_URL="http://127.0.0.1:$API_PORT"
 API_HEALTH_URL="$API_URL/api/v1/config/"
+# AdminPanelWeb talks to the AdminPanel backend: only it exposes the admin catalog routes (protocols, archetypes,
+# personalities, constraints, words, config, seasons, prizes). GameBackEnd answers those with 404/405.
+ADMIN_API_URL="http://127.0.0.1:$ADMIN_API_PORT"
+ADMIN_API_HEALTH_URL="$ADMIN_API_URL/api/v1/archetypes"
 AGENT_URL="http://127.0.0.1:$AGENT_PORT"
 WEB_URL="http://localhost:$WEB_PORT"
 ADMIN_URL="http://localhost:$ADMIN_PORT"
@@ -470,10 +476,52 @@ ensure_node_app() {
 # The shell environment wins over .env.local in Next.js, so the frontends always reach the local backend.
 web_env() { export API_URL NEXT_TELEMETRY_DISABLED=1; }
 
+# Secret AdminPanelWeb sends as X-Admin-Secret: shell, then AdminPanelWeb/.env.local, then the GameBackEnd one.
+admin_secret() {
+  local value
+  if printenv ADMIN_SECRET >/dev/null 2>&1; then
+    printenv ADMIN_SECRET
+    return
+  fi
+  if [ -f "$ADMIN_DIR/.env.local" ]; then
+    value="$(sed -n 's/^[[:space:]]*\(export[[:space:]]\{1,\}\)\{0,1\}ADMIN_SECRET=//p' "$ADMIN_DIR/.env.local" |
+      tail -n 1 | tr -d '\r' | sed 's/^["'\'']\(.*\)["'\'']$/\1/')"
+    if [ -n "$value" ]; then
+      printf '%s' "$value"
+      return
+    fi
+  fi
+  printf '%s' "$GAME_ADMIN_SECRET"
+}
+
 admin_env() {
-  export API_URL NEXT_TELEMETRY_DISABLED=1
+  export API_URL="$ADMIN_API_URL" NEXT_TELEMETRY_DISABLED=1
   if ! configured_in "$ADMIN_DIR/.env.local" ADMIN_SECRET; then
     export ADMIN_SECRET="$GAME_ADMIN_SECRET"
+  fi
+}
+
+# GameBackEnd's DATABASE_URL (from GameBackEnd/.env or its sqlite default), with relative SQLite paths made absolute
+# so AdminPanel, running from its own directory, opens the very same database instead of AdminPanel/dev.db.
+shared_database_url() {
+  backend_eval 'import os
+from config import Config
+url = Config.DATABASE_URL
+prefix = "sqlite:///"
+path = url[len(prefix):] if url.startswith(prefix) else ""
+if path and not os.path.isabs(path):
+    url = prefix + os.path.abspath(path).replace(os.sep, "/")
+print(url)' 2>/dev/null | tail -n 1 | tr -d '\r'
+}
+
+# Environment of the AdminPanel backend. The shell wins over AdminPanel/.env (load_dotenv does not override).
+admin_api_env() {
+  export PYTHONUNBUFFERED=1 PYTHONUTF8=1
+  export DATABASE_URL="$SHARED_DATABASE_URL" PASSWORD_DB=""
+  ADMIN_SECRET="$(admin_secret)"
+  export ADMIN_SECRET
+  if ! configured_in "$ADMIN_API_DIR/.env" CORS_ORIGINS; then
+    export CORS_ORIGINS="$ADMIN_URL"
   fi
 }
 
@@ -515,7 +563,7 @@ any_service_alive() {
 }
 
 service_ports() {
-  echo "$API_PORT $WEB_PORT $ADMIN_PORT"
+  echo "$API_PORT $ADMIN_API_PORT $WEB_PORT $ADMIN_PORT"
   [ "$AGENT_CHOICE" != local ] || echo "$AGENT_PORT"
 }
 
@@ -586,7 +634,8 @@ wait_for_url() {
 }
 
 run_services() {
-  ensure_port_free "$API_PORT" "is GameBackEnd (or AdminPanel) already running?"
+  ensure_port_free "$API_PORT" "is GameBackEnd already running?"
+  ensure_port_free "$ADMIN_API_PORT" "is AdminPanel already running?"
   ensure_port_free "$WEB_PORT" "is web already running?"
   ensure_port_free "$ADMIN_PORT" "is AdminPanelWeb already running?"
   [ "$AGENT_CHOICE" != local ] || ensure_port_free "$AGENT_PORT" "is AgenticService already running?"
@@ -602,6 +651,10 @@ run_services() {
   fi
   start_service api "$C_BLUE" "$BACKEND_DIR" backend_env \
     "$PY" -m flask --app app run --debug --port "$API_PORT"
+  SHARED_DATABASE_URL="$(shared_database_url)"
+  [ -n "$SHARED_DATABASE_URL" ] || die "Could not resolve GameBackEnd's DATABASE_URL for AdminPanel."
+  start_service admin-api "$C_GREEN" "$ADMIN_API_DIR" admin_api_env \
+    "$PY" -m flask --app app run --debug --port "$ADMIN_API_PORT"
   start_service web "$C_MAGENTA" "$WEB_DIR" web_env npm run dev -- --port "$WEB_PORT"
   start_service admin "$C_YELLOW" "$ADMIN_DIR" admin_env npm run dev -- --port "$ADMIN_PORT"
 
@@ -610,11 +663,13 @@ run_services() {
     wait_for_url "$AGENT_URL/health" "AgenticService" || ready=false
   fi
   if [ "$ready" = true ] && wait_for_url "$API_HEALTH_URL" "GameBackEnd" &&
+    wait_for_url "$ADMIN_API_HEALTH_URL" "AdminPanel" &&
     wait_for_url "$WEB_URL/onboarding" "web" && wait_for_url "$ADMIN_URL/" "AdminPanelWeb"; then
     printf '\n%s  ERNI-Bots is up%s\n' "$C_GREEN$C_BOLD" "$C_RESET"
     printf '    Game (web)      %s\n' "$WEB_URL"
     printf '    Admin panel     %s\n' "$ADMIN_URL"
     printf '    GameBackEnd     %s/api/v1  (SQLite/DB from GameBackEnd/.env)\n' "$API_URL"
+    printf '    AdminPanel      %s/api/v1  (same DB; backend of the admin panel)\n' "$ADMIN_API_URL"
     case "$AGENT_CHOICE" in
       mock) printf '    Agent           mock (--agent=local or --agent=env for a real LLM)\n' ;;
       local) printf '    AgenticService  %s  (Redis localhost:%s)\n' "$AGENT_URL" "$REDIS_PORT" ;;
@@ -642,6 +697,7 @@ print_state() {
 
 cmd_status() {
   print_state GameBackEnd "$API_HEALTH_URL"
+  print_state AdminPanel "$ADMIN_API_HEALTH_URL"
   print_state web "$WEB_URL/onboarding"
   print_state AdminPanelWeb "$ADMIN_URL/"
   print_state AgenticService "$AGENT_URL/health"
