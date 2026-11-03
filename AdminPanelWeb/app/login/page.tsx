@@ -16,7 +16,7 @@ function LoginContent() {
   const isFormValid = username.trim().length > 0 && invitationCode.trim().length > 0;
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional post-mount update: prefilling from the URL and localStorage after hydration avoids an SSR mismatch.
     setMounted(true);
     const codeFromUrl = searchParams.get("code");
     const storedCode = localStorage.getItem("invitationCode");
