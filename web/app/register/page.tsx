@@ -1,9 +1,11 @@
 ﻿"use client";
 
-import { useState, FormEvent, useEffect, Suspense } from "react";
+import { useState, FormEvent, useEffect, Suspense, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { registerApi } from "@/lib/auth";
+
+const subscribeNoop = () => () => {};
 
 function RegisterContent() {
     const [username, setUsername] = useState("");
@@ -11,15 +13,25 @@ function RegisterContent() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [jobTitle, setJobTitle] = useState("");
-    const [invitationCode, setInvitationCode] = useState("");
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const codeFromUrl = searchParams.get("code");
+    const [invitationCode, setInvitationCode] = useState(codeFromUrl ?? "");
+    // Adjust state during render when the URL code changes (instead of setState in an effect)
+    const [prevCodeFromUrl, setPrevCodeFromUrl] = useState(codeFromUrl);
+    // A code is auto-generated on mount when none is present in the URL, so start in "generating" state
+    const [generatingCode, setGeneratingCode] = useState(!codeFromUrl);
+    if (codeFromUrl !== prevCodeFromUrl) {
+        setPrevCodeFromUrl(codeFromUrl);
+        if (codeFromUrl) setInvitationCode(codeFromUrl);
+        else setGeneratingCode(true);
+    }
     const [acceptTerms, setAcceptTerms] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-    const [generatingCode, setGeneratingCode] = useState(false);
-    const [mounted, setMounted] = useState(false);
+    // false on the server/hydration pass, true once on the client
+    const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
     const [invitationsEnabled, setInvitationsEnabled] = useState(true);
-    const router = useRouter();
-    const searchParams = useSearchParams();
 
     const isFormValid =
         username.length >= 3 &&
@@ -32,14 +44,10 @@ function RegisterContent() {
         acceptTerms;
 
     useEffect(() => {
-        setMounted(true);
-        const codeFromUrl = searchParams.get("code");
-        if (codeFromUrl) {
-            setInvitationCode(codeFromUrl);
-        } else {
+        if (!searchParams.get("code")) {
             // Auto-generate invitation code when no code is present in URL
+            // (generatingCode is already true via initial state / render-time adjustment)
             (async () => {
-                setGeneratingCode(true);
                 try {
                     const res = await fetch("/api/admin/generate-code", { method: "POST" });
                     const data = await res.json();

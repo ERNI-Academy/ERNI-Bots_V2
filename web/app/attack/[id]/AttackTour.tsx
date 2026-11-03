@@ -102,7 +102,7 @@ export default function AttackTour({ username }: { username: string | null }) {
     }, [username]);
 
     const recalc = useCallback(
-        (stepIndex: number) => {
+        function recalc(stepIndex: number) {
             const s = STEPS[stepIndex];
             const el = document.querySelector(`[data-tour="${s.target}"]`);
             const mobile = isMobile();

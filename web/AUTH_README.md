@@ -5,7 +5,7 @@ Sistema de autenticación con diseño cyberpunk/feudal adaptado a Next.js.
 ## Características
 
 - **Página de Login**: Diseño "glitch feudalism" con efectos CRT, aberración cromática y lluvia de símbolos medievales
-- **Protección de Rutas**: Middleware que redirige automáticamente al login si no hay autenticación
+- **Protección de Rutas**: Proxy (antes middleware) que redirige automáticamente al login si no hay autenticación
 - **Modo Oscuro**: Tema oscuro forzado con colores cyan (#00ffff) como primario
 - **Animaciones**: Efectos de parpadeo, jitter, y glitch en botones
 - **Tipografía**: Space Grotesk como fuente principal con Material Symbols para iconos
@@ -19,12 +19,12 @@ app/
   ├── layout.tsx            # Layout principal con fuentes y modo oscuro
   ├── page.tsx              # Página principal protegida
   └── globals.css           # Estilos globales y animaciones personalizadas
-middleware.ts               # Protección de rutas y redirección al login
+proxy.ts                    # Protección de rutas y redirección al login
 ```
 
 ## Cómo Funciona
 
-1. **Acceso Inicial**: Al intentar acceder a cualquier ruta, el middleware verifica si existe una cookie `auth-token`
+1. **Acceso Inicial**: Al intentar acceder a cualquier ruta, el proxy verifica si existe una cookie `auth-token`
 2. **Sin Autenticación**: Si no hay token, redirige automáticamente a `/login`
 3. **Login**: El usuario ingresa credenciales y al enviar el formulario, se crea una cookie de autenticación
 4. **Acceso Concedido**: Con la cookie válida, el usuario puede acceder a todas las rutas protegidas
@@ -53,7 +53,7 @@ Actualmente, el sistema acepta cualquier usuario/contraseña. Para implementar a
 
 ### Rutas Públicas
 
-Para añadir rutas que no requieran autenticación, edita [middleware.ts](middleware.ts):
+Para añadir rutas que no requieran autenticación, edita [proxy.ts](proxy.ts):
 
 ```typescript
 const publicPaths = ["/login", "/registro", "/publica"];

@@ -21,7 +21,7 @@ function buildRedirectUrl(request: NextRequest, pathname: string): URL {
 /**
  * GET /api/auth/refresh?next=<path>
  *
- * Called by the middleware when the auth-token cookie is absent/missing
+ * Called by the proxy when the auth-token cookie is absent/missing
  * but a refresh-token cookie exists. Exchanges the refresh token for a new
  * access token, sets the cookie, and redirects to `next` (default: /dashboard).
  *

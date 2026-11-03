@@ -87,6 +87,42 @@ function StatusBadge({ banned }: { banned: boolean }) {
 // Edit player modal
 // 
 
+function RoleToggle({ label, icon, color, checked, onChange }: {
+  label: string; icon: string; color: string; checked: boolean; onChange: (v: boolean) => void;
+}) {
+  const activeClass: Record<string, string> = {
+    amber: "border-amber-500/50 bg-amber-500/15 text-amber-400",
+    cyan:  "border-cyan-400/50  bg-cyan-400/15  text-cyan-400",
+  };
+  const thumbClass: Record<string, string> = {
+    amber: "bg-amber-400",
+    cyan:  "bg-cyan-400",
+  };
+  const trackClass: Record<string, string> = {
+    amber: "border-amber-500/40 bg-amber-500/20",
+    cyan:  "border-cyan-400/40  bg-cyan-400/20",
+  };
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className={`flex items-center gap-2 rounded border px-3 py-2 text-xs font-mono transition-all ${
+        checked ? activeClass[color] : "border-[#27272A] bg-[#18181B] text-[#52525B] hover:border-[#3F3F46] hover:text-[#71717A]"
+      }`}
+    >
+      <span className="material-symbols-outlined text-[15px]">{icon}</span>
+      {label}
+      <span className={`ml-auto h-4 w-7 rounded-full border transition-all ${
+        checked ? trackClass[color] : "border-[#3F3F46] bg-[#27272A]"
+      }`}>
+        <span className={`block h-3 w-3 translate-y-[1px] rounded-full transition-all ${
+          checked ? `translate-x-[14px] ${thumbClass[color]}` : "translate-x-[1px] bg-[#52525B]"
+        }`} />
+      </span>
+    </button>
+  );
+}
+
 function EditPlayerModal({
   player,
   onClose,
@@ -149,41 +185,6 @@ function EditPlayerModal({
     finally { setSaving(false); }
   }
 
-  function RoleToggle({ label, icon, color, checked, onChange }: {
-    label: string; icon: string; color: string; checked: boolean; onChange: (v: boolean) => void;
-  }) {
-    const activeClass: Record<string, string> = {
-      amber: "border-amber-500/50 bg-amber-500/15 text-amber-400",
-      cyan:  "border-cyan-400/50  bg-cyan-400/15  text-cyan-400",
-    };
-    const thumbClass: Record<string, string> = {
-      amber: "bg-amber-400",
-      cyan:  "bg-cyan-400",
-    };
-    const trackClass: Record<string, string> = {
-      amber: "border-amber-500/40 bg-amber-500/20",
-      cyan:  "border-cyan-400/40  bg-cyan-400/20",
-    };
-    return (
-      <button
-        type="button"
-        onClick={() => onChange(!checked)}
-        className={`flex items-center gap-2 rounded border px-3 py-2 text-xs font-mono transition-all ${
-          checked ? activeClass[color] : "border-[#27272A] bg-[#18181B] text-[#52525B] hover:border-[#3F3F46] hover:text-[#71717A]"
-        }`}
-      >
-        <span className="material-symbols-outlined text-[15px]">{icon}</span>
-        {label}
-        <span className={`ml-auto h-4 w-7 rounded-full border transition-all ${
-          checked ? trackClass[color] : "border-[#3F3F46] bg-[#27272A]"
-        }`}>
-          <span className={`block h-3 w-3 translate-y-[1px] rounded-full transition-all ${
-            checked ? `translate-x-[14px] ${thumbClass[color]}` : "translate-x-[1px] bg-[#52525B]"
-          }`} />
-        </span>
-      </button>
-    );
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

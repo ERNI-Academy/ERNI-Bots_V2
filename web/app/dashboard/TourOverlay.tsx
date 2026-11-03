@@ -127,7 +127,7 @@ function calcTooltipPos(rect: SpotRect, side: TourStep["side"]): TooltipPos {
     const GAP = 20;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    let result: TooltipPos = { transformOrigin: "center center" };
+    const result: TooltipPos = { transformOrigin: "center center" };
 
     if (side === "bottom") {
         result.top = rect.top + rect.height + GAP;

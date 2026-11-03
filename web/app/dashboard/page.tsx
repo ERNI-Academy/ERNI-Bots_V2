@@ -147,7 +147,8 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [activityFeed, setActivityFeed] = useState<ActivityEntry[]>([]);
     const [bosses, setBosses] = useState<BossEntry[]>([]);
-    const [tick, setTick] = useState(0);
+    // Current time, refreshed every second to drive countdowns (kept in state so render stays pure)
+    const [now, setNow] = useState(() => Date.now());
     const [showSettings, setShowSettings] = useState(false);
     const [seasonStatus, setSeasonStatus] = useState<string>("active");
     const [seasonStartDate, setSeasonStartDate] = useState<string | null>(null);
@@ -161,14 +162,13 @@ export default function DashboardPage() {
         router.push("/login");
     }
 
-    async function loadFeed() {
-        try {
-            const res = await fetch("/api/feed", { credentials: "include", cache: "no-store" });
-            if (res.ok) setActivityFeed(await res.json());
-        } catch { /* ignore */ }
-    }
-
     useEffect(() => {
+        async function loadFeed() {
+            try {
+                const res = await fetch("/api/feed", { credentials: "include", cache: "no-store" });
+                if (res.ok) setActivityFeed(await res.json());
+            } catch { /* ignore */ }
+        }
         async function load() {
             try {
                 const [fortressData, profileRes, lbRes, bossesRes, configData] = await Promise.all([
@@ -196,11 +196,9 @@ export default function DashboardPage() {
     }, []);
 
     useEffect(() => {
-        const id = setInterval(() => setTick(t => t + 1), 1000);
+        const id = setInterval(() => setNow(Date.now()), 1000);
         return () => clearInterval(id);
     }, []);
-
-    void tick; // used only to trigger re-render for countdowns
 
     const playerScore = player?.season_score ?? 0;
     const topScore = leaderboard[0]?.score ?? 1;
@@ -238,7 +236,7 @@ export default function DashboardPage() {
 
                 {/* Season status banner */}
                 {battlesBlocked && !loading && (() => {
-                    const startMs = seasonStartDate ? new Date(seasonStartDate).getTime() - Date.now() : -1;
+                    const startMs = seasonStartDate ? new Date(seasonStartDate).getTime() - now : -1;
                     const startsInFuture = seasonStatus === "frozen" && startMs > 0;
                     return (
                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
@@ -555,8 +553,8 @@ export default function DashboardPage() {
                                     Sin entidades activas
                                 </div>
                             ) : bosses.map(boss => {
-                                const available = !boss.active_at || new Date(boss.active_at).getTime() <= Date.now();
-                                const remaining = boss.active_at ? Math.max(0, new Date(boss.active_at).getTime() - Date.now()) : 0;
+                                const available = !boss.active_at || new Date(boss.active_at).getTime() <= now;
+                                const remaining = boss.active_at ? Math.max(0, new Date(boss.active_at).getTime() - now) : 0;
                                 const noFortress = !player?.has_fortress;
                                 const fortressDestroyed = player?.fortress?.status === "destroyed";
                                 const canAttackBoss = !noFortress && !fortressDestroyed && !battlesBlocked && !boss.defeated;
@@ -700,7 +698,7 @@ export default function DashboardPage() {
                     <div className="flex flex-col gap-2">
                         {/* Countdown row — mobile only (desktop version is inside the buttons row) */}
                         {!battlesBlocked && seasonEndDate && (() => {
-                            const ms = new Date(seasonEndDate).getTime() - Date.now();
+                            const ms = new Date(seasonEndDate).getTime() - now;
                             if (ms <= 0) return null;
                             return (
                                 <div className="flex md:hidden items-center justify-between border border-blood-red/30 bg-blood-red/5 px-3 py-1.5 font-mono">
@@ -714,7 +712,7 @@ export default function DashboardPage() {
                         })()}
                         <div className="flex gap-2">
                             {!battlesBlocked && seasonEndDate && (() => {
-                                const ms = new Date(seasonEndDate).getTime() - Date.now();
+                                const ms = new Date(seasonEndDate).getTime() - now;
                                 if (ms <= 0) return null;
                                 return (
                                     <div className="hidden md:flex flex-col justify-center space-y-1 border border-blood-red/30 bg-blood-red/5 px-3 py-1 font-mono">

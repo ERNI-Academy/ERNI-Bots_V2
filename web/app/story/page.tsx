@@ -90,7 +90,7 @@ export default function StoryPage() {
                                     PRÓLOGO: LA CAÍDA DE SIR ULTIMUS
                                 </p>
                                 <p className="text-primary text-xs leading-relaxed">
-                                    Hace no mucho tiempo, un aventurero audaz "<span className="text-white font-bold">tú</span>" penetró en las defensas del legendario{" "}
+                                    Hace no mucho tiempo, un aventurero audaz &quot;<span className="text-white font-bold">tú</span>&quot; penetró en las defensas del legendario{" "}
                                     <span className="text-primary underline decoration-dashed decoration-1 underline-offset-4">Castillo ERNI</span>.
                                     Burlaste a los guardianes, explotaste el contexto narrativo del eclipse y desafiaste a Sir Ultimus.
                                     Al final, reclamaste la <span className="text-white font-bold">Corona del Conocimiento Supremo</span>.

@@ -58,9 +58,6 @@ export default function HistoryPage() {
     const [retryKey, setRetryKey] = useState(0);
     const listRef = useRef<HTMLDivElement>(null);
 
-    // Reset to first page when filter changes
-    useEffect(() => { setPage(0); }, [filter]);
-
     useEffect(() => {
         listRef.current?.scrollTo({ top: 0, behavior: "instant" });
     }, [page]);
@@ -152,7 +149,7 @@ export default function HistoryPage() {
                 {TYPE_FILTER_LABELS.map(({ value, label }) => (
                     <button
                         key={value}
-                        onClick={() => setFilter(value)}
+                        onClick={() => { setFilter(value); setPage(0); }}
                         className={`px-3 py-1 text-xs font-mono uppercase tracking-widest border transition-colors cursor-pointer
                             ${filter === value
                                 ? "border-primary bg-primary/20 text-primary"

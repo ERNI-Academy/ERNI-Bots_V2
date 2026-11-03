@@ -398,7 +398,7 @@ function FortressConfigurePage() {
                                         Fortaleza activa: {existingFortress?.name}
                                     </div>
                                     <div className="text-xs text-loot-gold font-mono mt-0.5">
-                                        Protocolo: {existingFortress?.protocol} // Arquetipo: {existingFortress?.archetype}
+                                        Protocolo: {existingFortress?.protocol} {"//"} Arquetipo: {existingFortress?.archetype}
                                     </div>
                                     <div className="text-xs text-[#e8c000] font-mono">
                                         La reconfiguración requiere ≥3 derrotas y tiene coste en créditos
