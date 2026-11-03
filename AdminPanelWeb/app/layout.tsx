@@ -1,21 +1,16 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Geist, Geist_Mono } from "next/font/google";
+import { Source_Sans_3 } from "next/font/google";
+import { Providers } from "@/components/Providers";
+import { fluentThemeCss } from "@/lib/theme/fluentThemeCss";
+import { themeBootstrapScript } from "@/lib/theme/themeBootstrap";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+// ERNI primary typeface (Brand Book), self-hosted by next/font.
+const erniSans = Source_Sans_3({
+  subsets: ["latin", "latin-ext"],
+  weight: ["300", "400", "600", "700"],
+  variable: "--font-erni-sans",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -29,19 +24,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    // The bootstrap script sets data-theme before hydration, so React must not treat it as a mismatch.
+    <html lang="es" className={erniSans.variable} suppressHydrationWarning>
       <head>
-        {/* Root layout of the App Router: this link is shared by every page, so the pages/_document warning is a false positive. */}
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          rel="stylesheet"
-        />
+        <script id="theme-bootstrap" dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+        <style id="fluent-theme" dangerouslySetInnerHTML={{ __html: fluentThemeCss }} />
       </head>
-      <body
-        className={`${spaceGrotesk.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className="antialiased">
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

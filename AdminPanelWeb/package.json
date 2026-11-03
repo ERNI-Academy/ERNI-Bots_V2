@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@fluentui/react-components": "^9.75.1",
+    "@fluentui/react-icons": "^2.0.345",
+    "@fluentui/tokens": "^1.0.0-alpha.24",
     "@tailwindcss/postcss": "^4",
     "next": "16.4.4",
     "qrcode.react": "^4.2.0",

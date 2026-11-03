@@ -1,118 +1,209 @@
 "use client";
 
+import {
+  makeStyles,
+  mergeClasses,
+  NavDrawer,
+  NavDrawerBody,
+  NavItem,
+  tokens,
+  Tooltip,
+} from "@fluentui/react-components";
+import {
+  bundleIcon,
+  Board20Filled,
+  Board20Regular,
+  BrainCircuit20Filled,
+  BrainCircuit20Regular,
+  Building20Filled,
+  Building20Regular,
+  CalendarLtr20Filled,
+  CalendarLtr20Regular,
+  Code20Filled,
+  Code20Regular,
+  Fire20Filled,
+  Fire20Regular,
+  Flash20Filled,
+  Flash20Regular,
+  Key20Filled,
+  Key20Regular,
+  Mail20Filled,
+  Mail20Regular,
+  People20Filled,
+  People20Regular,
+  PersonBoard20Filled,
+  PersonBoard20Regular,
+  Settings20Filled,
+  Settings20Regular,
+  ShieldLock20Filled,
+  ShieldLock20Regular,
+  Trophy20Filled,
+  Trophy20Regular,
+} from "@fluentui/react-icons";
 import { usePathname, useRouter } from "next/navigation";
-import { logoutApi } from "@/lib/auth";
+import type { MouseEvent, ReactElement } from "react";
+import { NAV_OVERLAY_MEDIA } from "@/components/navBreakpoint";
 
-const navItems: { label: string; icon: string; href: string; disabled?: boolean }[] = [
-  { label: "Ops Center",    icon: "dashboard",   href: "/dashboard" },
-  { label: "Jugadores",     icon: "group",       href: "/players" },
-  { label: "Arquetipos",      icon: "badge",       href: "/archetypes" },
-  { label: "Protocolos",      icon: "terminal",    href: "/protocols" },
-  { label: "Personalidades",  icon: "psychology",  href: "/personalities" },
-  { label: "Fortalezas",    icon: "fort",        href: "/fortresses" },
-  { label: "Bosses",        icon: "skull",       href: "/bosses" },
-  { label: "Restricciones", icon: "shield_lock", href: "/constraints" },
-  { label: "Batallas",      icon: "swords",      href: "/battles" },
-  { label: "Palabras",      icon: "key",         href: "/words" },
-  { label: "Invitaciones",  icon: "mail",        href: "/invitations" },
-  { label: "Temporadas",    icon: "calendar_month", href: "/seasons" },
-  { label: "Premios",       icon: "emoji_events",  href: "/prizes" },
-  { label: "Configuración", icon: "settings",      href: "/config" },
-];
+const DashboardIcon = bundleIcon(Board20Filled, Board20Regular);
+const PlayersIcon = bundleIcon(People20Filled, People20Regular);
+const ArchetypesIcon = bundleIcon(PersonBoard20Filled, PersonBoard20Regular);
+const ProtocolsIcon = bundleIcon(Code20Filled, Code20Regular);
+const PersonalitiesIcon = bundleIcon(BrainCircuit20Filled, BrainCircuit20Regular);
+const FortressesIcon = bundleIcon(Building20Filled, Building20Regular);
+const BossesIcon = bundleIcon(Fire20Filled, Fire20Regular);
+const ConstraintsIcon = bundleIcon(ShieldLock20Filled, ShieldLock20Regular);
+const BattlesIcon = bundleIcon(Flash20Filled, Flash20Regular);
+const WordsIcon = bundleIcon(Key20Filled, Key20Regular);
+const InvitationsIcon = bundleIcon(Mail20Filled, Mail20Regular);
+const SeasonsIcon = bundleIcon(CalendarLtr20Filled, CalendarLtr20Regular);
+const PrizesIcon = bundleIcon(Trophy20Filled, Trophy20Regular);
+const ConfigIcon = bundleIcon(Settings20Filled, Settings20Regular);
 
-interface AdminSidebarProps {
-  isOpen?: boolean;
-  onClose?: () => void;
+interface NavLink {
+  label: string;
+  href: string;
+  icon: ReactElement;
 }
 
-export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarProps) {
-  const pathname = usePathname();
-  const router   = useRouter();
+const navItems: NavLink[] = [
+  { label: "Ops Center", href: "/dashboard", icon: <DashboardIcon /> },
+  { label: "Jugadores", href: "/players", icon: <PlayersIcon /> },
+  { label: "Arquetipos", href: "/archetypes", icon: <ArchetypesIcon /> },
+  { label: "Protocolos", href: "/protocols", icon: <ProtocolsIcon /> },
+  { label: "Personalidades", href: "/personalities", icon: <PersonalitiesIcon /> },
+  { label: "Fortalezas", href: "/fortresses", icon: <FortressesIcon /> },
+  { label: "Bosses", href: "/bosses", icon: <BossesIcon /> },
+  { label: "Restricciones", href: "/constraints", icon: <ConstraintsIcon /> },
+  { label: "Batallas", href: "/battles", icon: <BattlesIcon /> },
+  { label: "Palabras", href: "/words", icon: <WordsIcon /> },
+  { label: "Invitaciones", href: "/invitations", icon: <InvitationsIcon /> },
+  { label: "Temporadas", href: "/seasons", icon: <SeasonsIcon /> },
+  { label: "Premios", href: "/prizes", icon: <PrizesIcon /> },
+  { label: "Configuración", href: "/config", icon: <ConfigIcon /> },
+];
 
-  const handleLogout = async () => {
-    await logoutApi();
-    router.push("/login");
+export const NAV_EXPANDED_WIDTH = "260px";
+export const NAV_COLLAPSED_WIDTH = "56px";
+
+const useStyles = makeStyles({
+  drawer: {
+    height: "100%",
+    width: NAV_EXPANDED_WIDTH,
+    backgroundColor: tokens.colorNeutralBackground1,
+    borderRight: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
+    "@media (prefers-reduced-motion: no-preference)": {
+      transitionProperty: "width",
+      transitionDuration: tokens.durationNormal,
+      transitionTimingFunction: tokens.curveEasyEase,
+    },
+  },
+  inline: {
+    flexShrink: 0,
+    [NAV_OVERLAY_MEDIA]: { display: "none" },
+  },
+  rail: { width: NAV_COLLAPSED_WIDTH, minWidth: NAV_COLLAPSED_WIDTH, overflowX: "hidden" },
+  body: { paddingBlock: tokens.spacingVerticalM },
+  railBody: { paddingInline: tokens.spacingHorizontalXS },
+  // NavItem paints itself with colorNeutralBackground4; make items transparent so only hover/selected get a fill.
+  item: {
+    backgroundColor: tokens.colorSubtleBackground,
+    ":hover": { backgroundColor: tokens.colorSubtleBackgroundHover },
+    ":active": { backgroundColor: tokens.colorSubtleBackgroundPressed },
+    '&[aria-current="page"]': {
+      backgroundColor: tokens.colorSubtleBackgroundSelected,
+      fontWeight: tokens.fontWeightSemibold,
+    },
+  },
+  railItem: {
+    justifyContent: "center",
+    paddingInline: 0,
+    columnGap: 0,
+    "::after": { display: "none" },
+  },
+  visuallyHidden: {
+    position: "absolute",
+    width: "1px",
+    height: "1px",
+    overflow: "hidden",
+    clip: "rect(0 0 0 0)",
+    whiteSpace: "nowrap",
+  },
+});
+
+interface AdminSidebarProps {
+  /** Overlay drawer state (narrow screens). */
+  isOpen?: boolean;
+  onClose?: () => void;
+  /** Icon-only rail for the inline drawer (wide screens). */
+  collapsed?: boolean;
+}
+
+interface DrawerProps {
+  type: "inline" | "overlay";
+  open: boolean;
+  collapsed?: boolean;
+  className?: string;
+  onOpenChange?: (open: boolean) => void;
+  onNavigate?: () => void;
+}
+
+function Drawer({ type, open, collapsed = false, className, onOpenChange, onNavigate }: DrawerProps) {
+  const styles = useStyles();
+  const router = useRouter();
+  const pathname = usePathname() ?? "";
+
+  const selected = navItems.find((i) => pathname === i.href || pathname.startsWith(`${i.href}/`))?.href ?? "";
+
+  const navigate = (event: MouseEvent, href: string) => {
+    // Keep native behaviour for new-tab / new-window clicks; client-side navigation otherwise.
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    router.push(href);
+    onNavigate?.();
   };
 
   return (
-    <aside
-      className={[
-        "flex w-64 shrink-0 flex-col border-r border-[#27272A] bg-[#09090B]",
-        // mobile: fixed drawer that slides in/out
-        "fixed inset-y-0 left-0 z-40",
-        "transform transition-transform duration-200 ease-in-out",
-        isOpen ? "translate-x-0" : "-translate-x-full",
-        // desktop: static, always visible, reset transform
-        "md:static md:translate-x-0",
-      ].join(" ")}
+    <NavDrawer
+      type={type}
+      open={open}
+      onOpenChange={(_, data) => onOpenChange?.(data.open)}
+      selectedValue={selected}
+      aria-label="Navegación principal"
+      className={mergeClasses(styles.drawer, collapsed && styles.rail, className)}
     >
-      {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-[#27272A] px-6">
-        <div className="flex items-center justify-center rounded bg-blue-500/20 p-1.5">
-          <span className="material-symbols-outlined text-blue-400 text-[22px]">rocket_launch</span>
-        </div>
-        <div className="flex flex-1 flex-col">
-          <h1 className="font-[var(--font-display)] text-lg font-bold tracking-tight text-white leading-none">
-            SINGULARITY
-          </h1>
-          <p className="mt-1 font-mono text-[10px] tracking-widest uppercase text-[#71717A]">
-            Admin Console v1.0
-          </p>
-        </div>
-        {/* Close button — mobile only */}
-        <button
-          onClick={onClose}
-          className="ml-auto flex items-center justify-center rounded p-1 text-[#71717A] hover:text-white md:hidden"
-          aria-label="Close menu"
-        >
-          <span className="material-symbols-outlined text-[20px]">close</span>
-        </button>
-      </div>
+      <NavDrawerBody className={mergeClasses(styles.body, collapsed && styles.railBody)}>
+        {navItems.map((link) => {
+          const item = (
+            <NavItem
+              key={link.href}
+              value={link.href}
+              href={link.href}
+              icon={link.icon}
+              className={mergeClasses(styles.item, collapsed && styles.railItem)}
+              onClick={(e) => navigate(e, link.href)}
+            >
+              {collapsed ? <span className={styles.visuallyHidden}>{link.label}</span> : link.label}
+            </NavItem>
+          );
+          return collapsed ? (
+            <Tooltip key={link.href} content={link.label} relationship="inaccessible" positioning="after" withArrow>
+              {item}
+            </Tooltip>
+          ) : (
+            item
+          );
+        })}
+      </NavDrawerBody>
+    </NavDrawer>
+  );
+}
 
-      {/* Nav */}
-      <div className="flex flex-1 flex-col justify-between overflow-y-auto px-3 py-4">
-        <nav className="flex flex-col gap-0.5">
-          {navItems.map((item) => {
-            const active = pathname === item.href;
-            if (item.disabled) return (
-              <span
-                key={item.href}
-                className="flex cursor-not-allowed items-center gap-3 rounded px-3 py-2 opacity-30"
-              >
-                <span className="material-symbols-outlined text-[20px] text-[#71717A]">{item.icon}</span>
-                <span className="text-sm font-medium font-[var(--font-display)] text-[#71717A]">{item.label}</span>
-              </span>
-            );
-            return (
-              <a
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded px-3 py-2 transition-all ${
-                  active
-                    ? "bg-[#27272A] border border-[#3F3F46] text-white"
-                    : "text-[#71717A] hover:bg-[#18181B] hover:text-white"
-                }`}
-              >
-                <span className={`material-symbols-outlined text-[20px] ${active ? "text-blue-400" : ""}`}>
-                  {item.icon}
-                </span>
-                <span className="text-sm font-medium font-[var(--font-display)]">{item.label}</span>
-              </a>
-            );
-          })}
-        </nav>
-
-        {/* Footer */}
-        <div className="mt-auto flex flex-col gap-0.5 border-t border-[#27272A] pt-4">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 rounded px-3 py-2 text-red-400/80 hover:bg-red-400/10 hover:text-red-400 transition-all"
-          >
-            <span className="material-symbols-outlined text-[20px]">logout</span>
-            <span className="text-sm font-medium font-[var(--font-display)]">Cerrar Sesión</span>
-          </button>
-        </div>
-      </div>
-    </aside>
+export default function AdminSidebar({ isOpen = false, onClose, collapsed = false }: AdminSidebarProps) {
+  const styles = useStyles();
+  return (
+    <>
+      <Drawer type="inline" open collapsed={collapsed} className={styles.inline} />
+      <Drawer type="overlay" open={isOpen} onOpenChange={(open) => !open && onClose?.()} onNavigate={onClose} />
+    </>
   );
 }
