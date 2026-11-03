@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { fetchMatchmakingFortresses, STATUS_STYLES, type Fortress } from "@/lib/fortresses";
 import TourOverlay from "./TourOverlay";
 
@@ -192,7 +193,6 @@ export default function DashboardPage() {
         }
         load();
         loadFeed();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -218,9 +218,11 @@ export default function DashboardPage() {
 
                 {/* Topo map image */}
                 <div className="absolute inset-0 opacity-40 mix-blend-screen scale-110 hot-zone">
-                    <img
+                    <Image
                         alt="Topographic digital map wireframe"
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="100vw"
+                        className="object-cover"
                         src="/madrid.png"
                     />
                 </div>

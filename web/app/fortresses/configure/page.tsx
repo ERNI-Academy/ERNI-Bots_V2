@@ -262,11 +262,6 @@ function FortressConfigurePage() {
         });
     };
 
-    const selectedProtocolData = protocols.find(p => p.id === selectedProtocol);
-    const selectedArchetypeData = archetypes.find(a => a.id === selectedArchetype);
-
-    const allConstraintItems = constraintTypes.flatMap(ct => ct.constraints);
-
     const handleSubmit = async () => {
         setError(null);
         setSuccess(null);

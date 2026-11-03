@@ -3,6 +3,7 @@
 import { useState, FormEvent, Suspense, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { loginApi } from "@/lib/auth";
 
 const subscribeNoop = () => () => {};
@@ -117,7 +118,7 @@ function LoginContent() {
             {/* Main Warning Display */}
             <div className="text-center py-4 sm:py-6 space-y-2 border-y border-primary/10">
               <div className="flex items-center justify-center gap-3 sm:gap-4">
-                <img src="/logo.png" alt="ERNI Logo" className="h-16 sm:h-20 md:h-24 w-auto" />
+                <Image src="/logo.png" alt="ERNI Logo" width={624} height={487} className="h-16 sm:h-20 md:h-24 w-auto" />
                 <div>
                   <h2 className="text-base sm:text-xl md:text-2xl font-bold tracking-tighter uppercase">
                     ERNI BOTS V2

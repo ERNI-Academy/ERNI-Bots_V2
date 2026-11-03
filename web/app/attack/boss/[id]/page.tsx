@@ -168,7 +168,6 @@ export default function BossAttackPage() {
             battleInitialized.current = true;
             initBossBattle();
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bossId, preflight]);
 
     async function handleSend() {

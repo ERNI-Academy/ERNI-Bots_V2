@@ -89,7 +89,6 @@ export default function HistoryPage() {
             }
         }
         load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, filter, retryKey]);
 
     const totalPages = total !== null ? Math.ceil(total / PAGE_SIZE) : null;

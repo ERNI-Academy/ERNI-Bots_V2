@@ -2,16 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { BACKEND, forwardedFor } from "@/lib/backend";
 
 // PUT /api/fortresses/[id]/reconfigure
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest) {
   const token = request.cookies.get("auth-token")?.value;
   if (!token) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
-
-  const { id } = await params;
 
   let body: unknown;
   try {

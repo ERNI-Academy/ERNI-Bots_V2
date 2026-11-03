@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Space_Mono } from "next/font/google";
 
 const spaceMono = Space_Mono({ weight: ["400", "700"], subsets: ["latin"] });
@@ -142,9 +143,11 @@ export default function AboutPage() {
                                 <div className="flex flex-col md:flex-row gap-6">
                                     {/* Avatar */}
                                     <div className="w-32 h-32 md:w-48 md:h-48 shrink-0 grayscale border border-primary/30 relative overflow-hidden">
-                                        <img
+                                        <Image
                                             alt={member.codename}
-                                            className="w-full h-full object-cover opacity-70"
+                                            fill
+                                            sizes="(min-width: 768px) 12rem, 8rem"
+                                            className="object-cover opacity-70"
                                             src={member.src}
                                             style={{ animation: "flicker 8s infinite" }}
                                         />

@@ -197,7 +197,7 @@ export default function AttackTour({ username }: { username: string | null }) {
         const steps = activeSteps(isMobile());
         if (step < steps.length - 1) setStep((s) => s + 1);
         else finish();
-    }, [step, finish]);  // eslint-disable-line react-hooks/exhaustive-deps
+    }, [step, finish]);
 
     if (!visible || !spot) return null;
 

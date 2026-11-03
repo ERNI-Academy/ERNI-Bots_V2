@@ -231,7 +231,6 @@ export default function AttackPage() {
             battleInitialized.current = true;
             initBattle();
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [fortressId, preflight]);
 
     const st = STATUS_STYLES[battle?.fortressStatus ?? "HOSTIL"];
