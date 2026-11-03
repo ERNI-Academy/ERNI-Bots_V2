@@ -176,4 +176,10 @@ jobs:
           app-name: 'Adminpanelernibots'
           slot-name: 'Production'
           package: release.zip
+          type: zip
+          # Wipe wwwroot before copying: the standalone bundle must not be mixed with files from older builds
+          # (stale .next/server chunks kept serving the previous build after a successful deploy).
+          clean: true
+          # Restart explicitly so Node never keeps serving its in-memory copy of the previous build.
+          restart: true
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E3DC9697CA1240869DBB9CC1A555BB84 }}
