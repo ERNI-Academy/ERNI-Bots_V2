@@ -1,8 +1,63 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, type MouseEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
+import {
+  Avatar,
+  Body1,
+  Button,
+  Caption1,
+  Card,
+  Link,
+  makeStyles,
+  mergeClasses,
+  Tab,
+  TabList,
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+  Title2,
+  tokens,
+  type SelectTabData,
+  type SelectTabEvent,
+} from "@fluentui/react-components";
+import {
+  ArrowClockwise20Regular,
+  ArrowLeft20Regular,
+  Bot20Regular,
+  CheckmarkCircle16Regular,
+  Diamond16Regular,
+  Diamond20Regular,
+  Flash20Regular,
+  Mail20Regular,
+  Person16Regular,
+  Ribbon16Regular,
+  Ribbon20Regular,
+  Shield20Regular,
+  Trophy20Regular,
+  History20Regular,
+  Circle16Regular,
+} from "@fluentui/react-icons";
 import AdminLayout from "@/components/AdminLayout";
+import { StatCard } from "@/components/ui/StatCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionCard } from "@/components/ui/SectionCard";
+import {
+  BattleStatusBadge,
+  BattleTypeBadge,
+  GuessBadge,
+  SecretWordBadge,
+  TargetChip,
+  TurnProgress,
+} from "@/components/ui/battle";
+import { useCommonStyles } from "@/components/ui/commonStyles";
+import { fmtDate, fmtDateTime } from "@/lib/format";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -89,83 +144,68 @@ interface ActivityData {
   used_invitation: UsedInvitation | null;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+type TabValue = "battles" | "history" | "invitations" | "bosses";
 
-const statusConfig: Record<string, { label: string; cls: string; dot: string }> = {
-  active:  { label: "En curso",  cls: "text-blue-400 bg-blue-400/10 border-blue-400/20",          dot: "bg-blue-400 animate-pulse" },
-  won:     { label: "Victoria",  cls: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", dot: "bg-emerald-400" },
-  lost:    { label: "Derrota",   cls: "text-red-400 bg-red-400/10 border-red-400/20",             dot: "bg-red-400" },
-  expired: { label: "Expirada",  cls: "text-[#71717A] bg-[#71717A]/10 border-[#71717A]/20",       dot: "bg-[#71717A]" },
-};
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const typeConfig: Record<string, { label: string; cls: string }> = {
-  pvp: { label: "PvP", cls: "text-amber-400 bg-amber-400/10 border-amber-400/20" },
-  pve: { label: "PvE", cls: "text-purple-400 bg-purple-400/10 border-purple-400/20" },
-};
-
-function fmt(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString("es-ES", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-}
-
-function fmtDate(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
-}
-
-// ─── Stat card ────────────────────────────────────────────────────────────────
-
-function StatCard({ icon, label, value, sub, color = "text-white" }: {
-  icon: string; label: string; value: string | number; sub?: string; color?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1 rounded-lg border border-[#27272A] bg-[#09090B] p-4">
-      <div className="flex items-center gap-1.5 text-[#71717A]">
-        <span className="material-symbols-outlined text-[16px]">{icon}</span>
-        <span className="font-mono text-[10px] uppercase tracking-wider">{label}</span>
-      </div>
-      <span className={`font-[var(--font-display)] text-2xl font-bold ${color}`}>{value}</span>
-      {sub && <span className="font-mono text-[10px] text-[#52525B]">{sub}</span>}
-    </div>
-  );
-}
-
-// ─── Tab button ───────────────────────────────────────────────────────────────
-
-function Tab({ label, icon, active, count, onClick }: {
-  label: string; icon: string; active: boolean; count?: number; onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
-        active
-          ? "border-blue-500 text-white"
-          : "border-transparent text-[#71717A] hover:text-[#A1A1AA]"
-      }`}
-    >
-      <span className="material-symbols-outlined text-[16px]">{icon}</span>
-      {label}
-      {count !== undefined && (
-        <span className={`rounded-full border px-1.5 py-0.5 font-mono text-[10px] ${
-          active ? "border-blue-500/40 bg-blue-500/20 text-blue-300" : "border-[#27272A] bg-[#18181B] text-[#71717A]"
-        }`}>{count}</span>
-      )}
-    </button>
-  );
-}
+const useStyles = makeStyles({
+  back: { alignSelf: "flex-start" },
+  header: {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "flex-start",
+    gap: tokens.spacingHorizontalL,
+    padding: tokens.spacingHorizontalXL,
+  },
+  info: { display: "flex", flexDirection: "column", gap: tokens.spacingVerticalXXS, flexGrow: 1, minWidth: 0 },
+  nameRow: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: tokens.spacingHorizontalS },
+  metaRow: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: tokens.spacingHorizontalM, marginTop: tokens.spacingVerticalXS },
+  stats: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: tokens.spacingHorizontalM,
+    "@media (min-width: 640px)": { gridTemplateColumns: "repeat(3, 1fr)" },
+    "@media (min-width: 1024px)": { gridTemplateColumns: "repeat(5, 1fr)" },
+  },
+  tabs: { padding: `0 ${tokens.spacingHorizontalS}`, borderBottom: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}` },
+  tabContent: { display: "flex", alignItems: "center", gap: tokens.spacingHorizontalS },
+  right: { justifyContent: "flex-end", textAlign: "right" },
+  inline: { display: "inline-flex", alignItems: "center", gap: tokens.spacingHorizontalXS },
+  positive: { fontFamily: tokens.fontFamilyMonospace, fontWeight: tokens.fontWeightBold, color: tokens.colorPaletteGreenForeground1 },
+  negative: { fontFamily: tokens.fontFamilyMonospace, fontWeight: tokens.fontWeightBold, color: tokens.colorPaletteRedForeground1 },
+  reason: {
+    padding: `0 ${tokens.spacingHorizontalS}`,
+    borderRadius: tokens.borderRadiusSmall,
+    backgroundColor: tokens.colorNeutralBackground3,
+    fontFamily: tokens.fontFamilyMonospace,
+  },
+  detail: { display: "block", maxWidth: "320px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  bossCell: { display: "flex", alignItems: "center", gap: tokens.spacingHorizontalS },
+  bossIcon: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "28px",
+    height: "28px",
+    borderRadius: tokens.borderRadiusCircular,
+    backgroundColor: tokens.colorStatusDangerBackground1,
+    color: tokens.colorStatusDangerForeground1,
+  },
+});
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function PlayerDetailPage() {
+  const styles = useStyles();
+  const common = useCommonStyles();
   const { id } = useParams<{ id: string }>();
-  const router  = useRouter();
+  const router = useRouter();
 
-  const [player,   setPlayer]   = useState<PlayerDetail | null>(null);
+  const [player, setPlayer] = useState<PlayerDetail | null>(null);
   const [activity, setActivity] = useState<ActivityData | null>(null);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState<string | null>(null);
-  const [tab,      setTab]      = useState<"battles" | "history" | "invitations" | "bosses">("battles");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<TabValue>("battles");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -190,373 +230,335 @@ export default function PlayerDetailPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch-on-mount/param-change: the loader sets loading/error state before awaiting; moving it would change the loading UX.
   useEffect(() => { load(); }, [load]);
 
+  const onTabSelect = (_: SelectTabEvent, data: SelectTabData) => setTab(data.value as TabValue);
+
+  const openPlayer = (href: string) => (e: MouseEvent) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    router.push(href);
+  };
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <AdminLayout title={player ? player.username.toUpperCase() : "JUGADOR"}>
-      <main className="flex-1 overflow-y-auto p-8">
-        <div className="mx-auto flex max-w-[1400px] flex-col gap-6">
-
-          {/* Back */}
-          <button
+      <main className={common.page}>
+        <div className={common.pageInner} style={{ maxWidth: 1400 }}>
+          <Button
+            className={styles.back}
+            appearance="subtle"
+            icon={<ArrowLeft20Regular />}
             onClick={() => router.push("/players")}
-            className="flex w-fit items-center gap-1.5 text-sm text-[#71717A] hover:text-white transition-colors"
           >
-            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
             Volver a jugadores
-          </button>
+          </Button>
 
-          {loading && (
-            <div className="flex items-center justify-center py-24">
-              <span className="material-symbols-outlined animate-spin text-[32px] text-[#71717A]">progress_activity</span>
-            </div>
-          )}
+          {loading && <LoadingState />}
 
-          {error && (
-            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-6 text-center text-red-400">
-              {error}
-            </div>
-          )}
+          {error && <ErrorBanner message={error} onRetry={load} />}
 
           {!loading && !error && player && activity && (
             <>
               {/* ── Player header ─────────────────────────────────────────── */}
-              <div className="flex flex-wrap items-start gap-4 rounded-lg border border-[#27272A] bg-[#09090B] p-6">
-                {/* Avatar */}
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-2xl font-bold text-white">
-                  {player.username[0].toUpperCase()}
-                </div>
+              <Card className={styles.header}>
+                <Avatar name={player.username} color="colorful" size={72} />
 
-                {/* Info */}
-                <div className="flex flex-1 flex-col gap-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="font-[var(--font-display)] text-2xl font-bold text-white">
-                      {player.username}
-                    </h1>
-                    {player.is_admin && (
-                      <span className="rounded border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 font-mono text-xs text-amber-400">Admin</span>
-                    )}
-                    {player.is_bot && (
-                      <span className="rounded border border-zinc-400/30 bg-zinc-400/10 px-2 py-0.5 font-mono text-xs text-zinc-400">Bot</span>
-                    )}
-                    {player.is_banned && (
-                      <span className="rounded border border-red-400/30 bg-red-400/10 px-2 py-0.5 font-mono text-xs text-red-400">Baneado</span>
-                    )}
-                    {!player.is_banned && !player.is_bot && !player.is_admin && (
-                      <span className="rounded border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 font-mono text-xs text-emerald-400">Activo</span>
-                    )}
+                <div className={styles.info}>
+                  <div className={styles.nameRow}>
+                    <Title2 as="h1">{player.username}</Title2>
+                    {player.is_admin && <StatusBadge tone="warning">Admin</StatusBadge>}
+                    {player.is_bot && <StatusBadge tone="neutral">Bot</StatusBadge>}
+                    {player.is_banned && <StatusBadge tone="danger">Baneado</StatusBadge>}
+                    {!player.is_banned && !player.is_bot && !player.is_admin && <StatusBadge tone="success">Activo</StatusBadge>}
                   </div>
-                  <span className="font-mono text-sm text-[#71717A]">{player.email}</span>
+                  <Body1 className={mergeClasses(common.mono, common.muted)}>{player.email}</Body1>
                   {(player.first_name || player.last_name) && (
-                    <span className="font-mono text-sm text-[#A1A1AA]">
+                    <Body1 className={mergeClasses(common.mono, common.subtle)}>
                       {[player.first_name, player.last_name].filter(Boolean).join(" ")}
-                    </span>
+                    </Body1>
                   )}
-                  {player.job_title && (
-                    <span className="font-mono text-xs text-[#52525B]">{player.job_title}</span>
-                  )}
-                  <div className="flex flex-wrap gap-3 mt-1">
-                    <span className="font-mono text-[11px] text-[#52525B]">ID: {player.id}</span>
-                    <span className="font-mono text-[11px] text-[#52525B]">Registro: {fmtDate(player.created_at)}</span>
+                  {player.job_title && <Caption1 className={mergeClasses(common.mono, common.muted)}>{player.job_title}</Caption1>}
+                  <div className={styles.metaRow}>
+                    <Caption1 className={mergeClasses(common.mono, common.muted)}>ID: {player.id}</Caption1>
+                    <Caption1 className={mergeClasses(common.mono, common.muted)}>Registro: {fmtDate(player.created_at)}</Caption1>
                     {activity.used_invitation && (
-                      <span className="font-mono text-[11px] text-[#52525B]">
-                        Código: <span className="text-[#71717A]">{activity.used_invitation.code}</span>
+                      <Caption1 className={mergeClasses(common.mono, common.muted)}>
+                        Código: <span className={common.subtle}>{activity.used_invitation.code}</span>
                         {activity.used_invitation.tag && (
-                          <span className="ml-1 rounded border border-[#27272A] bg-[#18181B] px-1 py-0.5 text-[10px] text-[#71717A]">{activity.used_invitation.tag}</span>
+                          <>
+                            {" "}
+                            <StatusBadge tone="neutral" appearance="outline" size="small">
+                              {activity.used_invitation.tag}
+                            </StatusBadge>
+                          </>
                         )}
-                      </span>
+                      </Caption1>
                     )}
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={load}
-                    className="flex items-center gap-1.5 rounded border border-[#27272A] bg-[#18181B] px-3 py-1.5 text-sm text-[#71717A] hover:bg-[#27272A] hover:text-white transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">refresh</span>
-                    Actualizar
-                  </button>
-                </div>
-              </div>
+                <Button icon={<ArrowClockwise20Regular />} onClick={load}>
+                  Actualizar
+                </Button>
+              </Card>
 
               {/* ── Stat cards ────────────────────────────────────────────── */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                <StatCard icon="military_tech" label="Score"    value={(player.season_score ?? 0).toLocaleString()} color="text-white" />
-                <StatCard icon="leaderboard"   label="Ranking"  value={player.rank ? `#${player.rank}` : "—"} color="text-blue-400" />
-                <StatCard icon="diamond"        label="Fragmentos" value={player.credits.toLocaleString()} color="text-amber-400" />
-                <StatCard icon="swords"         label="Batallas" value={activity.battles.length} sub="últimas 25" />
-                <StatCard icon="fort"           label="Fortaleza" value={player.has_fortress ? (player.fortress?.name ?? "Sí") : "No"} color={player.has_fortress ? "text-emerald-400" : "text-[#52525B]"} />
+              <div className={styles.stats}>
+                <StatCard label="Score" icon={<Ribbon20Regular />} value={(player.season_score ?? 0).toLocaleString()} />
+                <StatCard label="Ranking" icon={<Trophy20Regular />} value={player.rank ? `#${player.rank}` : "—"} />
+                <StatCard label="Fragmentos" icon={<Diamond20Regular />} value={player.credits.toLocaleString()} />
+                <StatCard label="Batallas" icon={<Flash20Regular />} value={activity.battles.length} hint="últimas 25" />
+                <StatCard
+                  label="Fortaleza"
+                  icon={<Shield20Regular />}
+                  value={player.has_fortress ? (player.fortress?.name ?? "Sí") : "No"}
+                />
               </div>
 
               {/* ── Tabs ──────────────────────────────────────────────────── */}
-              <div className="rounded-lg border border-[#27272A] bg-[#09090B] overflow-hidden">
-                <div className="flex border-b border-[#27272A] px-2 overflow-x-auto">
-                  <Tab label="Batallas"     icon="swords"        active={tab === "battles"}     count={activity.battles.length}     onClick={() => setTab("battles")} />
-                  <Tab label="Historial"    icon="history"       active={tab === "history"}     count={activity.history.length}     onClick={() => setTab("history")} />
-                  <Tab label="Invitaciones" icon="mail"          active={tab === "invitations"} count={activity.invitations.length} onClick={() => setTab("invitations")} />
-                  <Tab label="Bosses"       icon="skull"         active={tab === "bosses"}      count={activity.boss_stats.length}  onClick={() => setTab("bosses")} />
+              <SectionCard>
+                <div className={styles.tabs}>
+                  <TabList selectedValue={tab} onTabSelect={onTabSelect} aria-label="Actividad del jugador">
+                    <Tab value="battles" icon={<Flash20Regular />}>
+                      <span className={styles.tabContent}>
+                        Batallas <StatusBadge tone="neutral" appearance="outline" size="small">{String(activity.battles.length)}</StatusBadge>
+                      </span>
+                    </Tab>
+                    <Tab value="history" icon={<History20Regular />}>
+                      <span className={styles.tabContent}>
+                        Historial <StatusBadge tone="neutral" appearance="outline" size="small">{String(activity.history.length)}</StatusBadge>
+                      </span>
+                    </Tab>
+                    <Tab value="invitations" icon={<Mail20Regular />}>
+                      <span className={styles.tabContent}>
+                        Invitaciones <StatusBadge tone="neutral" appearance="outline" size="small">{String(activity.invitations.length)}</StatusBadge>
+                      </span>
+                    </Tab>
+                    <Tab value="bosses" icon={<Bot20Regular />}>
+                      <span className={styles.tabContent}>
+                        Bosses <StatusBadge tone="neutral" appearance="outline" size="small">{String(activity.boss_stats.length)}</StatusBadge>
+                      </span>
+                    </Tab>
+                  </TabList>
                 </div>
 
                 {/* ── Batallas ──────────────────────────────────────────── */}
                 {tab === "battles" && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[640px]">
-                      <thead>
-                        <tr className="border-b border-[#27272A] bg-[#18181B] font-mono text-[11px] uppercase tracking-wider text-[#71717A]">
-                          <th className="px-4 py-3 text-left font-medium">Fecha</th>
-                          <th className="px-4 py-3 text-left font-medium">Objetivo</th>
-                          <th className="px-4 py-3 text-center font-medium">Tipo</th>
-                          <th className="px-4 py-3 text-left font-medium">Palabra</th>
-                          <th className="px-4 py-3 text-left font-medium">Intento</th>
-                          <th className="px-4 py-3 text-center font-medium">Turnos</th>
-                          <th className="px-4 py-3 text-center font-medium">Estado</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#27272A] text-sm">
-                        {activity.battles.length === 0 ? (
-                          <tr><td colSpan={7} className="px-4 py-10 text-center text-sm text-[#52525B]">Sin batallas</td></tr>
-                        ) : activity.battles.map((b, i) => {
-                          const s   = statusConfig[b.status] ?? statusConfig.expired;
-                          const typ = typeConfig[b.type]     ?? typeConfig.pvp;
-                          return (
-                            <tr key={b.id} className={`transition-colors hover:bg-[#18181B] ${i % 2 === 0 ? "bg-[#09090B]" : "bg-[#0D0D0F]"}`}>
-                              <td className="px-4 py-2.5 font-mono text-xs text-[#71717A]">{fmt(b.created_at)}</td>
-                              <td className="px-4 py-2.5">
-                                {b.target ? (
-                                  <span className="inline-flex items-center gap-1.5 font-mono text-xs text-[#A1A1AA]">
-                                    <span className="material-symbols-outlined text-[13px]">{b.target_type === "boss" ? "skull" : "fort"}</span>
-                                    {b.target}
-                                  </span>
-                                ) : <span className="text-[#3F3F46]">—</span>}
-                              </td>
-                              <td className="px-4 py-2.5 text-center">
-                                <span className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-[10px] font-medium ${typ.cls}`}>
-                                  {typ.label}
-                                </span>
-                              </td>
-                              <td className="px-4 py-2.5">
-                                {b.secret_word ? (
-                                  <span className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 font-mono text-xs font-semibold text-amber-300">
-                                    <span className="material-symbols-outlined text-[11px]">key</span>
-                                    {b.secret_word}
-                                  </span>
-                                ) : <span className="text-[#3F3F46]">—</span>}
-                              </td>
-                              <td className="px-4 py-2.5">
+                  <div className={common.tableScroll}>
+                    {activity.battles.length === 0 ? (
+                      <EmptyState title="Sin batallas" />
+                    ) : (
+                      <Table style={{ minWidth: 760 }} aria-label="Batallas del jugador">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHeaderCell>Fecha</TableHeaderCell>
+                            <TableHeaderCell>Objetivo</TableHeaderCell>
+                            <TableHeaderCell>Tipo</TableHeaderCell>
+                            <TableHeaderCell>Palabra</TableHeaderCell>
+                            <TableHeaderCell>Intento</TableHeaderCell>
+                            <TableHeaderCell>Turnos</TableHeaderCell>
+                            <TableHeaderCell>Estado</TableHeaderCell>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {activity.battles.map((b) => (
+                            <TableRow key={b.id}>
+                              <TableCell>
+                                <Caption1 className={mergeClasses(common.mono, common.muted)}>{fmtDateTime(b.created_at)}</Caption1>
+                              </TableCell>
+                              <TableCell>
+                                <TargetChip name={b.target} type={b.target_type} />
+                              </TableCell>
+                              <TableCell>
+                                <BattleTypeBadge type={b.type} />
+                              </TableCell>
+                              <TableCell>
+                                {b.secret_word ? <SecretWordBadge word={b.secret_word} /> : <Caption1 className={common.muted}>—</Caption1>}
+                              </TableCell>
+                              <TableCell>
                                 {b.player_guess ? (
-                                  <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-xs font-semibold ${
-                                    b.status === "won"
-                                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                                      : "border-red-500/30 bg-red-500/10 text-red-300"
-                                  }`}>
-                                    <span className="material-symbols-outlined text-[11px]">
-                                      {b.status === "won" ? "check_circle" : "cancel"}
-                                    </span>
-                                    {b.player_guess}
-                                  </span>
-                                ) : <span className="text-[#3F3F46]">—</span>}
-                              </td>
-                              <td className="px-4 py-2.5 text-center">
-                                <div className="flex items-center justify-center gap-1.5">
-                                  <span className="font-mono text-xs text-[#71717A]">{b.turn_count}/{b.max_turns}</span>
-                                  <div className="h-1.5 w-16 overflow-hidden rounded-full bg-[#27272A]">
-                                    <div
-                                      className="h-full rounded-full bg-blue-500"
-                                      style={{ width: `${Math.min(100, b.max_turns > 0 ? (b.turn_count / b.max_turns) * 100 : 0)}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-4 py-2.5 text-center">
-                                <span className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-xs font-medium ${s.cls}`}>
-                                  <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-                                  {s.label}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                                  <GuessBadge guess={b.player_guess} won={b.status === "won"} />
+                                ) : (
+                                  <Caption1 className={common.muted}>—</Caption1>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <TurnProgress count={b.turn_count} max={b.max_turns} />
+                              </TableCell>
+                              <TableCell>
+                                <BattleStatusBadge status={b.status} />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
                   </div>
                 )}
 
                 {/* ── Historial ─────────────────────────────────────────── */}
                 {tab === "history" && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[500px]">
-                      <thead>
-                        <tr className="border-b border-[#27272A] bg-[#18181B] font-mono text-[11px] uppercase tracking-wider text-[#71717A]">
-                          <th className="px-4 py-3 text-left font-medium">Fecha</th>
-                          <th className="px-4 py-3 text-left font-medium">Tipo</th>
-                          <th className="px-4 py-3 text-right font-medium">Cantidad</th>
-                          <th className="px-4 py-3 text-left font-medium">Razón</th>
-                          <th className="px-4 py-3 text-left font-medium">Detalle</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#27272A] text-sm">
-                        {activity.history.length === 0 ? (
-                          <tr><td colSpan={5} className="px-4 py-10 text-center text-sm text-[#52525B]">Sin historial</td></tr>
-                        ) : activity.history.map((h, i) => (
-                          <tr key={h.id} className={`transition-colors hover:bg-[#18181B] ${i % 2 === 0 ? "bg-[#09090B]" : "bg-[#0D0D0F]"}`}>
-                            <td className="px-4 py-2.5 font-mono text-xs text-[#71717A]">{fmt(h.created_at)}</td>
-                            <td className="px-4 py-2.5">
-                              {h.type === "points" ? (
-                                <span className="inline-flex items-center gap-1 rounded border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 font-mono text-[10px] text-blue-300">
-                                  <span className="material-symbols-outlined text-[11px]">military_tech</span>
-                                  Puntos
+                  <div className={common.tableScroll}>
+                    {activity.history.length === 0 ? (
+                      <EmptyState title="Sin historial" />
+                    ) : (
+                      <Table style={{ minWidth: 620 }} aria-label="Historial del jugador">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHeaderCell>Fecha</TableHeaderCell>
+                            <TableHeaderCell>Tipo</TableHeaderCell>
+                            <TableHeaderCell className={styles.right}>Cantidad</TableHeaderCell>
+                            <TableHeaderCell>Razón</TableHeaderCell>
+                            <TableHeaderCell>Detalle</TableHeaderCell>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {activity.history.map((h) => (
+                            <TableRow key={h.id}>
+                              <TableCell>
+                                <Caption1 className={mergeClasses(common.mono, common.muted)}>{fmtDateTime(h.created_at)}</Caption1>
+                              </TableCell>
+                              <TableCell>
+                                {h.type === "points" ? (
+                                  <StatusBadge tone="brand" size="small" icon={<Ribbon16Regular />}>Puntos</StatusBadge>
+                                ) : (
+                                  <StatusBadge tone="warning" size="small" icon={<Diamond16Regular />}>Fragmentos</StatusBadge>
+                                )}
+                              </TableCell>
+                              <TableCell className={styles.right}>
+                                <span className={h.amount >= 0 ? styles.positive : styles.negative}>
+                                  {h.amount >= 0 ? "+" : ""}
+                                  {h.amount}
                                 </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] text-amber-300">
-                                  <span className="material-symbols-outlined text-[11px]">diamond</span>
-                                  Fragmentos
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2.5 text-right">
-                              <span className={`font-mono text-sm font-bold ${h.amount >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                                {h.amount >= 0 ? "+" : ""}{h.amount}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <span className="rounded bg-[#18181B] px-2 py-0.5 font-mono text-[11px] text-[#71717A]">{h.reason}</span>
-                            </td>
-                            <td className="px-4 py-2.5 max-w-xs">
-                              <span className="text-xs text-[#A1A1AA] line-clamp-1">{h.detail ?? "—"}</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                              </TableCell>
+                              <TableCell>
+                                <Caption1 className={styles.reason}>{h.reason}</Caption1>
+                              </TableCell>
+                              <TableCell>
+                                <Caption1 className={mergeClasses(styles.detail, common.subtle)} title={h.detail ?? undefined}>
+                                  {h.detail ?? "—"}
+                                </Caption1>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
                   </div>
                 )}
 
                 {/* ── Invitaciones ──────────────────────────────────────── */}
                 {tab === "invitations" && (
-                  <div className="overflow-x-auto">
+                  <div className={common.tableScroll}>
                     {activity.invitations.length === 0 ? (
-                      <div className="px-4 py-10 text-center text-sm text-[#52525B]">
-                        Este jugador no ha generado códigos de invitación
-                      </div>
+                      <EmptyState title="Este jugador no ha generado códigos de invitación" />
                     ) : (
-                      <table className="w-full min-w-[500px]">
-                        <thead>
-                          <tr className="border-b border-[#27272A] bg-[#18181B] font-mono text-[11px] uppercase tracking-wider text-[#71717A]">
-                            <th className="px-4 py-3 text-left font-medium">Código</th>
-                            <th className="px-4 py-3 text-left font-medium">Tag</th>
-                            <th className="px-4 py-3 text-center font-medium">Usos</th>
-                            <th className="px-4 py-3 text-center font-medium">Estado</th>
-                            <th className="px-4 py-3 text-left font-medium">Creado</th>
-                            <th className="px-4 py-3 text-left font-medium">Expira</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#27272A] text-sm">
-                          {activity.invitations.map((inv, i) => (
-                            <tr key={inv.id} className={`transition-colors hover:bg-[#18181B] ${i % 2 === 0 ? "bg-[#09090B]" : "bg-[#0D0D0F]"}`}>
-                              <td className="px-4 py-2.5">
-                                <span className="font-mono text-xs text-white">{inv.code}</span>
-                              </td>
-                              <td className="px-4 py-2.5">
+                      <Table style={{ minWidth: 620 }} aria-label="Invitaciones del jugador">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHeaderCell>Código</TableHeaderCell>
+                            <TableHeaderCell>Tag</TableHeaderCell>
+                            <TableHeaderCell>Usos</TableHeaderCell>
+                            <TableHeaderCell>Estado</TableHeaderCell>
+                            <TableHeaderCell>Creado</TableHeaderCell>
+                            <TableHeaderCell>Expira</TableHeaderCell>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {activity.invitations.map((inv) => (
+                            <TableRow key={inv.id}>
+                              <TableCell>
+                                <Caption1 className={common.mono}>{inv.code}</Caption1>
+                              </TableCell>
+                              <TableCell>
                                 {inv.tag ? (
-                                  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(inv.tag) ? (
-                                    <a
-                                      href={`/players/${inv.tag}`}
-                                      className="inline-flex items-center gap-1 rounded border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 font-mono text-xs text-blue-300 hover:border-blue-400/50 hover:text-blue-200 transition-colors"
-                                    >
-                                      <span className="material-symbols-outlined text-[11px]">person</span>
-                                      {inv.tag.slice(0, 8)}…
-                                    </a>
+                                  UUID_RE.test(inv.tag) ? (
+                                    <Link href={`/players/${inv.tag}`} onClick={openPlayer(`/players/${inv.tag}`)} className={common.mono}>
+                                      <span className={styles.inline}>
+                                        <Person16Regular />
+                                        {inv.tag.slice(0, 8)}…
+                                      </span>
+                                    </Link>
                                   ) : (
-                                    <span className="rounded border border-[#27272A] bg-[#18181B] px-2 py-0.5 font-mono text-xs text-[#A1A1AA]">{inv.tag}</span>
+                                    <StatusBadge tone="neutral" appearance="outline" size="small">{inv.tag}</StatusBadge>
                                   )
-                                ) : <span className="text-[#3F3F46]">—</span>}
-                              </td>
-                              <td className="px-4 py-2.5 text-center font-mono text-xs text-[#A1A1AA]">
-                                {inv.current_uses}/{inv.max_uses}
-                              </td>
-                              <td className="px-4 py-2.5 text-center">
-                                {inv.is_active ? (
-                                  <span className="inline-flex items-center gap-1 rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] text-emerald-400">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                                    Activo
-                                  </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 rounded border border-[#27272A] bg-[#18181B] px-2 py-0.5 font-mono text-[10px] text-[#71717A]">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-[#71717A]" />
-                                    Inactivo
-                                  </span>
+                                  <Caption1 className={common.muted}>—</Caption1>
                                 )}
-                              </td>
-                              <td className="px-4 py-2.5 font-mono text-xs text-[#71717A]">{fmtDate(inv.created_at)}</td>
-                              <td className="px-4 py-2.5 font-mono text-xs text-[#71717A]">{fmtDate(inv.expires_at)}</td>
-                            </tr>
+                              </TableCell>
+                              <TableCell>
+                                <Caption1 className={mergeClasses(common.mono, common.subtle)}>
+                                  {inv.current_uses}/{inv.max_uses}
+                                </Caption1>
+                              </TableCell>
+                              <TableCell>
+                                {inv.is_active ? (
+                                  <StatusBadge tone="success" size="small">Activo</StatusBadge>
+                                ) : (
+                                  <StatusBadge tone="neutral" size="small">Inactivo</StatusBadge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Caption1 className={mergeClasses(common.mono, common.muted)}>{fmtDate(inv.created_at)}</Caption1>
+                              </TableCell>
+                              <TableCell>
+                                <Caption1 className={mergeClasses(common.mono, common.muted)}>{fmtDate(inv.expires_at)}</Caption1>
+                              </TableCell>
+                            </TableRow>
                           ))}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     )}
                   </div>
                 )}
 
                 {/* ── Bosses ────────────────────────────────────────────── */}
                 {tab === "bosses" && (
-                  <div className="overflow-x-auto">
+                  <div className={common.tableScroll}>
                     {activity.boss_stats.length === 0 ? (
-                      <div className="px-4 py-10 text-center text-sm text-[#52525B]">
-                        Sin enfrentamientos con bosses
-                      </div>
+                      <EmptyState title="Sin enfrentamientos con bosses" />
                     ) : (
-                      <table className="w-full min-w-[400px]">
-                        <thead>
-                          <tr className="border-b border-[#27272A] bg-[#18181B] font-mono text-[11px] uppercase tracking-wider text-[#71717A]">
-                            <th className="px-4 py-3 text-left font-medium">Boss</th>
-                            <th className="px-4 py-3 text-left font-medium">Palabra asignada</th>
-                            <th className="px-4 py-3 text-center font-medium">Estado</th>
-                            <th className="px-4 py-3 text-left font-medium">Primer encuentro</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#27272A] text-sm">
-                          {activity.boss_stats.map((bs, i) => (
-                            <tr key={bs.boss_id} className={`transition-colors hover:bg-[#18181B] ${i % 2 === 0 ? "bg-[#09090B]" : "bg-[#0D0D0F]"}`}>
-                              <td className="px-4 py-2.5">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-500/10 border border-red-500/30">
-                                    <span className="material-symbols-outlined text-[14px] text-red-400">skull</span>
-                                  </div>
-                                  <span className="text-sm font-medium text-white">{bs.boss_name ?? bs.boss_id}</span>
+                      <Table style={{ minWidth: 520 }} aria-label="Bosses del jugador">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHeaderCell>Boss</TableHeaderCell>
+                            <TableHeaderCell>Palabra asignada</TableHeaderCell>
+                            <TableHeaderCell>Estado</TableHeaderCell>
+                            <TableHeaderCell>Primer encuentro</TableHeaderCell>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {activity.boss_stats.map((bs) => (
+                            <TableRow key={bs.boss_id}>
+                              <TableCell>
+                                <div className={styles.bossCell}>
+                                  <span className={styles.bossIcon}>
+                                    <Bot20Regular />
+                                  </span>
+                                  <Body1>{bs.boss_name ?? bs.boss_id}</Body1>
                                 </div>
-                              </td>
-                              <td className="px-4 py-2.5">
-                                {bs.assigned_word ? (
-                                  <span className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 font-mono text-xs font-semibold text-amber-300">
-                                    <span className="material-symbols-outlined text-[11px]">key</span>
-                                    {bs.assigned_word}
-                                  </span>
-                                ) : <span className="text-[#3F3F46]">—</span>}
-                              </td>
-                              <td className="px-4 py-2.5 text-center">
+                              </TableCell>
+                              <TableCell>
+                                {bs.assigned_word ? <SecretWordBadge word={bs.assigned_word} /> : <Caption1 className={common.muted}>—</Caption1>}
+                              </TableCell>
+                              <TableCell>
                                 {bs.defeated ? (
-                                  <span className="inline-flex items-center gap-1.5 rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] font-medium text-emerald-400">
-                                    <span className="material-symbols-outlined text-[12px]">check_circle</span>
-                                    Derrotado
-                                  </span>
+                                  <StatusBadge tone="success" size="small" icon={<CheckmarkCircle16Regular />}>Derrotado</StatusBadge>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1.5 rounded border border-[#27272A] bg-[#18181B] px-2 py-0.5 font-mono text-[10px] font-medium text-[#71717A]">
-                                    <span className="material-symbols-outlined text-[12px]">radio_button_unchecked</span>
-                                    Pendiente
-                                  </span>
+                                  <StatusBadge tone="neutral" size="small" icon={<Circle16Regular />}>Pendiente</StatusBadge>
                                 )}
-                              </td>
-                              <td className="px-4 py-2.5 font-mono text-xs text-[#71717A]">{fmtDate(bs.created_at)}</td>
-                            </tr>
+                              </TableCell>
+                              <TableCell>
+                                <Caption1 className={mergeClasses(common.mono, common.muted)}>{fmtDate(bs.created_at)}</Caption1>
+                              </TableCell>
+                            </TableRow>
                           ))}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     )}
                   </div>
                 )}
-              </div>
+              </SectionCard>
             </>
           )}
         </div>
