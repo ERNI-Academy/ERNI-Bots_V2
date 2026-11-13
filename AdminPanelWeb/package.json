@@ -13,10 +13,10 @@
     "@fluentui/react-icons": "^2.0.345",
     "@fluentui/tokens": "^1.0.0-alpha.24",
     "@tailwindcss/postcss": "^4",
-    "next": "16.4.4",
+    "next": "16.4.5",
     "qrcode.react": "^4.2.0",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
@@ -25,6 +25,6 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.4"
+    "eslint-config-next": "16.4.5"
   }
 }
