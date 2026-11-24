@@ -11,16 +11,29 @@ const SITE_URL = "https://ernibots-v2.azurewebsites.net/";
 const AUTO_REFRESH_MS = 60_000;    // reload data every 60s
 const AUTO_PAGE_MS   = 15_000;     // cycle page every 15s
 
+// Player ranking rows carry username (+ team_name in team seasons); team rows carry name.
 interface LeaderboardEntry {
   rank: number;
-  username: string;
   score: number;
+  username?: string;
+  team_name?: string | null;
+  team_id?: string;
+  name?: string;
+  member_count?: number;
+  dissolved?: boolean;
+}
+
+type RankingType = "players" | "teams";
+
+interface TeamDetail {
+  members: { username: string; score: number; current_member: boolean }[];
 }
 
 interface PlayerProfile {
   rank: number;
   username: string;
   season_score: number;
+  team?: { id: string; name: string } | null;
 }
 
 function formatScore(n: number): string {
@@ -60,6 +73,12 @@ export default function ScoreboardPage() {
   const [page, setPage] = useState(0);
   const [retryKey, setRetryKey] = useState(0);
   const [total, setTotal] = useState<number | null>(null);
+  // null = whatever the backend serves by default for the active season
+  const [view, setView] = useState<RankingType | null>(null);
+  const [shownType, setShownType] = useState<RankingType>("players");
+  const [seasonMode, setSeasonMode] = useState<string | null>(null);
+  const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
+  const [teamDetails, setTeamDetails] = useState<Record<string, TeamDetail | "error">>({});
   const listRef = useRef<HTMLDivElement>(null);
   const isAuthenticated = player !== null;
 
@@ -68,11 +87,12 @@ export default function ScoreboardPage() {
   }, [page]);
 
   // Fetches a page without touching loading/error up front
-  const fetchData = useCallback(async (targetPage: number) => {
+  const fetchData = useCallback(async (targetPage: number, rankingType: RankingType | null) => {
     const offset = targetPage * PAGE_SIZE;
+    const typeParam = rankingType ? `&type=${rankingType}` : "";
     try {
       const [lbData, meData] = await Promise.all([
-        fetch(`/api/leaderboard?offset=${offset}&limit=${PAGE_SIZE}`)
+        fetch(`/api/leaderboard?offset=${offset}&limit=${PAGE_SIZE}${typeParam}`)
           .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
           .catch((e: Error) => { throw e; }),
         fetch("/api/players/me", { credentials: "include" })
@@ -81,6 +101,8 @@ export default function ScoreboardPage() {
       ]);
       setEntries(Array.isArray(lbData?.items) ? lbData.items : []);
       setTotal(typeof lbData?.total === "number" ? lbData.total : null);
+      setShownType(lbData?.type === "teams" ? "teams" : "players");
+      setSeasonMode(lbData?.season_mode ?? null);
       setPlayer(meData ?? null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al cargar el ranking");
@@ -91,15 +113,15 @@ export default function ScoreboardPage() {
   }, []);
 
   // Refresh with visible loading state (used by the auto-refresh interval)
-  const loadData = useCallback(async (targetPage: number) => {
+  const loadData = useCallback(async (targetPage: number, rankingType: RankingType | null) => {
     setLoading(true);
     setError(null);
-    await fetchData(targetPage);
+    await fetchData(targetPage, rankingType);
   }, [fetchData]);
 
-  // When page/retryKey change, flag loading and clear the error during render
+  // When page/retryKey/view change, flag loading and clear the error during render
   // (React-recommended alternative to setting state inside an effect)
-  const requestKey = `${page}:${retryKey}`;
+  const requestKey = `${page}:${retryKey}:${view}`;
   const [prevRequestKey, setPrevRequestKey] = useState(requestKey);
   if (prevRequestKey !== requestKey) {
     setPrevRequestKey(requestKey);
@@ -109,17 +131,43 @@ export default function ScoreboardPage() {
 
   // Initial load + dependency on page/retryKey
   useEffect(() => {
-    async function run() { await fetchData(page); }
+    async function run() { await fetchData(page, view); }
     run();
-  }, [page, retryKey, fetchData]);
+  }, [page, retryKey, view, fetchData]);
 
   // Auto-refresh: reload current page data every 60s
   useEffect(() => {
     const id = setInterval(() => {
-      loadData(page);
+      loadData(page, view);
     }, AUTO_REFRESH_MS);
     return () => clearInterval(id);
-  }, [page, loadData]);
+  }, [page, view, loadData]);
+
+  function selectView(next: RankingType) {
+    if (next === shownType) return;
+    setView(next);
+    setPage(0);
+    setExpandedTeam(null);
+  }
+
+  async function toggleTeam(teamId: string) {
+    if (expandedTeam === teamId) {
+      setExpandedTeam(null);
+      return;
+    }
+    setExpandedTeam(teamId);
+    if (teamDetails[teamId]) return;
+    try {
+      const res = await fetch(`/api/leaderboard/teams/${encodeURIComponent(teamId)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const detail: TeamDetail = await res.json();
+      setTeamDetails((prev) => ({ ...prev, [teamId]: detail }));
+    } catch {
+      setTeamDetails((prev) => ({ ...prev, [teamId]: "error" }));
+    }
+  }
+
+  const showingTeams = shownType === "teams";
 
   const totalPages = total !== null ? Math.ceil(total / PAGE_SIZE) : null;
 
@@ -176,6 +224,21 @@ export default function ScoreboardPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
+          {seasonMode === "team" && (
+            <div className="flex border border-primary/30" role="tablist">
+              {(["teams", "players"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  role="tab"
+                  aria-selected={shownType === tab}
+                  onClick={() => selectView(tab)}
+                  className={`px-3 py-1.5 text-xs uppercase tracking-widest font-mono transition-colors cursor-pointer ${shownType === tab ? "bg-primary/25 text-white" : "text-primary hover:bg-primary/10"}`}
+                >
+                  {tab === "teams" ? "Equipos" : "Individual"}
+                </button>
+              ))}
+            </div>
+          )}
           {isAuthenticated && (
             <Link
               href="/dashboard"
@@ -218,7 +281,7 @@ export default function ScoreboardPage() {
             {/* Column headers */}
             <div className="grid grid-cols-12 gap-4 md:gap-6 px-2 md:px-4 py-3 text-xs md:text-xs tracking-[0.2em] md:tracking-[0.4em] uppercase  mb-2 md:mb-4 border-b border-primary/20">
               <div className="col-span-2">Pos.</div>
-              <div className="col-span-7">Usuario</div>
+              <div className="col-span-7">{showingTeams ? "Equipo" : "Usuario"}</div>
               <div className="col-span-3 text-right">Puntuación</div>
             </div>
 
@@ -248,23 +311,50 @@ export default function ScoreboardPage() {
                   const color = rankColorClass(entry.rank);
                   const opacity = rowOpacityClass(entry.rank);
                   const isFirst = entry.rank === 1;
+                  const teamId = showingTeams ? entry.team_id : undefined;
+                  const detail = teamId ? teamDetails[teamId] : undefined;
 
                   return (
-                    <div
-                      key={entry.rank}
-                      className={`grid grid-cols-12 gap-4 md:gap-6 px-2 md:px-4 ${sizes.py} items-center transition-all scoreboard-row-hover ${color} ${opacity}`}
-                    >
-                      <div className={`col-span-2 ${sizes.index} font-bold tracking-tighter`}>
-                        {String(entry.rank).padStart(2, "0")}
-                      </div>
+                    <div key={`${shownType}-${entry.rank}`}>
                       <div
-                        className={`col-span-7 ${sizes.name} font-bold tracking-tight uppercase ${isFirst ? "scoreboard-glitch" : ""}`}
+                        onClick={teamId ? () => toggleTeam(teamId) : undefined}
+                        className={`grid grid-cols-12 gap-4 md:gap-6 px-2 md:px-4 ${sizes.py} items-center transition-all scoreboard-row-hover ${color} ${opacity} ${teamId ? "cursor-pointer" : ""}`}
                       >
-                        {entry.username}
+                        <div className={`col-span-2 ${sizes.index} font-bold tracking-tighter`}>
+                          {String(entry.rank).padStart(2, "0")}
+                        </div>
+                        <div className="col-span-7 min-w-0">
+                          <div className={`${sizes.name} font-bold tracking-tight uppercase truncate ${isFirst ? "scoreboard-glitch" : ""}`}>
+                            {showingTeams ? entry.name : entry.username}
+                          </div>
+                          {showingTeams ? (
+                            <div className="text-[10px] md:text-xs tracking-widest uppercase text-slate-400">
+                              {entry.dissolved ? "Disuelto" : `${entry.member_count ?? 0} miembros`}
+                            </div>
+                          ) : seasonMode === "team" && (
+                            <div className="text-[10px] md:text-xs tracking-widest uppercase text-slate-400 truncate">
+                              {entry.team_name ?? "Sin equipo"}
+                            </div>
+                          )}
+                        </div>
+                        <div className={`col-span-3 text-right ${sizes.score} font-light tracking-wide`}>
+                          {formatScore(entry.score)}
+                        </div>
                       </div>
-                      <div className={`col-span-3 text-right ${sizes.score} font-light tracking-wide`}>
-                        {formatScore(entry.score)}
-                      </div>
+                      {teamId && expandedTeam === teamId && (
+                        <div className="ml-[16.6%] mr-2 md:mr-4 mb-2 border-l border-primary/30 pl-3 py-1 space-y-1 text-xs font-mono">
+                          {!detail ? (
+                            <div className="text-slate-500 animate-pulse uppercase tracking-widest">Cargando miembros...</div>
+                          ) : detail === "error" ? (
+                            <div className="text-red-400/70 uppercase tracking-widest">No se pudieron cargar los miembros</div>
+                          ) : detail.members.map((member) => (
+                            <div key={member.username} className="flex justify-between gap-4 text-slate-300">
+                              <span className={member.current_member ? "" : "text-slate-500 line-through"}>{member.username}</span>
+                              <span className="text-primary">{formatScore(member.score)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -276,7 +366,7 @@ export default function ScoreboardPage() {
           <footer className="w-full px-4 md:px-8 py-3 md:py-4 flex flex-row justify-between items-center gap-4 border-t border-primary/30 shrink-0">
             {/* Stat: total players */}
             <div className="flex flex-col">
-              <span className="text-xs md:text-xs tracking-[0.2em] uppercase text-slate-300">Jugadores totales</span>
+              <span className="text-xs md:text-xs tracking-[0.2em] uppercase text-slate-300">{showingTeams ? "Equipos totales" : "Jugadores totales"}</span>
               <span className="text-base md:text-xl font-bold">{loading ? "—" : (total ?? entries.length).toLocaleString()}</span>
             </div>
 
@@ -307,9 +397,9 @@ export default function ScoreboardPage() {
             {isAuthenticated ? (
               <div className="flex items-center gap-3 md:gap-4">
                 <div className="flex flex-col text-right">
-                  <span className="text-xs md:text-xs tracking-[0.2em] uppercase text-slate-300">Mi posición</span>
-                  <span className="text-base md:text-xl font-bold">
-                    {player ? `#${player.rank.toLocaleString()}` : "—"}
+                  <span className="text-xs md:text-xs tracking-[0.2em] uppercase text-slate-300">{showingTeams ? "Mi equipo" : "Mi posición"}</span>
+                  <span className="text-base md:text-xl font-bold truncate max-w-[12rem]">
+                    {showingTeams ? (player?.team?.name ?? "—") : player ? `#${player.rank.toLocaleString()}` : "—"}
                   </span>
                 </div>
               </div>

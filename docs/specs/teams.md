@@ -310,12 +310,13 @@ Cambios en endpoints existentes:
 
 - **Sin equipo:** las mismas opciones que en el registro.
 - **Con equipo:** nombre, miembros (n / máx.), código con botones «Copiar código» y «Copiar enlace» (`/team/join/<code>`), y botones de **cambiar nombre** y **regenerar código** (solo si `can_manage`) y de **salir** (solo si `can_leave`; si no, un tooltip con el motivo: temporada en curso o salida desactivada).
-- `/team/join/[code]`: vista previa y botón «Unirme». Si el usuario no ha iniciado sesión, va a login o registro y vuelve después a esta página.
+- `/team/join/[code]`: vista previa y botón «Unirme». Si el usuario no ha iniciado sesión, `proxy.ts` guarda el código en la cookie `team-invite` (1 día, legible por el cliente) antes de mandarlo al onboarding o al login. Tras el login o el registro se le lleva a `/team/join/<código>`, y `/team` y `/team/welcome` rellenan el código automáticamente.
 
 ### 10.3 Dashboard y batalla
 
 - Temporada por equipos en curso y jugador sin equipo: banner fijo «Esta temporada es por equipos. Únete a un equipo para jugar» con un CTA a `/team`. Los botones de atacar fortalezas y bosses están desactivados.
 - La cabecera muestra el nombre del equipo del jugador.
+- El mini ranking del dashboard pide siempre `type=players`.
 - La pantalla de batalla trata los códigos `team_required`, `same_team`, `target_not_participating` y `battle_invalidated` con mensajes claros.
 
 ### 10.4 Scoreboard

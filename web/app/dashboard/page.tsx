@@ -57,6 +57,7 @@ interface PlayerProfile {
     created_at: string;
     has_fortress: boolean;
     season_score: number;
+    team?: { id: string; name: string } | null;
     fortress?: {
         id: string;
         name: string;
@@ -152,6 +153,7 @@ export default function DashboardPage() {
     const [now, setNow] = useState(() => Date.now());
     const [showSettings, setShowSettings] = useState(false);
     const [seasonStatus, setSeasonStatus] = useState<string>("active");
+    const [seasonMode, setSeasonMode] = useState<string | null>(null);
     const [seasonStartDate, setSeasonStartDate] = useState<string | null>(null);
     const [seasonEndDate, setSeasonEndDate] = useState<string | null>(null);
 
@@ -175,7 +177,8 @@ export default function DashboardPage() {
                 const [fortressData, profileRes, lbRes, bossesRes, configData] = await Promise.all([
                     fetchMatchmakingFortresses().catch(() => [] as Fortress[]),
                     fetch("/api/players/me", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
-                    fetch("/api/leaderboard?limit=100", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
+                    // Always the player ranking here: team seasons default to the team ranking
+                    fetch("/api/leaderboard?limit=100&type=players", { credentials: "include" }).then(r => r.ok ? r.json() : null).catch(() => null),
                     fetch("/api/players/bosses", { credentials: "include" }).then(r => r.ok ? r.json() : []).catch(() => []),
                     fetch("/api/config").then(r => r.ok ? r.json() : {}).catch(() => ({})),
                 ]);
@@ -185,6 +188,7 @@ export default function DashboardPage() {
                 setMarkerPos(generateSpreadPositions(fortressData.length));
                 setBosses(Array.isArray(bossesRes) ? bossesRes : []);
                 setSeasonStatus((configData as Record<string, string>).season_status ?? "active");
+                setSeasonMode((configData as Record<string, string | null>).season_mode ?? null);
                 setSeasonStartDate((configData as Record<string, string | null>).season_start_date ?? null);
                 setSeasonEndDate((configData as Record<string, string | null>).season_end_date ?? null);
             } finally {
@@ -203,6 +207,9 @@ export default function DashboardPage() {
     const playerScore = player?.season_score ?? 0;
     const topScore = leaderboard[0]?.score ?? 1;
     const battlesBlocked = seasonStatus !== "active";
+    // Team season without a team: the player cannot attack (RN-70/71) and the map is empty (RN-76)
+    const teamBlocked = !battlesBlocked && seasonMode === "team" && !!player && !player.team;
+    const teamBlockedTitle = "Esta temporada es por equipos. Únete a un equipo para jugar.";
 
     return (
         <div className="relative bg-background-dark text-white font-[var(--font-display)] overflow-hidden h-screen w-screen">
@@ -232,6 +239,27 @@ export default function DashboardPage() {
                     <div className="absolute inset-0 flex items-center justify-center z-10">
                         <div className="font-mono text-primary text-xs animate-pulse uppercase tracking-widest">
                             ESCANEANDO FORTALEZAS...
+                        </div>
+                    </div>
+                )}
+
+                {/* Team season banner: no team, no game */}
+                {teamBlocked && !loading && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                        <div className="bg-black/85 border border-loot-gold/60 px-6 py-4 font-mono text-center space-y-3 max-w-sm mx-4 pointer-events-auto">
+                            <div className="text-loot-gold font-bold uppercase tracking-widest text-sm animate-pulse">
+                                ⚔ TEMPORADA POR EQUIPOS
+                            </div>
+                            <p className="text-slate-300 text-xs uppercase tracking-widest leading-relaxed">
+                                Únete a un equipo o crea el tuyo para atacar y defender en esta temporada.
+                            </p>
+                            <Link
+                                href="/team"
+                                className="inline-flex items-center gap-2 border border-loot-gold text-loot-gold px-4 py-1.5 text-xs font-bold uppercase tracking-widest hover:bg-loot-gold/15 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-sm">groups</span>
+                                Ir a equipos
+                            </Link>
                         </div>
                     </div>
                 )}
@@ -312,6 +340,16 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-center gap-2 md:gap-6">
                     <div className="flex gap-1 md:gap-2">
+                        <Link
+                            href="/team"
+                            className={`p-1 md:p-2 border transition-colors cursor-pointer flex items-center gap-1 ${teamBlocked ? "border-loot-gold/60 text-loot-gold hover:bg-loot-gold/15 animate-pulse" : "border-primary/30 text-primary hover:bg-primary/20"}`}
+                            title={player?.team ? `Equipo: ${player.team.name}` : "Equipo"}
+                        >
+                            <span className="material-symbols-outlined text-xs md:text-sm">groups</span>
+                            <span className="hidden lg:inline text-xs uppercase tracking-widest max-w-[10rem] truncate">
+                                {player?.team?.name ?? "Sin equipo"}
+                            </span>
+                        </Link>
                         <Link
                             href="/scoreboard"
                             data-tour="tour-scoreboard"
@@ -559,7 +597,7 @@ export default function DashboardPage() {
                                 const remaining = boss.active_at ? Math.max(0, new Date(boss.active_at).getTime() - now) : 0;
                                 const noFortress = !player?.has_fortress;
                                 const fortressDestroyed = player?.fortress?.status === "destroyed";
-                                const canAttackBoss = !noFortress && !fortressDestroyed && !battlesBlocked && !boss.defeated;
+                                const canAttackBoss = !noFortress && !fortressDestroyed && !battlesBlocked && !teamBlocked && !boss.defeated;
                                 return (
                                     <div key={boss.boss_id} className={`border p-3 space-y-2.5 ${
                                         boss.defeated
@@ -841,13 +879,13 @@ export default function DashboardPage() {
                                     {(() => {
                                         const fortressDestroyed = player?.fortress?.status === "destroyed";
                                         const noFortress = !player?.has_fortress;
-                                        const canAttack = !noFortress && !fortressDestroyed && !battlesBlocked;
+                                        const canAttack = !noFortress && !fortressDestroyed && !battlesBlocked && !teamBlocked;
                                         return (
                                             <>
                                                 <button
                                                     onClick={() => canAttack ? router.push(`/attack/${selectedFortress.id}`) : undefined}
                                                     disabled={!canAttack}
-                                                    title={battlesBlocked ? (seasonStatus === "frozen" ? "Temporada congelada. Las batallas están pausadas." : "La temporada ha finalizado. No se pueden iniciar batallas.") : noFortress ? "Debes crear tu fortaleza antes de atacar" : fortressDestroyed ? "Tu fortaleza está destruida. Reconstruyela primero." : undefined}
+                                                    title={battlesBlocked ? (seasonStatus === "frozen" ? "Temporada congelada. Las batallas están pausadas." : "La temporada ha finalizado. No se pueden iniciar batallas.") : teamBlocked ? teamBlockedTitle : noFortress ? "Debes crear tu fortaleza antes de atacar" : fortressDestroyed ? "Tu fortaleza está destruida. Reconstruyela primero." : undefined}
                                                     className="flex-1 bg-blood-red/10 border border-blood-red/40 text-xs px-3 py-2 text-blood-red hover:bg-blood-red/30 transition-colors uppercase flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
                                                     <span className="material-symbols-outlined text-xs">gps_fixed</span>

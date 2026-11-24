@@ -16,6 +16,7 @@ interface Prize {
     category: string | null;
     color_key: string;
     winner_username: string | null;
+    winner_team: { name: string; members: string[] } | null;
 }
 
 const COLOR_THEMES: Record<string, { color: string; borderColor: string; glowColor: string; dotColor: string }> = {
@@ -140,6 +141,21 @@ export default function PremiosPage() {
                                                     <span className="text-loot-gold text-xs font-bold uppercase tracking-widest">
                                                         {prize.winner_username}
                                                     </span>
+                                                </div>
+                                            )}
+                                            {prize.winner_team && (
+                                                <div className="mt-4 border border-loot-gold/30 bg-loot-gold/5 px-3 py-2 w-fit max-w-full space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="material-symbols-outlined text-loot-gold text-base">groups</span>
+                                                        <span className="text-loot-gold text-xs font-bold uppercase tracking-widest">
+                                                            {prize.winner_team.name}
+                                                        </span>
+                                                    </div>
+                                                    {prize.winner_team.members.length > 0 && (
+                                                        <p className="text-white/60 text-[11px] leading-relaxed">
+                                                            {prize.winner_team.members.join(" · ")}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>

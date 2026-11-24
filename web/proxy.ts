@@ -4,6 +4,28 @@ import type { NextRequest } from "next/server";
 // Rutas que no requieren autenticación
 const publicPaths = ["/login", "/register", "/about", "/premios", "/onboarding", "/scoreboard"];
 
+// Enlace de invitación a un equipo: /team/join/<código de 8 caracteres>
+const TEAM_JOIN_PATH = /^\/team\/join\/([A-Za-z0-9]{8})\/?$/;
+const TEAM_INVITE_COOKIE = "team-invite";
+
+/**
+ * Si el usuario abre un enlace de equipo sin sesión, guarda el código en una cookie
+ * (legible por el cliente, 1 día) para ofrecérselo tras el login o el registro.
+ */
+function keepTeamInvite(request: NextRequest, response: NextResponse): NextResponse {
+  const match = request.nextUrl.pathname.match(TEAM_JOIN_PATH);
+  if (match) {
+    response.cookies.set(TEAM_INVITE_COOKIE, match[1].toUpperCase(), {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24,
+      path: "/",
+    });
+  }
+  return response;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -27,7 +49,7 @@ export function proxy(request: NextRequest) {
     const onboardingUrl = request.nextUrl.clone();
     onboardingUrl.pathname = "/onboarding";
     onboardingUrl.search = "";
-    return NextResponse.redirect(onboardingUrl);
+    return keepTeamInvite(request, NextResponse.redirect(onboardingUrl));
   }
 
   // Si es una ruta pública, permitir acceso
@@ -51,7 +73,7 @@ export function proxy(request: NextRequest) {
     loginUrl.search = "";
     const code = request.nextUrl.searchParams.get("code");
     if (code) loginUrl.searchParams.set("code", code);
-    return NextResponse.redirect(loginUrl);
+    return keepTeamInvite(request, NextResponse.redirect(loginUrl));
   }
 
   // Usuario autenticado en la raíz → ir al dashboard

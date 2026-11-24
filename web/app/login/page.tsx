@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, Suspense, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { postAuthDestination } from "@/lib/teams";
 import Link from "next/link";
 import Image from "next/image";
 import { loginApi } from "@/lib/auth";
@@ -35,7 +36,7 @@ function LoginContent() {
       await loginApi(username, invitationCode);
       localStorage.setItem("username", username);
       localStorage.setItem("invitationCode", invitationCode);
-      router.push("/dashboard");
+      router.push(postAuthDestination("/dashboard"));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error de autenticación");
     } finally {

@@ -8,11 +8,14 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const offset = searchParams.get("offset") ?? "0";
   const limit  = searchParams.get("limit")  ?? "20";
+  // players | teams; omitted → the backend picks the default for the active season
+  const type   = searchParams.get("type");
+  const typeParam = type === "players" || type === "teams" ? `&type=${type}` : "";
 
   let backendRes: Response;
   try {
     backendRes = await fetch(
-      `${BACKEND}/api/v1/leaderboard?offset=${offset}&limit=${limit}`,
+      `${BACKEND}/api/v1/leaderboard?offset=${encodeURIComponent(offset)}&limit=${encodeURIComponent(limit)}${typeParam}`,
       {
         method: "GET",
         cache: "no-store",

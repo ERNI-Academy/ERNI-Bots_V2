@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useEffect, Suspense, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { postAuthDestination } from "@/lib/teams";
 import Link from "next/link";
 import Image from "next/image";
 import { registerApi } from "@/lib/auth";
@@ -104,7 +105,8 @@ function RegisterContent() {
             await registerApi(username, email, codeToUse, firstName.trim(), lastName.trim(), jobTitle.trim());
             localStorage.setItem("username", username);
             localStorage.setItem("invitationCode", codeToUse);
-            router.push("/dashboard");
+            // New players choose a team first (a pending /team/join link goes straight to it)
+            router.push(postAuthDestination("/team/welcome"));
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Error de registro");
         } finally {

@@ -235,6 +235,22 @@ export default function AttackPage() {
 
     const st = STATUS_STYLES[battle?.fortressStatus ?? "HOSTIL"];
 
+    // A team-season rule broke mid-battle (e.g. the admin moved a player): the battle ended without points.
+    function endInvalidatedBattle(text?: string) {
+        setBattleResult("lost");
+        setMessages(prev => [
+            ...prev,
+            {
+                id: uid(),
+                role: "result",
+                variant: "lost",
+                text: `${text ?? "La batalla ya no es válida."} Redirigiendo al mapa...`,
+                timestamp: now(),
+            },
+        ]);
+        setTimeout(() => router.push("/dashboard"), 3500);
+    }
+
     async function handleSend() {
         if (!input.trim() || isThinking || !battle || battleResult) return;
 
@@ -264,7 +280,9 @@ export default function AttackPage() {
 
             const data = await res.json();
 
-            if (!res.ok) {
+            if (!res.ok && data.code === "battle_invalidated") {
+                endInvalidatedBattle(data.error);
+            } else if (!res.ok) {
                 setMessages(prev => [
                     ...prev,
                     {
@@ -383,6 +401,11 @@ export default function AttackPage() {
             });
 
             const data = await res.json();
+
+            if (data.code === "battle_invalidated") {
+                endInvalidatedBattle(data.error);
+                return;
+            }
 
             if (data.result === "correct") {
                 setBattleResult("won");
