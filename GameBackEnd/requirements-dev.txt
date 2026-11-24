@@ -1,2 +1,2 @@
 # Test-only dependencies (install on top of requirements.txt)
-pytest
+pytest==9.2.0

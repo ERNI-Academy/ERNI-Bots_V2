@@ -75,13 +75,22 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-          cache-dependency-path: GameBackEnd/requirements.txt
+          cache-dependency-path: |
+            GameBackEnd/requirements.txt
+            GameBackEnd/requirements-dev.txt
 
       - name: Audit dependencies (pip-audit)
         run: pipx run --spec "pip-audit==${PIP_AUDIT_VERSION}" pip-audit -r requirements.txt
 
       - name: Byte-compile sources
         run: python -m compileall -q .
+
+      # psycopg2 (source build) is dropped for tests only: psycopg2-binary provides the same module.
+      - name: Run tests
+        run: |
+          grep -vx 'psycopg2' requirements.txt > "$RUNNER_TEMP/requirements-test.txt"
+          python -m pip install --disable-pip-version-check -r "$RUNNER_TEMP/requirements-test.txt" -r requirements-dev.txt
+          python -m pytest -q -p no:cacheprovider tests
 
   trivy:
     name: Trivy (SBOM & dependency scan)
