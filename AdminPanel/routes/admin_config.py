@@ -1,8 +1,12 @@
 """
 Admin configuration endpoints.
 
-GET  /api/v1/admin/config           – list all config entries
+GET  /api/v1/admin/config           – list all editable config entries (registry order)
 PATCH /api/v1/admin/config/<key>    – update a config value
+
+Editable keys, their types, defaults and bounds live in settings_registry.py.
+Values travel as canonical strings ("true"/"false" for bools, "5" for ints);
+each entry also carries its type, default and bounds so the UI can render it.
 """
 
 from flask import Blueprint, jsonify, request
@@ -10,15 +14,9 @@ from datetime import datetime
 
 from db import SessionLocal
 from db.models import AppConfig
+from settings_registry import REGISTRY, SETTINGS, Setting, parse_stored, serialize, validate_input
 
 admin_config_bp = Blueprint("admin_config", __name__)
-
-# Keys that admins are allowed to read/write via this API (allowlist)
-ALLOWED_KEYS = {
-    "invitations_enabled",
-    "player_invitations_enabled",
-    "bot_fortresses_enabled",
-}
 
 
 def _check_admin():
@@ -28,39 +26,34 @@ def _check_admin():
     return request.headers.get("X-Admin-Secret") == secret and secret != ""
 
 
+def _entry(setting: Setting, row: AppConfig | None) -> dict:
+    return {
+        "key": setting.key,
+        "value": serialize(setting, parse_stored(setting, row.value if row else None)),
+        "type": setting.type,
+        "default": serialize(setting, setting.default),
+        "min": setting.min,
+        "max": setting.max,
+        "description": (row.description if row and row.description else setting.description),
+        "updated_at": row.updated_at.isoformat() if row and row.updated_at else None,
+    }
+
+
 # ──────────────────────────────────────────────────────────
 # GET /config
 # ──────────────────────────────────────────────────────────
 
 @admin_config_bp.get("/config")
 def list_config():
-    """Return all allowed config entries."""
+    """Return every editable config entry, in registry order."""
     if not _check_admin():
         return jsonify({"error": "Forbidden"}), 403
 
     db = SessionLocal()
     try:
-        rows = db.query(AppConfig).filter(AppConfig.key.in_(ALLOWED_KEYS)).all()
+        rows = db.query(AppConfig).filter(AppConfig.key.in_(list(REGISTRY))).all()
         existing = {row.key: row for row in rows}
-        result = []
-        for key in ALLOWED_KEYS:
-            if key in existing:
-                row = existing[key]
-                result.append({
-                    "key": row.key,
-                    "value": row.value,
-                    "description": row.description,
-                    "updated_at": row.updated_at.isoformat() if row.updated_at else None,
-                })
-            else:
-                # Key not seeded yet — return default
-                result.append({
-                    "key": key,
-                    "value": "true",
-                    "description": None,
-                    "updated_at": None,
-                })
-        return jsonify(result), 200
+        return jsonify([_entry(setting, existing.get(setting.key)) for setting in SETTINGS]), 200
     finally:
         db.close()
 
@@ -71,37 +64,34 @@ def list_config():
 
 @admin_config_bp.route("/config/<key>", methods=["PATCH"])
 def update_config(key: str):
-    """Update a config entry value.  Body: {"value": "true"|"false"}"""
+    """Update a config entry value.  Body: {"value": <bool|int|string>}"""
     if not _check_admin():
         return jsonify({"error": "Forbidden"}), 403
 
-    if key not in ALLOWED_KEYS:
+    setting = REGISTRY.get(key)
+    if setting is None:
         return jsonify({"error": f"Config key '{key}' not found or not editable"}), 404
 
     data = request.get_json(silent=True) or {}
-    new_value = data.get("value")
-    if new_value is None:
+    if data.get("value") is None:
         return jsonify({"error": "'value' is required"}), 400
-    new_value = str(new_value).strip().lower()
-    if new_value not in ("true", "false"):
-        return jsonify({"error": "'value' must be 'true' or 'false'"}), 400
+    try:
+        new_value = validate_input(setting, data["value"])
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
 
     db = SessionLocal()
     try:
         row = db.get(AppConfig, key)
         if row is None:
-            row = AppConfig(key=key, value=new_value)
+            row = AppConfig(key=key, value=new_value, description=setting.description)
             db.add(row)
         else:
             row.value = new_value
             row.updated_at = datetime.utcnow()
         db.commit()
         db.refresh(row)
-        return jsonify({
-            "key": row.key,
-            "value": row.value,
-            "updated_at": row.updated_at.isoformat() if row.updated_at else None,
-        }), 200
+        return jsonify(_entry(setting, row)), 200
     except Exception:
         db.rollback()
         raise

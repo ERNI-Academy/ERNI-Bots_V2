@@ -22,7 +22,11 @@ import { fmtFullDateTime } from "@/lib/format";
 
 interface ConfigEntry {
   key: string;
-  value: string; // "true" | "false"
+  value: string; // canonical string: "true" | "false" for bools, "5" for ints
+  type?: "bool" | "int";
+  default?: string;
+  min?: number | null;
+  max?: number | null;
   description: string | null;
   updated_at: string | null;
 }
@@ -80,7 +84,10 @@ export default function ConfigPage() {
   useEffect(() => {
     fetch("/api/admin/config", { cache: "no-store" })
       .then((r) => r.json())
-      .then((data: ConfigEntry[]) => setEntries(Array.isArray(data) ? data : []))
+      // Only render the toggles this page knows; the team settings get their own section later.
+      .then((data: ConfigEntry[]) =>
+        setEntries(Array.isArray(data) ? data.filter((e) => e.key in KEY_LABELS && (e.type ?? "bool") === "bool") : []),
+      )
       .catch(() => setError("No se pudo cargar la configuración"))
       .finally(() => setLoading(false));
   }, []);

@@ -47,10 +47,17 @@ class Player(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
 
+    # Current team (at most one). History lives in team_membership_log.
+    team_id = Column(String, ForeignKey("teams.id"), nullable=True)
+
     fortress = relationship("Fortress", back_populates="owner", uselist=False)
     battles = relationship("Battle", back_populates="attacker")
     season_stats = relationship("PlayerSeasonStats", back_populates="player")
     purchased_assets = relationship("PlayerAsset", back_populates="player")
+    team = relationship("Team", back_populates="members", foreign_keys=[team_id])
+
+
+Index("idx_player_team", Player.team_id)
 
 
 # ==========================
@@ -67,6 +74,10 @@ class Season(Base):
     is_ranked = Column(Boolean, default=True)
     is_frozen = Column(Boolean, default=False)
     finalized = Column(Boolean, default=False)
+
+    # 'individual' | 'team'. Editable only while first_activated_at is NULL.
+    mode = Column(String(10), nullable=False, default="individual", server_default="individual")
+    first_activated_at = Column(DateTime, nullable=True)
 
     start_date = Column(DateTime, default=datetime.utcnow)
     end_date = Column(DateTime)
@@ -99,6 +110,123 @@ Index(
     PlayerSeasonStats.season_id,
     unique=True
 )
+
+
+# ==========================
+# TEAM
+# ==========================
+
+class Team(Base):
+    """
+    Persistent team. A player belongs to at most one team (Player.team_id).
+    Dissolved teams are kept (dissolved_at set) so past season rankings survive.
+    - name_normalized: lowercase, accents stripped, spaces collapsed; unique among active teams
+    - join_code: 8-char uppercase code used to join; unique among active teams
+    - created_by_player_id: NULL when created by an admin. Plain column (no FK) to
+      avoid a players <-> teams foreign-key cycle.
+    - dissolved_reason: 'empty' | 'admin' | 'admin_bulk'
+    """
+    __tablename__ = "teams"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    name = Column(String(32), nullable=False)
+    name_normalized = Column(String(64), nullable=False)  # NFKD may expand some letters
+    join_code = Column(String(8), nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by_player_id = Column(String, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    dissolved_at = Column(DateTime, nullable=True)
+    dissolved_reason = Column(String(30), nullable=True)
+
+    members = relationship("Player", back_populates="team", foreign_keys="Player.team_id")
+    season_members = relationship("TeamSeasonMember", back_populates="team")
+
+
+Index(
+    "uq_team_name_active",
+    Team.name_normalized,
+    unique=True,
+    sqlite_where=Team.dissolved_at.is_(None),
+    postgresql_where=Team.dissolved_at.is_(None),
+)
+Index(
+    "uq_team_join_code_active",
+    Team.join_code,
+    unique=True,
+    sqlite_where=Team.dissolved_at.is_(None),
+    postgresql_where=Team.dissolved_at.is_(None),
+)
+
+
+# ==========================
+# TEAM MEMBERSHIP LOG (audit)
+# ==========================
+
+class TeamMembershipLog(Base):
+    """
+    Audit trail of team changes.
+    - event: created | joined | left | removed | moved_in | moved_out |
+             renamed | code_regenerated | dissolved
+    - actor: player | admin | system
+    - player_id: affected player (NULL for team-level events such as renamed)
+    """
+    __tablename__ = "team_membership_log"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    team_id = Column(String, ForeignKey("teams.id"), nullable=False)
+    player_id = Column(String, ForeignKey("players.id"), nullable=True)
+
+    event = Column(String(30), nullable=False)
+    actor = Column(String(10), nullable=False)
+    actor_player_id = Column(String, ForeignKey("players.id"), nullable=True)
+    detail = Column(Text, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    team = relationship("Team")
+    player = relationship("Player", foreign_keys=[player_id])
+
+
+Index("idx_team_log_team", TeamMembershipLog.team_id, TeamMembershipLog.created_at)
+
+
+# ==========================
+# TEAM SEASON MEMBER (roster + contributed points)
+# ==========================
+
+class TeamSeasonMember(Base):
+    """
+    One row per (team, season, player): the season roster and the points that
+    player earned for that team. Team score = SUM(score) per (team, season).
+    A player moved mid-season has one row per team, so earned points stay
+    with the team they were earned for.
+    """
+    __tablename__ = "team_season_members"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    team_id = Column(String, ForeignKey("teams.id"), nullable=False)
+    season_id = Column(String, ForeignKey("seasons.id"), nullable=False)
+    player_id = Column(String, ForeignKey("players.id"), nullable=False)
+
+    score = Column(Integer, nullable=False, default=0, server_default="0")
+    joined_at = Column(DateTime, default=datetime.utcnow)
+
+    team = relationship("Team", back_populates="season_members")
+    season = relationship("Season")
+    player = relationship("Player")
+
+
+Index(
+    "idx_team_season_member_unique",
+    TeamSeasonMember.team_id,
+    TeamSeasonMember.season_id,
+    TeamSeasonMember.player_id,
+    unique=True,
+)
+Index("idx_team_season_member_season_team", TeamSeasonMember.season_id, TeamSeasonMember.team_id)
+Index("idx_team_season_member_player_season", TeamSeasonMember.player_id, TeamSeasonMember.season_id)
 
 
 # ==========================
@@ -603,6 +731,9 @@ class PlayerHistoryEntry(Base):
     reason = Column(String(100), nullable=False)
     detail = Column(Text, nullable=True)
 
+    # Team credited with these points (team seasons only), NULL otherwise.
+    team_id = Column(String, ForeignKey("teams.id"), nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
 
     player = relationship("Player")
@@ -621,6 +752,7 @@ class Prize(Base):
     CTF prizes shown on the /premios page.
     color_key maps to a frontend theme: 'red' | 'cyan' | 'green' | 'purple' | 'yellow' | 'orange'
     winner_username is set once the winner is announced.
+    winner_team_id is the alternative winner: a team. At most one of the two is set.
     """
     __tablename__ = "prizes"
 
@@ -633,8 +765,11 @@ class Prize(Base):
     category      = Column(String(100), nullable=True)
     color_key     = Column(String(20), default="cyan", nullable=False)
     winner_username = Column(String(50), nullable=True)
+    winner_team_id  = Column(String, ForeignKey("teams.id"), nullable=True)
     created_at    = Column(DateTime, default=datetime.utcnow)
     updated_at    = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    winner_team = relationship("Team")
 
 
 # ==========================

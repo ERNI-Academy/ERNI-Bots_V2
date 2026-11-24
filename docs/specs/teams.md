@@ -168,7 +168,7 @@ Hay que cambiar **las dos copias** de `models.py` (GameBackEnd y AdminPanel).
 |---|---|---|
 | `id` | String PK | uuid |
 | `name` | String(32) | Nombre visible |
-| `name_normalized` | String(32) | lower + sin tildes + espacios colapsados |
+| `name_normalized` | String(64) | lower + sin tildes + espacios colapsados |
 | `join_code` | String(8) | Mayúsculas |
 | `created_at` | DateTime | |
 | `created_by_player_id` | String FK players, nullable | `null` si lo creó el admin |
@@ -236,7 +236,7 @@ Cambios necesarios en `admin_config.py` y `config.py`:
 - El valor por defecto deja de ser `"true"` para todas las claves.
 - El PATCH valida según el tipo de la clave.
 
-`GET /config` añade además `season.mode` (`individual` | `team` | `null`).
+`GET /config` añade además `season_mode` (`individual` | `team` | `null`), plano como `season_status`.
 
 ## 8. API del juego (GameBackEnd, `/api/v1`, JWT)
 

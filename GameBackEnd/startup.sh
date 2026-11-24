@@ -38,6 +38,7 @@ python scripts/migrate_battle_player_guess.py || { echo "[startup] Migration fai
 # python scripts/migrate_battle_hint_used.py || { echo "[startup] Migration failed, aborting."; exit 1; }
 # python scripts/migrate_battle_hint_text.py || { echo "[startup] Migration failed, aborting."; exit 1; }
 # python scripts/migrate_player_profile_fields.py || { echo "[startup] Migration failed, aborting."; exit 1; }
+python scripts/migrate_teams.py || { echo "[startup] Migration failed, aborting."; exit 1; }
 echo "[startup] Migrations completed."
 
 # Run seed only when SEED_DB=true is explicitly set (e.g. via Azure App Settings on first deploy)

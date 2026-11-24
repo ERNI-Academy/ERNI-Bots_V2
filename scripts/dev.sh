@@ -407,6 +407,12 @@ run_seed() {
   fi
   # Plain invitation codes are only printed once; show them and keep them in .dev/seed.log.
   awk '/INVITACI/ { show = 1 } /Seed completado/ { show = 0 } show && NF { print "    " $0 }' "$log"
+  # Dev-only human players and teams (never part of the production seed).
+  if ! backend_script scripts/seed_dev_teams.py >>"$log" 2>&1; then
+    tail -n 30 "$log" >&2
+    die "Dev teams seed failed (full log in .dev/seed.log)."
+  fi
+  awk '/Códigos de acceso de los jugadores de prueba/ { show = 1 } /\[dev teams\] Done/ { show = 0 } show && NF { print "    " $0 }' "$log"
   ok "Seed loaded (output in .dev/seed.log; './scripts/dev.sh invite' creates a code to register)"
 }
 
