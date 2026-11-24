@@ -8,9 +8,6 @@ load_dotenv()
 from config import Config
 from extensions import limiter
 from routes.auth import auth_bp
-from routes.players import players_bp
-from routes.fortresses import fortresses_bp
-from routes.battles import battles_bp
 from routes.leaderboard import leaderboard_bp
 from routes.admin import admin_bp
 from routes.admin_catalog import admin_catalog_bp
@@ -25,7 +22,6 @@ from routes.protocols import protocols_bp
 from routes.constraints import constraints_bp
 from routes.words import words_bp
 from routes.personalities import personalities_bp
-from routes.store import store_bp
 from routes.admin_config import admin_config_bp
 from routes.admin_seasons import admin_seasons_bp
 from routes.admin_prizes import admin_prizes_bp
@@ -82,10 +78,9 @@ def create_app():
         return response
 
     # ── Blueprints ─────────────────────────────────────────────────────────
+    # Gameplay routes (battles, players, fortresses, store) live only in GameBackEnd:
+    # an outdated copy here would let players bypass the current game rules.
     app.register_blueprint(auth_bp,        url_prefix="/api/v1/auth")
-    app.register_blueprint(players_bp,     url_prefix="/api/v1/players")
-    app.register_blueprint(fortresses_bp,  url_prefix="/api/v1/fortresses")
-    app.register_blueprint(battles_bp,     url_prefix="/api/v1/battles")
     app.register_blueprint(leaderboard_bp, url_prefix="/api/v1/leaderboard")
     app.register_blueprint(admin_bp,            url_prefix="/api/v1/admin")
     app.register_blueprint(admin_catalog_bp,    url_prefix="/api/v1/admin")
@@ -105,7 +100,6 @@ def create_app():
     app.register_blueprint(constraints_bp, url_prefix="/api/v1/constraints")
     app.register_blueprint(words_bp,          url_prefix="/api/v1/words")
     app.register_blueprint(personalities_bp,  url_prefix="/api/v1/personalities")
-    app.register_blueprint(store_bp,          url_prefix="/api/v1/store")
     return app
 
 
