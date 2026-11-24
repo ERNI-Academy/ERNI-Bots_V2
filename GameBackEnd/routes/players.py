@@ -1,8 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from sqlalchemy import func, text
-from sqlalchemy.exc import IntegrityError
-from datetime import datetime
+from sqlalchemy import func
 import random
 import secrets
 import string
@@ -14,9 +12,7 @@ from db import SessionLocal
 from db.models import (
     Player,
     Fortress,
-    Season,
     PlayerSeasonStats,
-    FortressSeasonStats,
     Battle,
     Boss,
     PlayerBossStats,
@@ -24,74 +20,15 @@ from db.models import (
     InvitationCode,
     AppConfig,
 )
-from db import engine as db_engine
-from utils import generate_uuid
+from services.season_stats import (
+    get_active_season,
+    get_or_create_fortress_season_stats,
+    get_or_create_player_season_stats,
+)
+from services.teams import is_team_season, team_scores
+from settings_registry import get_setting
 
 players_bp = Blueprint("players", __name__)
-
-
-# ==========================
-# Helpers
-# ==========================
-
-def get_active_season(db):
-    return db.query(Season).filter_by(is_active=True).first()
-
-
-def get_or_create_player_season_stats(db, player_id, season_id):
-    """Atomically ensure a PlayerSeasonStats row exists and return it."""
-    is_postgres = db_engine.dialect.name == "postgresql"
-    new_id = generate_uuid()
-    if is_postgres:
-        sql = text("""
-            INSERT INTO player_season_stats (id, player_id, season_id, score)
-            VALUES (:id, :player_id, :season_id, 0)
-            ON CONFLICT (player_id, season_id) DO NOTHING
-        """)
-    else:
-        sql = text("""
-            INSERT OR IGNORE INTO player_season_stats (id, player_id, season_id, score)
-            VALUES (:id, :player_id, :season_id, 0)
-        """)
-    try:
-        db.execute(sql, {"id": new_id, "player_id": player_id, "season_id": season_id})
-    except Exception as exc:
-        logger.exception("[get_or_create_player_season_stats] INSERT failed for player=%s season=%s: %s", player_id, season_id, exc)
-        db.rollback()
-    stats = db.query(PlayerSeasonStats).filter_by(
-        player_id=player_id, season_id=season_id
-    ).first()
-    if stats is None:
-        logger.error("[get_or_create_player_season_stats] Record still missing after INSERT for player=%s season=%s", player_id, season_id)
-    return stats
-
-
-def get_or_create_fortress_season_stats(db, fortress_id, season_id):
-    """Atomically ensure a FortressSeasonStats row exists and return it."""
-    is_postgres = db_engine.dialect.name == "postgresql"
-    new_id = generate_uuid()
-    if is_postgres:
-        sql = text("""
-            INSERT INTO fortress_season_stats (id, fortress_id, season_id, defeat_count, attack_count, status, created_at, updated_at)
-            VALUES (:id, :fortress_id, :season_id, 0, 0, 'active', NOW(), NOW())
-            ON CONFLICT (fortress_id, season_id) DO NOTHING
-        """)
-    else:
-        sql = text("""
-            INSERT OR IGNORE INTO fortress_season_stats (id, fortress_id, season_id, defeat_count, attack_count, status, created_at, updated_at)
-            VALUES (:id, :fortress_id, :season_id, 0, 0, 'active', :now, :now)
-        """)
-    try:
-        db.execute(sql, {"id": new_id, "fortress_id": fortress_id, "season_id": season_id, "now": datetime.utcnow().isoformat()})
-    except Exception as exc:
-        logger.exception("[get_or_create_fortress_season_stats] INSERT failed for fortress=%s season=%s: %s", fortress_id, season_id, exc)
-        db.rollback()
-    stats = db.query(FortressSeasonStats).filter_by(
-        fortress_id=fortress_id, season_id=season_id
-    ).first()
-    if stats is None:
-        logger.error("[get_or_create_fortress_season_stats] Record still missing after INSERT for fortress=%s season=%s", fortress_id, season_id)
-    return stats
 
 
 # ==========================
@@ -134,6 +71,7 @@ def get_profile():
             "season_score": stats.score,
             "rank": rank,
             "has_fortress": player.fortress is not None,
+            "team": {"id": player.team.id, "name": player.team.name} if player.team else None,
         }
 
         if player.fortress:
@@ -290,6 +228,12 @@ def matchmaking():
         MIN_RESULTS = 6
         INITIAL_DELTA = 100
 
+        # Team season (RN-75/76): without a team the player does not take part
+        team_mode = is_team_season(season)
+        if team_mode and not current_player.team_id:
+            return jsonify([]), 200
+        scores_by_team = team_scores(db, season.id) if team_mode else {}
+
         # Fortalezas ya vencidas esta season Y que no han sido reconfiguradas desde la victoria
         defeated_fortress_ids = (
             db.query(Battle.fortress_id)
@@ -304,83 +248,66 @@ def matchmaking():
 
         defeated_fortress_ids = [f[0] for f in defeated_fortress_ids]
 
-        # Read app config: are bot fortresses enabled?
-        cfg_bots = db.get(AppConfig, "bot_fortresses_enabled")
-        bot_fortresses_enabled = cfg_bots is None or cfg_bots.value.lower() == "true"
+        bot_fortresses_enabled = get_setting(db, "bot_fortresses_enabled")
 
-        delta = INITIAL_DELTA
-
-        def _build_base_query(min_score, max_score):
-            return (
-                db.query(Player, Fortress)
+        def _candidates(is_bot):
+            q = (
+                db.query(Player, Fortress, PlayerSeasonStats)
                 .join(Fortress, Fortress.owner_id == Player.id)
-                .join(PlayerSeasonStats,
-                      PlayerSeasonStats.player_id == Player.id)
+                .join(PlayerSeasonStats, PlayerSeasonStats.player_id == Player.id)
                 .filter(Player.id != user_id)
                 .filter(Player.is_banned == False)  # noqa: E712
+                .filter(Player.is_bot == is_bot)
                 .filter(PlayerSeasonStats.season_id == season.id)
-                .filter(PlayerSeasonStats.score.between(min_score, max_score))
                 .filter(~Fortress.id.in_(defeated_fortress_ids))
             )
+            if team_mode and not is_bot:
+                # Only other teams' members: no friendly fire, no players without team
+                q = q.filter(Player.team_id.isnot(None), Player.team_id != current_player.team_id)
+            return q.all()
 
-        def _filter_and_rank(rows):
-            filtered = []
-            for player, fortress in rows:
-                f_stats = get_or_create_fortress_season_stats(
-                    db, fortress.id, season.id
-                )
-                if f_stats.status == "destroyed":
-                    continue
-                filtered.append((player, fortress, f_stats))
+        def _pick(rows, own_score, score_of, max_delta, limit):
+            """Closest candidates by score, widening the window until `limit` are found."""
+            delta = INITIAL_DELTA
+            picked = []
+            while True:
+                in_range = [row for row in rows if abs(score_of(row) - own_score) <= delta]
+                ranked = []
+                for player, fortress, stats in in_range:
+                    f_stats = get_or_create_fortress_season_stats(db, fortress.id, season.id)
+                    if f_stats.status == "destroyed":
+                        continue
+                    pressure = f_stats.defeat_count * 2 - f_stats.attack_count
+                    key = abs(score_of((player, fortress, stats)) - own_score) + pressure + random.uniform(0, 5)
+                    ranked.append((key, (player, fortress, stats, f_stats)))
+                ranked.sort(key=lambda item: item[0])
+                picked = [entry for _, entry in ranked][:limit]
+                if len(picked) >= limit:
+                    break
+                delta *= 2
+                if delta > max_delta:
+                    break
+            return picked
 
-            def ranking_key(x):
-                player, fortress, f_stats = x
-                score_distance = abs(
-                    player.season_stats[0].score - current_stats.score
-                )
-                pressure_component = (
-                    f_stats.defeat_count * 2
-                    - f_stats.attack_count
-                )
-                noise = random.uniform(0, 5)
-                return score_distance + pressure_component + noise
-
-            filtered.sort(key=ranking_key)
-            return filtered
+        # Humans: by team score in team seasons, by individual score otherwise.
+        # Bots: always by individual score (they have no team).
+        if team_mode:
+            own_human_score = scores_by_team.get(current_player.team_id, 0)
+            human_score = lambda row: scores_by_team.get(row[0].team_id, 0)  # noqa: E731
+        else:
+            own_human_score = current_stats.score
+            human_score = lambda row: row[2].score  # noqa: E731
 
         # ── Phase 1: real players only ──
-        real_results = []
-        while len(real_results) < MIN_RESULTS:
-            min_score = current_stats.score - delta
-            max_score = current_stats.score + delta
-
-            q = _build_base_query(min_score, max_score)
-            q = q.filter(Player.is_bot == False)  # noqa: E712
-            real_results = _filter_and_rank(q.all())[:MIN_RESULTS]
-
-            if len(real_results) >= MIN_RESULTS:
-                break
-            delta *= 2
-            if delta > 2000:
-                break
+        real_results = _pick(_candidates(False), own_human_score, human_score, 2000, MIN_RESULTS)
 
         # ── Phase 2: fill with bots if needed and enabled ──
         bot_results = []
         if len(real_results) < MIN_RESULTS and bot_fortresses_enabled:
-            bot_delta = INITIAL_DELTA
-            while len(real_results) + len(bot_results) < MIN_RESULTS:
-                min_score = current_stats.score - bot_delta
-                max_score = current_stats.score + bot_delta
-
-                q = _build_base_query(min_score, max_score)
-                q = q.filter(Player.is_bot == True)  # noqa: E712
-                bot_results = _filter_and_rank(q.all())[: MIN_RESULTS - len(real_results)]
-
-                if len(real_results) + len(bot_results) >= MIN_RESULTS:
-                    break
-                bot_delta *= 2
-                if bot_delta > 10000:
-                    break
+            bot_results = _pick(
+                _candidates(True), current_stats.score, lambda row: row[2].score, 10000,
+                MIN_RESULTS - len(real_results),
+            )
 
         results = real_results + bot_results
 
@@ -388,10 +315,11 @@ def matchmaking():
 
         response = []
 
-        for player, fortress, f_stats in results:
+        for player, fortress, stats, f_stats in results:
             response.append({
                 "username": player.username,
-                "season_score": player.season_stats[0].score,
+                "season_score": stats.score,
+                "team_name": player.team.name if team_mode and player.team else None,
                 "fortress_id": fortress.id,
                 "fortress_name": fortress.name,
                 "defeats": f_stats.defeat_count,

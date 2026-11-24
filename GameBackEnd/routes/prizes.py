@@ -1,6 +1,8 @@
 """
 GET /api/v1/prizes  – public, no auth required.
 Returns all prizes ordered by sort_order, including winner if set.
+The winner is either a player (winner_username) or a team (winner_team, shown
+with its current members, D19).
 """
 
 from flask import Blueprint, jsonify
@@ -21,7 +23,15 @@ def _prize_to_dict(prize: Prize) -> dict:
         "category":         prize.category,
         "color_key":        prize.color_key,
         "winner_username":  prize.winner_username,
+        "winner_team":      _team_to_dict(prize.winner_team) if prize.winner_team else None,
     }
+
+
+def _team_to_dict(team) -> dict:
+    members = sorted(
+        player.username for player in team.members if not player.is_banned
+    )
+    return {"name": team.name, "members": members}
 
 
 @prizes_bp.get("/")

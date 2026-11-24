@@ -27,6 +27,7 @@ from routes.store import store_bp
 from routes.config import config_bp
 from routes.prizes import prizes_bp
 from routes.onboarding import onboarding_bp
+from routes.teams import teams_bp
 
 
 def create_app():
@@ -138,6 +139,7 @@ def create_app():
     app.register_blueprint(config_bp,         url_prefix="/api/v1/config")
     app.register_blueprint(prizes_bp,          url_prefix="/api/v1/prizes")
     app.register_blueprint(onboarding_bp,      url_prefix="/api/v1/onboarding")
+    app.register_blueprint(teams_bp,           url_prefix="/api/v1/teams")
     return app
 
 

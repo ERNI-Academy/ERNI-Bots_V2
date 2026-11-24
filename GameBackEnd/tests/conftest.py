@@ -21,7 +21,7 @@ import pytest  # noqa: E402
 
 from db import SessionLocal, engine  # noqa: E402
 from db.base import Base  # noqa: E402
-import db.models  # noqa: E402,F401  (register every model)
+from db import models as _models  # noqa: E402,F401  (register every model)
 
 Base.metadata.create_all(bind=engine)
 
@@ -41,10 +41,14 @@ def db():
 
 
 @pytest.fixture
-def client(db):
+def app(db):
     from app import create_app
 
-    app = create_app()
+    return create_app()
+
+
+@pytest.fixture
+def client(app):
     test_client = app.test_client()
     # The rate limiter keys on X-Forwarded-For (set by the Azure proxy) and rejects requests without it.
     test_client.environ_base["HTTP_X_FORWARDED_FOR"] = "203.0.113.10"

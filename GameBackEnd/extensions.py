@@ -35,3 +35,18 @@ limiter = Limiter(
     key_func=_get_real_ip,
     default_limits=["10000 per day", "2000 per hour"],
 )
+
+
+def player_or_ip_key() -> str:
+    """
+    Rate-limit key for authenticated endpoints: the player id from the JWT, so a
+    player cannot dodge a per-player limit by switching IP. Falls back to the IP
+    when the request carries no valid token (the view then rejects it anyway).
+    """
+    from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+
+    try:
+        verify_jwt_in_request()
+        return f"player:{get_jwt_identity()}"
+    except Exception:
+        return _get_real_ip()

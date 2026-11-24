@@ -1,7 +1,5 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from sqlalchemy import func, text
-from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import random
 import logging
@@ -10,15 +8,15 @@ logger = logging.getLogger(__name__)
 
 from utils import generate_uuid
 from services.agent_service import get_agent_service, SessionExpiredError
-from db import SessionLocal, engine as db_engine
+from services.scoring import award_points
+from services.season_stats import get_active_season, get_or_create_fortress_season_stats
+from services.teams import BATTLE_RULE_MESSAGES, team_battle_violation
+from db import SessionLocal
 from db.models import (
     Battle,
     BattleMessage,
     Fortress,
     Player,
-    Season,
-    PlayerSeasonStats,
-    FortressSeasonStats,
     ActivityLog,
     PlayerHistoryEntry,
     Boss,
@@ -34,11 +32,6 @@ battles_bp = Blueprint("battles", __name__)
 # ==========================
 # Helpers
 # ==========================
-
-def get_active_season(db):
-    season = db.query(Season).filter_by(is_active=True).first()
-    return season
-
 
 def _build_pvp_context(fortress):
     """Build the AgenticService context dict for a PvP fortress battle."""
@@ -64,61 +57,34 @@ def _build_pve_context(boss):
     }
 
 
-def get_or_create_player_season_stats(db, player_id, season_id):
-    """Atomically ensure a PlayerSeasonStats row exists and return it."""
-    is_postgres = db_engine.dialect.name == "postgresql"
-    new_id = generate_uuid()
-    if is_postgres:
-        sql = text("""
-            INSERT INTO player_season_stats (id, player_id, season_id, score)
-            VALUES (:id, :player_id, :season_id, 0)
-            ON CONFLICT (player_id, season_id) DO NOTHING
-        """)
-    else:
-        sql = text("""
-            INSERT OR IGNORE INTO player_season_stats (id, player_id, season_id, score)
-            VALUES (:id, :player_id, :season_id, 0)
-        """)
-    try:
-        db.execute(sql, {"id": new_id, "player_id": player_id, "season_id": season_id})
-    except Exception as exc:
-        logger.exception("[battles] INSERT player_season_stats failed for player=%s season=%s: %s", player_id, season_id, exc)
-        db.rollback()
-    stats = db.query(PlayerSeasonStats).filter_by(
-        player_id=player_id, season_id=season_id
-    ).first()
-    if stats is None:
-        logger.error("[battles] player_season_stats still missing after INSERT for player=%s season=%s", player_id, season_id)
-    return stats
+def _battle_rule_violation(db, season, battle):
+    """RN-72: re-check the team rules for an ongoing battle (the admin may have moved someone)."""
+    attacker = db.query(Player).filter_by(id=battle.attacker_id).first()
+    target_owner = battle.fortress.owner if battle.fortress_id else None
+    return team_battle_violation(season, attacker, target_owner)
 
 
-def get_or_create_fortress_season_stats(db, fortress_id, season_id):
-    """Atomically ensure a FortressSeasonStats row exists and return it."""
-    is_postgres = db_engine.dialect.name == "postgresql"
-    new_id = generate_uuid()
-    now = datetime.utcnow().isoformat()
-    if is_postgres:
-        sql = text("""
-            INSERT INTO fortress_season_stats (id, fortress_id, season_id, defeat_count, attack_count, status, created_at, updated_at)
-            VALUES (:id, :fortress_id, :season_id, 0, 0, 'active', NOW(), NOW())
-            ON CONFLICT (fortress_id, season_id) DO NOTHING
-        """)
-    else:
-        sql = text("""
-            INSERT OR IGNORE INTO fortress_season_stats (id, fortress_id, season_id, defeat_count, attack_count, status, created_at, updated_at)
-            VALUES (:id, :fortress_id, :season_id, 0, 0, 'active', :now, :now)
-        """)
+def _expire_battle(db, battle):
+    """End a battle that broke the team rules: no points for anyone."""
+    battle.status = "expired"
+    battle.updated_at = datetime.utcnow()
+    db.commit()
     try:
-        db.execute(sql, {"id": new_id, "fortress_id": fortress_id, "season_id": season_id, "now": now})
-    except Exception as exc:
-        logger.exception("[battles] INSERT fortress_season_stats failed for fortress=%s season=%s: %s", fortress_id, season_id, exc)
-        db.rollback()
-    stats = db.query(FortressSeasonStats).filter_by(
-        fortress_id=fortress_id, season_id=season_id
-    ).first()
-    if stats is None:
-        logger.error("[battles] fortress_season_stats still missing after INSERT for fortress=%s season=%s", fortress_id, season_id)
-    return stats
+        agent_service.terminate_session(battle.session_id)
+    except Exception:
+        pass
+
+
+def _team_rule_error(violation):
+    return jsonify({"error": BATTLE_RULE_MESSAGES[violation], "code": violation}), 403
+
+
+def _battle_invalidated(violation):
+    return jsonify({
+        "error": "La batalla ya no es válida: " + BATTLE_RULE_MESSAGES[violation],
+        "code": "battle_invalidated",
+        "reason": violation,
+    }), 409
 
 
 # ==========================
@@ -153,6 +119,17 @@ def start_battle():
 
         if fortress.owner_id == user_id:
             return jsonify({"error": "Cannot attack your own fortress"}), 403
+
+        # Team season rules (RN-70); an active battle that now breaks them is ended (RN-72)
+        attacker = db.query(Player).filter_by(id=user_id).first()
+        violation = team_battle_violation(season, attacker, fortress.owner)
+        if violation:
+            stale = db.query(Battle).filter_by(
+                attacker_id=user_id, fortress_id=fortress_id, status="active"
+            ).first()
+            if stale:
+                _expire_battle(db, stale)
+            return _team_rule_error(violation)
 
         # Attacker must have their own fortress
         attacker_fortress = db.query(Fortress).filter_by(owner_id=user_id).first()
@@ -313,6 +290,16 @@ def start_boss_battle():
         player = db.query(Player).filter_by(id=user_id).first()
         if not player or not player.fortress:
             return jsonify({"error": "You need an active fortress to attack bosses"}), 403
+
+        # Team season rules (RN-71); an active battle that now breaks them is ended (RN-72)
+        violation = team_battle_violation(season, player)
+        if violation:
+            stale = db.query(Battle).filter_by(
+                attacker_id=user_id, boss_id=boss_id, status="active"
+            ).first()
+            if stale:
+                _expire_battle(db, stale)
+            return _team_rule_error(violation)
 
         boss = db.query(Boss).filter_by(id=boss_id, enabled=True).first()
         if not boss:
@@ -477,6 +464,11 @@ def send_message(battle_id):
         if battle.status != "active":
             return jsonify({"error": "Battle not active"}), 400
 
+        violation = _battle_rule_violation(db, season, battle)
+        if violation:
+            _expire_battle(db, battle)
+            return _battle_invalidated(violation)
+
         battle.turn_count += 1
 
         # Persist user message
@@ -505,20 +497,12 @@ def send_message(battle_id):
                 )
                 db.add(log)
 
-                defender_season_stats = get_or_create_player_season_stats(
-                    db, defender.id, season.id
+                award_points(
+                    db, defender, season, 1, "battle_defense",
+                    f"Defensa exitosa contra {attacker.username} (turnos agotados)",
                 )
-                defender_season_stats.score += 1
                 defender.credits += 10
 
-                db.add(PlayerHistoryEntry(
-                    id=generate_uuid(),
-                    player_id=defender.id,
-                    type="points",
-                    amount=1,
-                    reason="battle_defense",
-                    detail=f"Defensa exitosa contra {attacker.username} (turnos agotados)"
-                ))
                 db.add(PlayerHistoryEntry(
                     id=generate_uuid(),
                     player_id=defender.id,
@@ -608,6 +592,12 @@ def request_hint(battle_id):
 
         if battle.status != "active":
             return jsonify({"error": "Battle not active"}), 400
+
+        season = get_active_season(db)
+        violation = _battle_rule_violation(db, season, battle) if season else None
+        if violation:
+            _expire_battle(db, battle)
+            return _battle_invalidated(violation)
 
         is_pve = battle.type == "pve"
         min_turns = 20 if is_pve else 10
@@ -712,6 +702,11 @@ def guess_word(battle_id):
             return jsonify({"error": "Too many requests"}), 429
         if battle.status != "active":
             return jsonify({"error": "Battle already finished"}), 400
+
+        violation = _battle_rule_violation(db, season, battle)
+        if violation:
+            _expire_battle(db, battle)
+            return _battle_invalidated(violation)
         if battle.turn_count<1:
             return jsonify({"result": "defense", "reason": "wrong_guess"})
 
@@ -739,7 +734,6 @@ def guess_word(battle_id):
             battle.status = "won"
             battle.updated_at = datetime.utcnow()
             attacker = db.query(Player).filter_by(id=user_id).first()
-            player_stats = get_or_create_player_season_stats(db, user_id, season.id)
 
             if is_pve:
                 # Award attacker with boss reward (current values before reduction)
@@ -768,7 +762,7 @@ def guess_word(battle_id):
                 boss.reward_score   = max(boss.score_min,   boss.reward_score   - boss.score_reduction)
                 boss.reward_credits = max(boss.credits_min, boss.reward_credits - boss.credits_reduction)
 
-                player_stats.score += score_awarded
+                award_points(db, attacker, season, score_awarded, "boss_defeated", f"Boss derrotado: {boss.name}")
                 attacker.credits   += credits_awarded
 
                 db.add(ActivityLog(
@@ -778,14 +772,6 @@ def guess_word(battle_id):
                     message=f"{attacker.username} ha neutralizado a {boss.name}"
                 ))
 
-                db.add(PlayerHistoryEntry(
-                    id=generate_uuid(),
-                    player_id=attacker.id,
-                    type="points",
-                    amount=score_awarded,
-                    reason="boss_defeated",
-                    detail=f"Boss derrotado: {boss.name}"
-                ))
                 db.add(PlayerHistoryEntry(
                     id=generate_uuid(),
                     player_id=attacker.id,
@@ -843,17 +829,12 @@ def guess_word(battle_id):
                     score_awarded = score_awarded // 2
                     credits_awarded = credits_awarded // 2
 
-                player_stats.score += score_awarded
+                award_points(
+                    db, attacker, season, score_awarded, "battle_win",
+                    f"Victoria contra {defender.username}{' (bonus invencible)' if was_invincible else ''}",
+                )
                 attacker.credits += credits_awarded
 
-                db.add(PlayerHistoryEntry(
-                    id=generate_uuid(),
-                    player_id=attacker.id,
-                    type="points",
-                    amount=score_awarded,
-                    reason="battle_win",
-                    detail=f"Victoria contra {defender.username}{' (bonus invencible)' if was_invincible else ''}"
-                ))
                 db.add(PlayerHistoryEntry(
                     id=generate_uuid(),
                     player_id=attacker.id,
@@ -900,18 +881,12 @@ def guess_word(battle_id):
             )
             db.add(log)
 
-            defender_season_stats = get_or_create_player_season_stats(db, defender.id, season.id)
-            defender_season_stats.score += 1
+            award_points(
+                db, defender, season, 1, "battle_defense",
+                f"Defensa exitosa contra {attacker.username} (palabra incorrecta)",
+            )
             defender.credits += 10
 
-            db.add(PlayerHistoryEntry(
-                id=generate_uuid(),
-                player_id=defender.id,
-                type="points",
-                amount=1,
-                reason="battle_defense",
-                detail=f"Defensa exitosa contra {attacker.username} (palabra incorrecta)"
-            ))
             db.add(PlayerHistoryEntry(
                 id=generate_uuid(),
                 player_id=defender.id,

@@ -20,7 +20,7 @@ import pytest  # noqa: E402
 
 from db import SessionLocal, engine  # noqa: E402
 from db.base import Base  # noqa: E402
-import db.models  # noqa: E402,F401  (register every model)
+from db import models as _models  # noqa: E402,F401  (register every model)
 
 Base.metadata.create_all(bind=engine)
 

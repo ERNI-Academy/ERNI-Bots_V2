@@ -156,7 +156,7 @@ Esta feature añade **equipos persistentes** y un **modo de temporada** (`indivi
 ### 6.10 Premios
 
 - **RN-90** Un premio tiene como mucho un ganador: un jugador (`winner_username`, como ahora) o un equipo (`winner_team_id`). Si llegan los dos, se devuelve 400.
-- **RN-91** `/premios` muestra el nombre del equipo y sus miembros. Se muestran los miembros actuales del equipo (D19).
+- **RN-91** `/premios` muestra el nombre del equipo y sus miembros. Se muestran los miembros actuales del equipo (D19), sin los jugadores baneados.
 
 ## 7. Modelo de datos
 
@@ -244,7 +244,7 @@ Blueprint nuevo `routes/teams.py`. Errores con el formato `{ "error": "<mensaje 
 
 | Método y ruta | Descripción | Errores |
 |---|---|---|
-| `GET /teams/me` | Mi equipo: `{id, name, join_code, members:[{username, first_name, last_name, joined_at}], member_count, max_size, can_manage, can_leave}`. Si no tengo equipo, `{team: null, can_create, can_join}`. | — |
+| `GET /teams/me` | Siempre `{team, max_size, team_season_running, can_create, can_join, can_manage, can_leave, leave_blocked_reason}`. `team` es `null` o `{id, name, join_code, member_count, is_full, members:[{username, first_name, last_name, joined_at}]}`. `leave_blocked_reason`: `season_locked` \| `team_leaving_disabled` \| `null`. Las operaciones de escritura devuelven este mismo estado. | — |
 | `POST /teams` `{name}` | Crear un equipo (RN-10..14). 201 + equipo. | 403 `team_creation_disabled`, 409 `already_in_team`, 409 `name_taken`, 400 `invalid_name` |
 | `GET /teams/preview?code=` | Para el enlace de invitación: `{name, member_count, max_size, is_full}`. Rate limit compartido con RN-23. | 404 `invalid_code` |
 | `POST /teams/join` `{code}` | Unirse (RN-20..23). | 403 `team_joining_disabled`, 409 `already_in_team`, 404 `invalid_code`, 409 `team_full` |
@@ -259,7 +259,7 @@ Cambios en endpoints existentes:
 | `GET /players/me` | Añade `team: {id, name} \| null`. |
 | `GET /players/matchmaking` | RN-75 y RN-76. |
 | `POST /battles`, `POST /battles/boss`, `POST /battles/<id>/message`, `/guess`, `/hint` | RN-70..72. |
-| `GET /leaderboard` | Nuevo parámetro `type=players\|teams`. Por defecto vale `teams` si la temporada es por equipos y `players` si no. Respuesta para equipos: `items:[{rank, team_id, name, score, member_count, dissolved}]` con la misma paginación. Para jugadores en temporada por equipos se añade `team_name`. Si se pide `type=teams` en una temporada individual: 400 `not_team_season`. |
+| `GET /leaderboard` | Nuevo parámetro `type=players\|teams`. Por defecto vale `teams` si la temporada es por equipos y `players` si no. Respuesta para equipos: `items:[{rank, team_id, name, score, member_count, dissolved}]` con la misma paginación. Para jugadores en temporada por equipos se añade `team_name`. Si se pide `type=teams` en una temporada individual: 400 `not_team_season`. La respuesta incluye `type` y `season_mode`. |
 | `GET /leaderboard/teams/<team_id>` | Detalle de un equipo en la temporada activa: miembros del roster con su aportación (`score`). |
 | `GET /prizes` | Añade `winner_team: {name, members:[username]} \| null`. |
 | `GET /config` | §7.7. |
