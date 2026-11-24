@@ -251,14 +251,16 @@ def matchmaking():
         bot_fortresses_enabled = get_setting(db, "bot_fortresses_enabled")
 
         def _candidates(is_bot):
+            # Outer join: players (and bots) who have not played this season yet have no
+            # stats row; they are still attackable, with 0 points.
             q = (
                 db.query(Player, Fortress, PlayerSeasonStats)
                 .join(Fortress, Fortress.owner_id == Player.id)
-                .join(PlayerSeasonStats, PlayerSeasonStats.player_id == Player.id)
+                .outerjoin(PlayerSeasonStats, (PlayerSeasonStats.player_id == Player.id)
+                           & (PlayerSeasonStats.season_id == season.id))
                 .filter(Player.id != user_id)
                 .filter(Player.is_banned == False)  # noqa: E712
                 .filter(Player.is_bot == is_bot)
-                .filter(PlayerSeasonStats.season_id == season.id)
                 .filter(~Fortress.id.in_(defeated_fortress_ids))
             )
             if team_mode and not is_bot:
@@ -289,6 +291,9 @@ def matchmaking():
                     break
             return picked
 
+        def _individual_score(row):
+            return row[2].score if row[2] is not None else 0
+
         # Humans: by team score in team seasons, by individual score otherwise.
         # Bots: always by individual score (they have no team).
         if team_mode:
@@ -296,7 +301,7 @@ def matchmaking():
             human_score = lambda row: scores_by_team.get(row[0].team_id, 0)  # noqa: E731
         else:
             own_human_score = current_stats.score
-            human_score = lambda row: row[2].score  # noqa: E731
+            human_score = lambda row: _individual_score(row)  # noqa: E731
 
         # ── Phase 1: real players only ──
         real_results = _pick(_candidates(False), own_human_score, human_score, 2000, MIN_RESULTS)
@@ -305,7 +310,7 @@ def matchmaking():
         bot_results = []
         if len(real_results) < MIN_RESULTS and bot_fortresses_enabled:
             bot_results = _pick(
-                _candidates(True), current_stats.score, lambda row: row[2].score, 10000,
+                _candidates(True), current_stats.score, _individual_score, 10000,
                 MIN_RESULTS - len(real_results),
             )
 
@@ -318,7 +323,7 @@ def matchmaking():
         for player, fortress, stats, f_stats in results:
             response.append({
                 "username": player.username,
-                "season_score": stats.score,
+                "season_score": stats.score if stats else 0,
                 "team_name": player.team.name if team_mode and player.team else None,
                 "fortress_id": fortress.id,
                 "fortress_name": fortress.name,

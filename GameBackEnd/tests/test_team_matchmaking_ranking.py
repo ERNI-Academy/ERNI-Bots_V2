@@ -157,3 +157,16 @@ def test_prizes_show_the_winning_team_and_its_members(client, db):
     assert prizes["Campeones"]["winner_team"] == {"name": "Red", "members": ["alice", "bob"]}
     assert prizes["MVP"]["winner_team"] is None
     assert prizes["MVP"]["winner_username"] == "carol"
+
+
+def test_matchmaking_includes_players_and_bots_without_stats_this_season(app, client, db):
+    """A fresh season has no stats rows yet: bots and idle players must still be attackable."""
+    s = f.season(db, mode="individual")
+    me = f.player(db, "me", season_obj=s)
+    f.player(db, "idle")                # no PlayerSeasonStats row in this season
+    f.player(db, "npc", is_bot=True)    # bots never open their profile
+
+    matches = _matches(client, app, me)
+
+    assert set(matches) == {"idle", "npc"}
+    assert matches["idle"]["season_score"] == 0
