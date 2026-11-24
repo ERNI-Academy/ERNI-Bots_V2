@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/battle";
 import { useCommonStyles } from "@/components/ui/commonStyles";
 import { fmtDate, fmtDateTime } from "@/lib/format";
+import { PlayerTeamCard } from "@/components/teams/PlayerTeamCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -79,6 +80,7 @@ interface PlayerDetail {
   rank: number | null;
   has_fortress: boolean;
   invitation_code_id: string | null;
+  team: { id: string; name: string } | null;
   fortress?: {
     id: string;
     name: string;
@@ -314,6 +316,10 @@ export default function PlayerDetailPage() {
                   value={player.has_fortress ? (player.fortress?.name ?? "Sí") : "No"}
                 />
               </div>
+
+              {!player.is_bot && (
+                <PlayerTeamCard playerId={player.id} username={player.username} team={player.team ?? null} onChanged={load} />
+              )}
 
               {/* ── Tabs ──────────────────────────────────────────────────── */}
               <SectionCard>

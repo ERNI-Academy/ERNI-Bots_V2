@@ -12,6 +12,8 @@ import {
   makeStyles,
   mergeClasses,
   Option,
+  Radio,
+  RadioGroup,
   Select,
   Spinner,
   Textarea,
@@ -33,8 +35,10 @@ import {
   Star20Regular,
   Trophy20Regular,
   UsbStick20Regular,
+  PeopleTeam20Regular,
 } from "@fluentui/react-icons";
 import AdminLayout from "@/components/AdminLayout";
+import { TeamPicker } from "@/components/teams/TeamPicker";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EntityFormDialog } from "@/components/ui/EntityFormDialog";
@@ -58,6 +62,8 @@ interface Prize {
   category: string | null;
   color_key: string;
   winner_username: string | null;
+  winner_team_id: string | null;
+  winner_team: { id: string; name: string } | null;
   updated_at: string | null;
 }
 
@@ -241,6 +247,9 @@ function PrizeDialog({
   const [category, setCategory] = useState(initial?.category ?? "");
   const [colorKey, setColorKey] = useState(initial?.color_key ?? "cyan");
   const [winner, setWinner] = useState(initial?.winner_username ?? "");
+  // RN-90: the winner is a player or a team, never both
+  const [winnerType, setWinnerType] = useState<"player" | "team">(initial?.winner_team_id ? "team" : "player");
+  const [winnerTeamId, setWinnerTeamId] = useState<string | null>(initial?.winner_team_id ?? null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -255,7 +264,8 @@ function PrizeDialog({
       icon: icon.trim() || "star",
       category: category.trim() || null,
       color_key: colorKey,
-      winner_username: winner.trim() || null,
+      winner_username: winnerType === "player" ? winner.trim() || null : null,
+      winner_team_id: winnerType === "team" ? winnerTeamId : null,
     };
     const result = await sendAdminRequest(
       isEdit ? `/api/admin/prizes/${initial.id}` : "/api/admin/prizes",
@@ -316,9 +326,24 @@ function PrizeDialog({
         </Field>
       </div>
 
-      <Field label="Ganador (username)">
-        <UsernameAutocomplete value={winner} onChange={setWinner} />
+      <Field label="Tipo de ganador">
+        <RadioGroup layout="horizontal" value={winnerType} onChange={(_, d) => setWinnerType(d.value as "player" | "team")}>
+          <Radio value="player" label="Jugador" />
+          <Radio value="team" label="Equipo" />
+        </RadioGroup>
       </Field>
+      {winnerType === "player" ? (
+        <Field label="Ganador (username)">
+          <UsernameAutocomplete value={winner} onChange={setWinner} />
+        </Field>
+      ) : (
+        <Field label="Equipo ganador" hint="En /premios se muestran el equipo y sus miembros actuales.">
+          <div className={styles.winnerRow}>
+            <TeamPicker value={winnerTeamId} onChange={setWinnerTeamId} includeDissolved />
+            {winnerTeamId && <Button appearance="subtle" onClick={() => setWinnerTeamId(null)}>Quitar</Button>}
+          </div>
+        </Field>
+      )}
     </EntityFormDialog>
   );
 }
@@ -424,10 +449,10 @@ export default function PrizesPage() {
                         </span>
                         <Body1 className={styles.name}>{prize.name}</Body1>
                         {prize.tagline && <Caption1 className={common.muted}>{prize.tagline}</Caption1>}
-                        {prize.winner_username ? (
+                        {prize.winner_username || prize.winner_team ? (
                           <div className={styles.winner}>
-                            <StatusBadge tone="warning" icon={<Trophy20Regular />}>
-                              {prize.winner_username}
+                            <StatusBadge tone="warning" icon={prize.winner_team ? <PeopleTeam20Regular /> : <Trophy20Regular />}>
+                              {prize.winner_team ? prize.winner_team.name : prize.winner_username}
                             </StatusBadge>
                           </div>
                         ) : (

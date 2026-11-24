@@ -38,6 +38,8 @@ interface ConfirmDialogProps {
   destructive?: boolean;
   /** True while the action runs: disables both buttons and shows a spinner. */
   busy?: boolean;
+  /** Disables only the confirm button (e.g. until a typed confirmation matches). */
+  confirmDisabled?: boolean;
   /** Error from the last attempt, shown inside the dialog. */
   error?: string | null;
   onConfirm: () => void;
@@ -56,6 +58,7 @@ export function ConfirmDialog({
   cancelLabel = "Cancelar",
   destructive = false,
   busy = false,
+  confirmDisabled = false,
   error,
   onConfirm,
   onClose,
@@ -82,7 +85,7 @@ export function ConfirmDialog({
               appearance="primary"
               className={mergeClasses(destructive && styles.danger)}
               onClick={onConfirm}
-              disabled={busy}
+              disabled={busy || confirmDisabled}
               icon={busy ? <Spinner size="tiny" /> : undefined}
             >
               {confirmLabel}

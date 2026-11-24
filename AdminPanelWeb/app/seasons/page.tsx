@@ -8,6 +8,8 @@ import {
   Field,
   Input,
   makeStyles,
+  Radio,
+  RadioGroup,
   mergeClasses,
   Spinner,
   Switch,
@@ -58,6 +60,8 @@ interface Season {
   end_date: string | null;
   player_count: number;
   fortress_count: number;
+  mode: "individual" | "team";
+  mode_editable: boolean;
 }
 
 interface PendingAction {
@@ -111,6 +115,8 @@ function SeasonDialog({
   const isEdit = initial !== null;
   const [name, setName] = useState(initial?.name ?? "");
   const [isRanked, setIsRanked] = useState(initial?.is_ranked ?? true);
+  const [mode, setMode] = useState<Season["mode"]>(initial?.mode ?? "individual");
+  const modeEditable = !isEdit || initial.mode_editable;
   const [startDate, setStartDate] = useState(
     initial?.start_date ? initial.start_date.slice(0, 16) : new Date().toISOString().slice(0, 16)
   );
@@ -126,6 +132,7 @@ function SeasonDialog({
       is_ranked: isRanked,
       start_date: startDate || null,
       end_date: endDate || null,
+      ...(modeEditable && { mode }),
     };
     const result = await sendAdminRequest(
       isEdit ? `/api/admin/seasons/${initial.id}` : "/api/admin/seasons",
@@ -162,6 +169,17 @@ function SeasonDialog({
           <Input type="datetime-local" value={endDate} onChange={(_, d) => setEndDate(d.value)} />
         </Field>
       </div>
+      <Field
+        label="Modo"
+        hint={modeEditable
+          ? "Por equipos: se compite por la puntuación del equipo; sin equipo no se puede jugar. Solo se puede cambiar antes de activarla."
+          : "La temporada ya se ha activado: el modo no se puede cambiar."}
+      >
+        <RadioGroup layout="horizontal" value={mode} disabled={!modeEditable} onChange={(_, d) => setMode(d.value as Season["mode"])}>
+          <Radio value="individual" label="Individual" />
+          <Radio value="team" label="Por equipos" />
+        </RadioGroup>
+      </Field>
       <Switch checked={isRanked} onChange={(_, d) => setIsRanked(d.checked)} label="Temporada clasificatoria" />
     </EntityFormDialog>
   );
@@ -226,7 +244,9 @@ export default function SeasonsPage() {
   const askActivate = (s: Season) =>
     ask({
       title: `Activar "${s.name}"`,
-      message: "Esto desactivará cualquier otra temporada en curso. ¿Confirmar?",
+      message: s.mode === "team"
+        ? "Esto desactivará cualquier otra temporada en curso. Es una temporada por equipos: se guardará el roster actual de cada equipo, los jugadores no podrán salir de su equipo y quien no tenga equipo no podrá jugar. El modo quedará fijo. ¿Confirmar?"
+        : "Esto desactivará cualquier otra temporada en curso. El modo quedará fijo. ¿Confirmar?",
       label: "Activar",
       url: `/api/admin/seasons/${s.id}/activate`,
       method: "POST",
@@ -341,6 +361,11 @@ export default function SeasonsPage() {
                         <TableCell>
                           <div className={styles.nameCell}>
                             <Body1 className={styles.nameText}>{s.name}</Body1>
+                            {s.mode === "team" && (
+                              <Badge appearance="tint" color="brand" size="small">
+                                por equipos
+                              </Badge>
+                            )}
                             {!s.is_ranked && (
                               <Badge appearance="outline" color="informative" size="small">
                                 no ranked

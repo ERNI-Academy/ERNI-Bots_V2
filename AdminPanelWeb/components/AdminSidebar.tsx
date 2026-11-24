@@ -31,6 +31,8 @@ import {
   Mail20Regular,
   People20Filled,
   People20Regular,
+  PeopleTeam20Filled,
+  PeopleTeam20Regular,
   PersonBoard20Filled,
   PersonBoard20Regular,
   Settings20Filled,
@@ -46,6 +48,7 @@ import { NAV_OVERLAY_MEDIA } from "@/components/navBreakpoint";
 
 const DashboardIcon = bundleIcon(Board20Filled, Board20Regular);
 const PlayersIcon = bundleIcon(People20Filled, People20Regular);
+const TeamsIcon = bundleIcon(PeopleTeam20Filled, PeopleTeam20Regular);
 const ArchetypesIcon = bundleIcon(PersonBoard20Filled, PersonBoard20Regular);
 const ProtocolsIcon = bundleIcon(Code20Filled, Code20Regular);
 const PersonalitiesIcon = bundleIcon(BrainCircuit20Filled, BrainCircuit20Regular);
@@ -68,6 +71,7 @@ interface NavLink {
 const navItems: NavLink[] = [
   { label: "Ops Center", href: "/dashboard", icon: <DashboardIcon /> },
   { label: "Jugadores", href: "/players", icon: <PlayersIcon /> },
+  { label: "Equipos", href: "/teams", icon: <TeamsIcon /> },
   { label: "Arquetipos", href: "/archetypes", icon: <ArchetypesIcon /> },
   { label: "Protocolos", href: "/protocols", icon: <ProtocolsIcon /> },
   { label: "Personalidades", href: "/personalities", icon: <PersonalitiesIcon /> },

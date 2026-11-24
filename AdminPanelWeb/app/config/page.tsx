@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useState, type ReactElement } from "react";
-import { Body1, Caption1, Card, makeStyles, Spinner, Switch, tokens } from "@fluentui/react-components";
+import { Body1, Button, Caption1, Card, makeStyles, Spinner, SpinButton, Subtitle2, Switch, tokens } from "@fluentui/react-components";
 import {
   Bot20Regular,
+  DoorArrowRight20Regular,
+  Edit20Regular,
   Mail20Regular,
+  PeopleAdd20Regular,
+  PeopleTeam20Regular,
   PersonAdd20Regular,
   Settings20Regular,
   SettingsCogMultiple20Regular,
+  ShieldAdd20Regular,
 } from "@fluentui/react-icons";
 import AdminLayout from "@/components/AdminLayout";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -50,7 +55,30 @@ const KEY_LABELS: Record<string, { label: string; description: string; icon: Rea
       "Controla si las fortalezas de bots aparecen en el matchmaking. Cuando está deshabilitado, los bots quedan excluidos del emparejamiento y los jugadores solo se enfrentan a fortalezas de otros usuarios.",
     icon: <Bot20Regular />,
   },
+  team_creation_enabled: {
+    label: "Crear equipos",
+    description: "Permite que los jugadores funden equipos. Desactivado, solo el admin puede crearlos.",
+    icon: <ShieldAdd20Regular />,
+  },
+  team_joining_enabled: {
+    label: "Unirse a equipos",
+    description: "Permite entrar en un equipo con su código. Útil para congelar los equipos una vez formados.",
+    icon: <PeopleAdd20Regular />,
+  },
+  team_leaving_enabled: {
+    label: "Salir de equipos",
+    description: "Permite que los jugadores dejen su equipo. Durante una temporada por equipos nunca se puede salir.",
+    icon: <DoorArrowRight20Regular />,
+  },
+  team_self_management_enabled: {
+    label: "Gestión del equipo por sus miembros",
+    description: "Activado: cualquier miembro cambia el nombre y regenera el código. Desactivado: solo el admin.",
+    icon: <Edit20Regular />,
+  },
 };
+
+const TEAM_KEYS = ["team_creation_enabled", "team_joining_enabled", "team_leaving_enabled", "team_self_management_enabled"];
+const MAX_SIZE_KEY = "team_max_size";
 
 const useStyles = makeStyles({
   inner: { maxWidth: "800px", width: "100%", marginInline: "auto" },
@@ -66,6 +94,8 @@ const useStyles = makeStyles({
   text: { display: "flex", flexDirection: "column", gap: tokens.spacingVerticalXXS, minWidth: 0 },
   label: { fontWeight: tokens.fontWeightSemibold },
   toggle: { display: "flex", alignItems: "center", gap: tokens.spacingHorizontalS, flexShrink: 0 },
+  section: { marginTop: tokens.spacingVerticalXL, marginBottom: tokens.spacingVerticalS, display: "flex", alignItems: "center", gap: tokens.spacingHorizontalS },
+  spin: { width: "96px" },
 });
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -86,11 +116,45 @@ export default function ConfigPage() {
       .then((r) => r.json())
       // Only render the toggles this page knows; the team settings get their own section later.
       .then((data: ConfigEntry[]) =>
-        setEntries(Array.isArray(data) ? data.filter((e) => e.key in KEY_LABELS && (e.type ?? "bool") === "bool") : []),
+        setEntries(Array.isArray(data) ? data.filter((e) => e.key in KEY_LABELS || e.key === MAX_SIZE_KEY) : []),
       )
       .catch(() => setError("No se pudo cargar la configuración"))
       .finally(() => setLoading(false));
   }, []);
+
+  const maxSizeEntry = entries.find((e) => e.key === MAX_SIZE_KEY);
+  const [maxSizeDraft, setMaxSizeDraft] = useState<number | null>(null);
+  const maxSizeValue = maxSizeDraft ?? (maxSizeEntry ? Number(maxSizeEntry.value) : null);
+
+  // ── Max team size ──────────────────────────────────────────────────────────
+  const saveMaxSize = async () => {
+    if (!maxSizeEntry || maxSizeValue === null) return;
+    setSaving(MAX_SIZE_KEY);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/config/${MAX_SIZE_KEY}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value: maxSizeValue }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError((d as { error?: string }).error ?? "Error al guardar");
+        return;
+      }
+      setEntries((prev) => prev.map((e) => (e.key === MAX_SIZE_KEY ? { ...e, value: String(maxSizeValue) } : e)));
+      setMaxSizeDraft(null);
+      // D13: bigger teams are kept but accept nobody; tell the admin how many
+      const teams = await fetch("/api/admin/teams?status=active", { cache: "no-store" }).then((r) => (r.ok ? r.json() : []));
+      const over = Array.isArray(teams) ? teams.filter((t: { over_max: boolean }) => t.over_max).length : 0;
+      if (over > 0) toast.warning("Tamaño máximo actualizado", `${over} equipo(s) lo superan: conservan sus miembros, pero no admiten nuevos.`);
+      else toast.success("Tamaño máximo actualizado");
+    } catch {
+      setError("Error de conexión");
+    } finally {
+      setSaving(null);
+    }
+  };
 
   // ── Toggle ─────────────────────────────────────────────────────────────────
   const toggle = async (entry: ConfigEntry) => {
@@ -141,8 +205,9 @@ export default function ConfigPage() {
                 title="No hay entradas de configuración disponibles."
               />
             ) : (
+              <>
               <div className={styles.list}>
-                {entries.map((entry) => {
+                {entries.filter((e) => e.key in KEY_LABELS && !TEAM_KEYS.includes(e.key)).map((entry) => {
                   const meta = KEY_LABELS[entry.key];
                   const isEnabled = entry.value === "true";
                   const isSaving = saving === entry.key;
@@ -175,6 +240,78 @@ export default function ConfigPage() {
                   );
                 })}
               </div>
+
+              <div className={styles.section}>
+                <PeopleTeam20Regular />
+                <Subtitle2 as="h2">Equipos</Subtitle2>
+              </div>
+              <div className={styles.list}>
+                {maxSizeEntry && (
+                  <Card className={styles.card}>
+                    <div className={styles.info}>
+                      <span className={styles.icon}><PeopleTeam20Regular /></span>
+                      <div className={styles.text}>
+                        <Body1 className={styles.label}>Tamaño máximo de equipo</Body1>
+                        <Caption1 className={common.muted}>
+                          Jugadores por equipo ({maxSizeEntry.min ?? 1}–{maxSizeEntry.max ?? 50}). Si lo bajas, los equipos más grandes se conservan, pero no admiten miembros nuevos.
+                        </Caption1>
+                        {maxSizeEntry.updated_at && (
+                          <Caption1 className={`${common.muted} ${common.mono}`}>
+                            Última actualización: {fmtFullDateTime(maxSizeEntry.updated_at)}
+                          </Caption1>
+                        )}
+                      </div>
+                    </div>
+                    <div className={styles.toggle}>
+                      <SpinButton
+                        className={styles.spin}
+                        min={maxSizeEntry.min ?? 1}
+                        max={maxSizeEntry.max ?? 50}
+                        value={maxSizeValue}
+                        onChange={(_, d) => {
+                          const next = d.value ?? Number(d.displayValue);
+                          if (Number.isFinite(next)) setMaxSizeDraft(next as number);
+                        }}
+                        aria-label="Tamaño máximo de equipo"
+                      />
+                      <Button
+                        appearance="primary"
+                        disabled={saving === MAX_SIZE_KEY || maxSizeDraft === null || maxSizeDraft === Number(maxSizeEntry.value)}
+                        icon={saving === MAX_SIZE_KEY ? <Spinner size="tiny" /> : undefined}
+                        onClick={saveMaxSize}
+                      >
+                        Guardar
+                      </Button>
+                    </div>
+                  </Card>
+                )}
+                {entries.filter((e) => TEAM_KEYS.includes(e.key)).map((entry) => {
+                  const meta = KEY_LABELS[entry.key];
+                  const isEnabled = entry.value === "true";
+                  const isSaving = saving === entry.key;
+                  return (
+                    <Card key={entry.key} className={styles.card}>
+                      <div className={styles.info}>
+                        <span className={styles.icon}>{meta.icon}</span>
+                        <div className={styles.text}>
+                          <Body1 className={styles.label}>{meta.label}</Body1>
+                          <Caption1 className={common.muted}>{meta.description}</Caption1>
+                        </div>
+                      </div>
+                      <div className={styles.toggle}>
+                        {isSaving && <Spinner size="tiny" />}
+                        <Switch
+                          checked={isEnabled}
+                          disabled={isSaving}
+                          onChange={() => toggle(entry)}
+                          aria-label={`${isEnabled ? "Deshabilitar" : "Habilitar"}: ${meta.label}`}
+                        />
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+              </>
             )}
           </div>
         </div>
