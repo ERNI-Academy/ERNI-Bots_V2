@@ -495,6 +495,7 @@ def list_users():
                     "created_at":   p.created_at.isoformat() + "Z" if p.created_at else None,
                     "has_fortress": p.fortress is not None,
                     "season_score": stats.score if stats else None,
+                    "team":         {"id": p.team.id, "name": p.team.name} if p.team else None,
                 }
                 for p, stats in rows
             ],
@@ -551,6 +552,7 @@ def get_user(player_id):
             "has_fortress":         player.fortress is not None,
             "invitation_code_id":   inv.id if inv else None,
             "invitation_active":    inv.is_active if inv else None,
+            "team":                 {"id": player.team.id, "name": player.team.name} if player.team else None,
         }
 
         if player.fortress:
@@ -942,7 +944,8 @@ def delete_player(player_id):
     player_words, player_assets, player_season_stats,
     invitation_codes (unlinked), attacker battles + messages,
     defender battles + messages (via fortress), fortress_constraints,
-    fortress_season_stats, fortress, player.
+    fortress_season_stats, fortress, team links (roster rows, audit entries,
+    current team, dissolved if left empty), player.
     """
     if not _check_admin():
         return jsonify({"error": "Forbidden"}), 403
@@ -954,6 +957,10 @@ def delete_player(player_id):
             return jsonify({"error": "Player not found"}), 404
 
         username = player.username
+
+        # 0. Teams: roster rows, audit links and current team (FK-safe on PostgreSQL)
+        from services.team_admin import detach_player_from_teams
+        detach_player_from_teams(db, player)
 
         # 1. Activity logs (actor)
         db.query(ActivityLog).filter_by(actor_id=player_id).delete()

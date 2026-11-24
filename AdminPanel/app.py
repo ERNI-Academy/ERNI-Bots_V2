@@ -29,6 +29,7 @@ from routes.store import store_bp
 from routes.admin_config import admin_config_bp
 from routes.admin_seasons import admin_seasons_bp
 from routes.admin_prizes import admin_prizes_bp
+from routes.admin_teams import admin_teams_bp
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -97,6 +98,7 @@ def create_app():
     app.register_blueprint(admin_config_bp,        url_prefix="/api/v1/admin")
     app.register_blueprint(admin_seasons_bp,       url_prefix="/api/v1/admin")
     app.register_blueprint(admin_prizes_bp,        url_prefix="/api/v1/admin")
+    app.register_blueprint(admin_teams_bp,         url_prefix="/api/v1/admin")
     app.register_blueprint(archetypes_bp,         url_prefix="/api/v1/archetypes")
     app.register_blueprint(protocols_bp,   url_prefix="/api/v1/protocols")
 

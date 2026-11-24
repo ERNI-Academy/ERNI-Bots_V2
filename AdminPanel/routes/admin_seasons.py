@@ -9,15 +9,23 @@ PUT    /seasons/<id>          – update editable fields
 POST   /seasons/<id>/activate – make this season active (deactivates all others)
 POST   /seasons/<id>/freeze   – toggle is_frozen
 POST   /seasons/<id>/finalize – finalize (marks is_active=False, finalized=True)
-DELETE /seasons/<id>          – hard-delete (only if no player/fortress stats exist)
+POST   /seasons/<id>/reactivate – reopen a finalized season as the only active one
+DELETE /seasons/<id>          – hard-delete (only if no player/fortress stats nor team points exist)
+
+Team seasons (docs/specs/teams.md RN-60..64): 'mode' is 'individual' | 'team' and
+can only change while the season was never activated (first_activated_at NULL).
+Activating or reactivating a team season snapshots the current team rosters.
 """
 
 from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request
 
 from db import SessionLocal
-from db.models import Season, PlayerSeasonStats, FortressSeasonStats, Player, Fortress
+from db.models import Season, PlayerSeasonStats, FortressSeasonStats, Player, Fortress, TeamSeasonMember
 from routes.admin import _check_admin
+from services.team_admin import snapshot_team_rosters
+
+SEASON_MODES = ("individual", "team")
 
 admin_seasons_bp = Blueprint("admin_seasons", __name__)
 
@@ -53,11 +61,30 @@ def _season_to_dict(s: Season, db=None) -> dict:
         "is_ranked":      s.is_ranked,
         "is_frozen":      s.is_frozen,
         "finalized":      s.finalized,
+        "mode":           s.mode,
+        "first_activated_at": s.first_activated_at.isoformat() + "Z" if s.first_activated_at else None,
+        "mode_editable":  s.first_activated_at is None,
         "start_date":     s.start_date.isoformat() + "Z" if s.start_date else None,
         "end_date":       s.end_date.isoformat() + "Z" if s.end_date else None,
         "player_count":   player_count,
         "fortress_count": fortress_count,
     }
+
+
+def _mode_error(mode):
+    if mode not in SEASON_MODES:
+        return jsonify({"error": "'mode' must be 'individual' or 'team'", "code": "invalid_mode"}), 400
+    return None
+
+
+def _activate(db, target: Season) -> None:
+    """Make `target` the only active season and snapshot team rosters (RN-62/63)."""
+    db.query(Season).update({Season.is_active: False})
+    target.is_active = True
+    if target.first_activated_at is None:
+        target.first_activated_at = datetime.utcnow()
+    db.flush()
+    snapshot_team_rosters(db, target)
 
 
 def _parse_dt(value: str | None) -> datetime | None:
@@ -96,11 +123,15 @@ def create_season():
     name = (data.get("name") or "").strip()
     if not name:
         return jsonify({"error": "'name' is required"}), 400
+    mode = data.get("mode") or "individual"
+    if (error := _mode_error(mode)) is not None:
+        return error
 
     db = SessionLocal()
     try:
         s = Season(
             name=name,
+            mode=mode,
             is_active=False,
             is_ranked=bool(data.get("is_ranked", True)),
             is_frozen=False,
@@ -144,6 +175,15 @@ def update_season(season_id: str):
             s.name = v
         if "is_ranked" in data:
             s.is_ranked = bool(data["is_ranked"])
+        if "mode" in data and data["mode"] != s.mode:
+            if (error := _mode_error(data["mode"])) is not None:
+                return error
+            if s.first_activated_at is not None:
+                return jsonify({
+                    "error": "The mode cannot change once the season has been activated",
+                    "code": "mode_locked",
+                }), 409
+            s.mode = data["mode"]
         if "start_date" in data:
             s.start_date = _parse_dt(data["start_date"]) or s.start_date
         if "end_date" in data:
@@ -177,9 +217,7 @@ def activate_season(season_id: str):
         if target.finalized:
             return jsonify({"error": "Cannot activate a finalized season"}), 409
 
-        # Deactivate all
-        db.query(Season).update({Season.is_active: False})
-        target.is_active = True
+        _activate(db, target)
         db.commit()
         db.refresh(target)
         return jsonify(_season_to_dict(target, db)), 200
@@ -270,11 +308,9 @@ def reactivate_season(season_id: str):
         if not target.finalized:
             return jsonify({"error": "Season is not finalized"}), 409
 
-        # Deactivate all others
-        db.query(Season).update({Season.is_active: False})
         target.finalized = False
-        target.is_active = True
         target.is_frozen = False
+        _activate(db, target)
         db.commit()
         db.refresh(target)
         return jsonify(_season_to_dict(target, db)), 200
@@ -315,6 +351,14 @@ def delete_season(season_id: str):
             return jsonify({
                 "error": f"Cannot delete: season has {ps} player stat(s) and {fs} fortress stat(s)"
             }), 409
+
+        # RN-64: team points block the deletion; empty roster rows go with the season
+        scored = db.query(func.count(TeamSeasonMember.id)).filter(
+            TeamSeasonMember.season_id == season_id, TeamSeasonMember.score > 0
+        ).scalar() or 0
+        if scored > 0:
+            return jsonify({"error": f"Cannot delete: season has {scored} team member(s) with points"}), 409
+        db.query(TeamSeasonMember).filter(TeamSeasonMember.season_id == season_id).delete(synchronize_session=False)
 
         db.delete(s)
         db.commit()

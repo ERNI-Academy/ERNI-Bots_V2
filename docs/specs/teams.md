@@ -114,6 +114,7 @@ Esta feature añade **equipos persistentes** y un **modo de temporada** (`indivi
 - **RN-53** Al disolver un equipo, todos sus miembros quedan sin equipo (motivo `dissolved_by_admin`). El equipo conserva su histórico y su puntuación en las temporadas pasadas y en la temporada en curso; en el ranking aparece como «(disuelto)».
 - **RN-54** «Disolver todos los equipos» solo está disponible si **no** hay una temporada por equipos en curso, y pide escribir una confirmación.
 - **RN-55** Todas las acciones del admin sobre equipos quedan registradas en `team_membership_log` (§7.3) con `actor = 'admin'`.
+- **RN-56** Al borrar un jugador desde el admin se borran sus filas de roster (sus puntos de equipo desaparecen, igual que su `PlayerSeasonStats`), se desvinculan sus entradas del log y sale de su equipo, que se disuelve si se queda vacío (RN-03).
 
 ### 6.7 Temporadas
 
@@ -274,6 +275,7 @@ Blueprint nuevo `routes/admin_teams.py`.
 |---|---|
 | `GET /teams?status=active\|dissolved\|all&q=` | Lista: `id, name, join_code, member_count, over_max (bool), created_at, dissolved_at, score_active_season`. |
 | `POST /teams` `{name, member_ids?: []}` | Crear un equipo, con miembros iniciales opcionales (RN-51). |
+| `GET /teams/available-players?q=&limit=` | Jugadores que se pueden añadir a un equipo (sin equipo y no bots), para el buscador del panel. |
 | `GET /teams/<id>` | Detalle: miembros, puntos por temporada, log de pertenencia. |
 | `PATCH /teams/<id>` `{name}` | Cambiar el nombre. |
 | `POST /teams/<id>/regenerate-code` | Regenerar el código. |
@@ -287,11 +289,11 @@ Cambios en endpoints existentes:
 
 | Endpoint | Cambio |
 |---|---|
-| `POST/PUT /seasons` | Campo `mode` (RN-60, RN-61). `_season_to_dict` añade `mode` y `first_activated_at`. |
+| `POST/PUT /seasons` | Campo `mode` (RN-60, RN-61): 400 `invalid_mode`, 409 `mode_locked`. `_season_to_dict` añade `mode`, `first_activated_at` y `mode_editable`. |
 | `POST /seasons/<id>/activate`, `/reactivate` | Rellenan `first_activated_at` y aplican RN-62 y RN-63. |
 | `DELETE /seasons/<id>` | RN-64. |
 | `GET/PATCH /config` | Registro tipado (§7.7). |
-| `PUT /prizes/<id>` | `winner_team_id` (RN-90). |
+| `POST/PUT /prizes` | `winner_team_id` (RN-90). Asignar un ganador sustituye al otro tipo; enviar los dos a la vez da 400 `two_winners`; un equipo inexistente, 404 `team_not_found`. La respuesta añade `winner_team: {id, name}`. |
 | Endpoints de jugadores del admin | Añaden `team: {id, name} \| null`. |
 
 ## 10. Interfaz del juego (web)

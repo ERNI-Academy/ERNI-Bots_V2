@@ -1,6 +1,10 @@
 """
 Team domain logic (docs/specs/teams.md).
 
+DUPLICATED in GameBackEnd/services/teams.py and AdminPanel/services/teams.py:
+keep both copies identical (D20). Admin-only operations live in
+AdminPanel/services/team_admin.py.
+
 Routes translate TeamError into HTTP responses; everything else (rules, locks,
 roster rows, audit log) lives here so the battle, matchmaking and team routes
 apply exactly the same rules.

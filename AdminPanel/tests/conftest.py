@@ -17,10 +17,20 @@ os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-with-enough-length-1234
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
+from sqlalchemy import event  # noqa: E402
 
 from db import SessionLocal, engine  # noqa: E402
 from db.base import Base  # noqa: E402
 from db import models as _models  # noqa: E402,F401  (register every model)
+
+
+
+# Enforce foreign keys like PostgreSQL does (SQLite ignores them by default), so
+# tests catch deletes and updates that production would reject.
+@event.listens_for(engine, "connect")
+def _enable_sqlite_foreign_keys(dbapi_connection, _record):
+    dbapi_connection.execute("PRAGMA foreign_keys=ON")
+
 
 Base.metadata.create_all(bind=engine)
 
