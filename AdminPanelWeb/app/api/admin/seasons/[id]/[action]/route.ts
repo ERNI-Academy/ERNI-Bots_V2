@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BACKEND } from "@/lib/backend";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 const ALLOWED_ACTIONS = ["activate", "freeze", "finalize", "reactivate"];
 
@@ -9,6 +10,8 @@ export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string; action: string }> }
 ): Promise<NextResponse> {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const s = secret();
   if (!s) return NextResponse.json({ error: "ADMIN_SECRET no configurado" }, { status: 503 });
   const { id, action } = await params;

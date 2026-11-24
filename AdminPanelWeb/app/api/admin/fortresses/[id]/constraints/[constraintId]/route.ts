@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BACKEND } from "@/lib/backend";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string; constraintId: string }> }
 ): Promise<NextResponse> {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const secret = process.env.ADMIN_SECRET;
   if (!secret) {
     return NextResponse.json({ error: "ADMIN_SECRET no configurado" }, { status: 503 });

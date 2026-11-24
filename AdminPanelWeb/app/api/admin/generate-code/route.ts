@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { BACKEND } from "@/lib/backend";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function POST() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     const secret = process.env.ADMIN_SECRET;
     if (!secret) {

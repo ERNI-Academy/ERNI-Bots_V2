@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BACKEND } from "@/lib/backend";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, { params }: Params): Promise<NextResponse> {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const secret = process.env.ADMIN_SECRET;
   if (!secret) return NextResponse.json({ error: "ADMIN_SECRET no configurado" }, { status: 503 });
 
@@ -21,6 +24,8 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<NextRe
 }
 
 export async function PATCH(request: NextRequest, { params }: Params): Promise<NextResponse> {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const secret = process.env.ADMIN_SECRET;
   if (!secret) return NextResponse.json({ error: "ADMIN_SECRET no configurado" }, { status: 503 });
 
@@ -40,6 +45,8 @@ export async function PATCH(request: NextRequest, { params }: Params): Promise<N
 }
 
 export async function DELETE(_request: NextRequest, { params }: Params): Promise<NextResponse> {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const secret = process.env.ADMIN_SECRET;
   if (!secret) return NextResponse.json({ error: "ADMIN_SECRET no configurado" }, { status: 503 });
 

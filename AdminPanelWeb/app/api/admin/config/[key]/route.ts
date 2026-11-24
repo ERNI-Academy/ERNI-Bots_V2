@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BACKEND } from "@/lib/backend";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 /**
  * PATCH /api/admin/config/<key>  – update a single config value
@@ -8,6 +9,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ key: string }> }
 ): Promise<NextResponse> {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const secret = process.env.ADMIN_SECRET;
   if (!secret) {
     return NextResponse.json({ error: "ADMIN_SECRET no configurado" }, { status: 503 });

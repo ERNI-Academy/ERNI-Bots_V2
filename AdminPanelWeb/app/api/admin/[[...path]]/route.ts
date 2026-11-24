@@ -16,11 +16,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { BACKEND } from "@/lib/backend";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 async function proxy(
   request: NextRequest,
   { params }: { params: Promise<{ path?: string[] }> }
 ): Promise<NextResponse> {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const secret = request.headers.get("X-Admin-Secret");
   if (!secret) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });

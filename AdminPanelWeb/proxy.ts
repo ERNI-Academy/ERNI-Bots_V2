@@ -7,6 +7,15 @@ const publicPaths = ["/login", "/dashboard"];
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Admin API: reject requests without a session right away. Every route handler
+  // also calls requireAdmin(), which validates the token and the admin role.
+  if (pathname.startsWith("/api/admin")) {
+    if (!request.cookies.get("auth-token")) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
+
   // Si es una ruta pública, permitir acceso
   if (publicPaths.some((path) => pathname.startsWith(path))) {
     return NextResponse.next();
@@ -57,5 +66,7 @@ export const config = {
      * - archivos estáticos (.png, .jpg, .svg, etc.)
      */
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp)).*)",
+    // Admin API routes (see the guard above)
+    "/api/admin/:path*",
   ],
 };

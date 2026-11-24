@@ -417,6 +417,9 @@ def me():
             "energy":      player.energy,
             "created_at":  (player.created_at.isoformat() + "Z") if player.created_at else None,
             "has_fortress": player.fortress is not None,
+            # The admin web checks these before proxying any admin request
+            "is_admin":    player.is_admin,
+            "is_banned":   player.is_banned,
         }), 200
     finally:
         db.close()
