@@ -22,6 +22,9 @@ Ahora, señores de la guerra compiten por el control de **fortalezas de IA**. Ca
 [Login / Registro]
         │
         ▼
+[Equipo — /team/welcome: crear, unirse con código o "Ahora no"]
+        │
+        ▼
 [Story — Introducción narrativa]
         │
         ▼ "INICIAR SISTEMA"
@@ -50,18 +53,19 @@ Ahora, señores de la guerra compiten por el control de **fortalezas de IA**. Ca
 3. [Puesta en marcha local](#puesta-en-marcha-local)
 4. [Seed — datos iniciales](#seed--datos-iniciales)
 5. [Cómo registrarse e iniciar sesión](#cómo-registrarse-e-iniciar-sesión)
-6. [API Reference](#api-reference)
+6. [Equipos y temporadas por equipos](#equipos-y-temporadas-por-equipos)
+7. [API Reference](#api-reference)
    - [Auth](#auth)
    - [Jugadores](#jugadores)
    - [Fortalezas](#fortalezas)
    - [Batallas](#batallas)
    - [Leaderboard](#leaderboard)
    - [Admin](#admin)
-7. [Agent Service (guardián IA)](#agent-service-guardián-ia)
-8. [Variables de entorno](#variables-de-entorno)
-9. [Estructura del proyecto](#estructura-del-proyecto)
-10. [Despliegue en Azure](#despliegue-en-azure)
-11. [Estado del desarrollo](#estado-del-desarrollo)
+8. [Agent Service (guardián IA)](#agent-service-guardián-ia)
+9. [Variables de entorno](#variables-de-entorno)
+10. [Estructura del proyecto](#estructura-del-proyecto)
+11. [Despliegue en Azure](#despliegue-en-azure)
+12. [Estado del desarrollo](#estado-del-desarrollo)
 
 ---
 
@@ -150,6 +154,18 @@ npm run dev                # servidor en http://localhost:3000
 
 ---
 
+### Tests (Flask)
+
+GameBackEnd y AdminPanel tienen cada uno su suite de pytest (SQLite temporal, claves foráneas activadas como en PostgreSQL). CI la ejecuta antes de desplegar.
+
+```bash
+cd GameBackEnd   # o AdminPanel
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest -q tests
+```
+
+---
+
 ## Seed — datos iniciales
 
 El script `GameBackEnd/scripts/seed.py` es **idempotente** (puede ejecutarse varias veces sin duplicar datos) y crea:
@@ -176,6 +192,8 @@ Códigos LIBRES para nuevos jugadores:
 ```
 
 Para generar más códigos sin relanzar el seed, usar el [endpoint admin](#post-admininvitations).
+
+**Equipos de prueba (solo desarrollo).** `./scripts/dev.sh seed` ejecuta además `GameBackEnd/scripts/seed_dev_teams.py`: 7 jugadores humanos `dev_*` (con fortaleza y código de acceso, que se imprime), los equipos *Lanceros Rojos* (3), *Guardianes Azules* (2) y *Sombras del Norte* (disuelto), `dev_gala` sin equipo y una temporada por equipos ya finalizada con puntos. No forma parte de `seed.py` (que puede ejecutarse en producción con `SEED_DB=true`) y se niega a correr contra una base de datos que no sea SQLite.
 
 ---
 
@@ -222,6 +240,40 @@ Respuesta:
 ```
 
 > En el frontend, el JWT se guarda en una cookie `httpOnly`. El JavaScript del navegador no puede leerla, protegiéndola contra XSS.
+
+---
+
+## Equipos y temporadas por equipos
+
+Especificación completa: [`docs/specs/teams.md`](docs/specs/teams.md).
+
+- **Equipos persistentes.** Un jugador pertenece como mucho a un equipo. Se crea uno o se entra con un **código de 8 caracteres** (o el enlace `/team/join/<código>`). Todos los miembros son iguales; si el último sale, el equipo se disuelve. Los bots no tienen equipo.
+- **Modo de temporada.** Cada temporada es `individual` o `team`. El modo se elige al crearla y queda fijo en cuanto se activa. Al activar una temporada por equipos se guarda el roster de cada equipo.
+- **En una temporada por equipos:**
+  - sin equipo no se puede atacar (ni fortalezas ni bosses) y tu fortaleza no sale en el matchmaking; las fortalezas bot siguen siendo atacables;
+  - no se puede atacar a un compañero, y nadie puede salir de su equipo (sí unirse si no tenía);
+  - cada punto se suma al jugador **y** al equipo en el que está en ese momento; si el admin lo mueve, lo ya ganado se queda en el equipo anterior;
+  - el matchmaking empareja por puntuación de equipo, y el scoreboard muestra pestañas *Equipos* / *Individual*.
+- **Administración** (panel → *Equipos*, *Temporadas*, *Configuración*, *Premios*): crear, renombrar, regenerar código, añadir, sacar y mover miembros, disolver uno o todos, elegir el modo de temporada, y asignar premios a un equipo. El admin no está limitado por los interruptores ni por el bloqueo de temporada, pero respeta el tamaño máximo.
+
+| Clave de `app_config` | Tipo | Por defecto | Efecto |
+|---|---|---|---|
+| `team_max_size` | int (1–50) | 5 | Máximo de miembros. Al bajarlo, los equipos más grandes se conservan pero no admiten nuevos. |
+| `team_creation_enabled` | bool | true | Los jugadores pueden crear equipos. |
+| `team_joining_enabled` | bool | true | Los jugadores pueden unirse con código. |
+| `team_leaving_enabled` | bool | true | Los jugadores pueden salir (nunca durante una temporada por equipos). |
+| `team_self_management_enabled` | bool | true | Cualquier miembro renombra y regenera el código; si no, solo el admin. |
+
+Endpoints (detalle en `GameBackEnd/openapi.yaml`):
+
+| Juego (`/api/v1`, 🔒 JWT) | Admin (`/api/v1/admin`, `X-Admin-Secret`) |
+|---|---|
+| `GET /teams/me` · `POST /teams` · `PATCH /teams/me` | `GET/POST /teams` · `GET/PATCH /teams/<id>` |
+| `GET /teams/preview?code=` · `POST /teams/join` | `POST /teams/<id>/members` · `DELETE /teams/<id>/members/<player_id>` |
+| `POST /teams/me/leave` · `POST /teams/me/regenerate-code` | `POST /teams/<id>/members/<player_id>/move` · `POST /teams/<id>/regenerate-code` |
+| `GET /leaderboard?type=players\|teams` · `GET /leaderboard/teams/<id>` (públicos) | `POST /teams/<id>/dissolve` · `POST /teams/dissolve-all` · `GET /teams/available-players` |
+
+El esquema se migra con `scripts/migrate_teams.py` (idempotente; lo ejecutan los `startup.sh` de GameBackEnd y AdminPanel).
 
 ---
 
@@ -478,7 +530,7 @@ Intenta adivinar la palabra secreta. Si es correcta, la batalla termina con vict
 
 #### `GET /leaderboard`
 
-Top 100 de la temporada activa. No requiere autenticación.
+Ranking paginado (`offset`, `limit` ≤ 100) de la temporada activa. No requiere autenticación. Con `type=players|teams`; por defecto `teams` en temporadas por equipos y `players` en las individuales. En temporadas por equipos, el ranking de jugadores incluye `team_name`. Ver [Equipos](#equipos-y-temporadas-por-equipos).
 
 ---
 
@@ -627,6 +679,7 @@ ERNI-Bots_V2/
 │   │   ├── register/page.tsx        # Registro con código de invitación
 │   │   ├── dashboard/page.tsx       # War Room — mapa táctico con fortalezas reales
 │   │   ├── attack/[id]/page.tsx     # Chat de asalto contra el guardián real
+│   │   ├── team/                    # /team, /team/welcome, /team/join/[code]
 │   │   └── api/
 │   │       ├── auth/                # login, logout, register (proxies httpOnly)
 │   │       ├── players/me/          # GET perfil + stats
@@ -644,7 +697,9 @@ ERNI-Bots_V2/
     │   ├── models.py                # 13 modelos SQLAlchemy
     │   ├── base.py                  # Base declarativa
     │   └── __init__.py              # engine + SessionLocal
+    ├── settings_registry.py         # Claves tipadas de app_config (también en AdminPanel)
     ├── routes/
+    │   ├── teams.py                 # equipos del jugador (crear, unirse, salir...)
     │   ├── auth.py                  # register, login, logout, me
     │   ├── players.py               # me, matchmaking, leaderboard
     │   ├── fortresses.py            # CRUD + reconfigure + rebuild
@@ -652,9 +707,14 @@ ERNI-Bots_V2/
     │   ├── leaderboard.py           # top 100
     │   └── admin.py                 # invitations, stats (🔒 X-Admin-Secret)
     ├── services/
-    │   └── agent_service.py         # MockAgentService + HttpAgentService
+    │   ├── agent_service.py         # MockAgentService + HttpAgentService
+    │   ├── teams.py                 # Reglas de equipos (copia idéntica en AdminPanel)
+    │   ├── scoring.py               # award_points: puntos de jugador y de equipo
+    │   └── season_stats.py          # Temporada activa y stats por temporada
     └── scripts/
         ├── seed.py                  # Datos iniciales (NPCs, fortalezas, temporada)
+        ├── seed_dev_teams.py        # Jugadores y equipos de prueba (solo SQLite)
+        ├── migrate_teams.py         # Migración de equipos (idempotente)
         └── create_invitation.py     # CLI para generar un código desde terminal
 ```
 
@@ -714,3 +774,6 @@ Para más detalles de infraestructura, ver [DEPLOYMENT.md](web/DEPLOYMENT.md).
 | Integración Frontend ↔ Backend | ✅ Completo |
 | Agent Service (mock, sin API key) | ✅ Completo |
 | Agent Service (LLM real vía `http`) | ✅ Completo |
+| Equipos (API de juego y de admin) | ✅ Completo |
+| UI: Equipos, temporadas por equipos y scoreboard por equipos | ✅ Completo |
+| Admin: gestión de equipos, modo de temporada y configuración de equipos | ✅ Completo |

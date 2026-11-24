@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Estado** | Aprobada (2026-11-24) |
+| **Estado** | Implementada (2026-11-24) |
 | **Fecha** | 2026-11-24 |
 | **Alcance** | GameBackEnd · AdminPanel · web · AdminPanelWeb |
 

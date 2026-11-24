@@ -6,6 +6,8 @@ info:
     Backend API for ERNI-Bots MMORPG.
     The backend is the authoritative game engine.
     Agent Service is external and not exposed publicly.
+    NOTE: only the team endpoints, /config and /leaderboard are kept up to date
+    (docs/specs/teams.md); the older auth/battle entries predate the current API.
 
 servers:
   - url: /api/v1
@@ -153,6 +155,134 @@ components:
           type: string
         score:
           type: integer
+        team_name:
+          type: string
+          nullable: true
+          description: Only in team seasons (current team of the player).
+
+    TeamLeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        team_id:
+          type: string
+        name:
+          type: string
+        score:
+          type: integer
+          description: Sum of the points the members earned for this team in the season.
+        member_count:
+          type: integer
+        dissolved:
+          type: boolean
+
+    LeaderboardPage:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [players, teams]
+        season_mode:
+          type: string
+          enum: [individual, team]
+        items:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/LeaderboardEntry'
+              - $ref: '#/components/schemas/TeamLeaderboardEntry'
+        total:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+        has_more:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Human-readable message (Spanish for player-facing endpoints).
+        code:
+          type: string
+          description: Stable machine-readable code, e.g. team_full, season_locked, same_team.
+
+    TeamMember:
+      type: object
+      properties:
+        username:
+          type: string
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        joined_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    MyTeam:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        join_code:
+          type: string
+          description: 8 characters from ABCDEFGHJKMNPQRSTUVWXYZ23456789, case-insensitive.
+        member_count:
+          type: integer
+        is_full:
+          type: boolean
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMember'
+
+    TeamState:
+      type: object
+      description: My team and the actions allowed right now. Every team write returns it too.
+      properties:
+        team:
+          allOf:
+            - $ref: '#/components/schemas/MyTeam'
+          nullable: true
+        max_size:
+          type: integer
+        team_season_running:
+          type: boolean
+        can_create:
+          type: boolean
+        can_join:
+          type: boolean
+        can_manage:
+          type: boolean
+          description: Rename and regenerate the code (team_self_management_enabled).
+        can_leave:
+          type: boolean
+        leave_blocked_reason:
+          type: string
+          nullable: true
+          enum: [season_locked, team_leaving_disabled, null]
+
+    TeamPreview:
+      type: object
+      properties:
+        name:
+          type: string
+        member_count:
+          type: integer
+        max_size:
+          type: integer
+        is_full:
+          type: boolean
 
 paths:
 
@@ -267,7 +397,11 @@ paths:
         '400':
           description: Invalid request
         '403':
-          description: Forbidden
+          description: >
+            Forbidden. In a running team season also team_required (attacker without team),
+            same_team (teammate's fortress) or target_not_participating (owner without team).
+            Message, hint and guess answer 409 battle_invalidated (with `reason`) when an
+            ongoing battle stops complying; the battle ends as expired with no points.
         '404':
           description: Fortress not found
 
@@ -337,13 +471,258 @@ paths:
 
   /leaderboard:
     get:
-      summary: Get global leaderboard
+      summary: Ranking of the active season (public)
+      parameters:
+        - name: type
+          in: query
+          description: Default is teams in team seasons and players otherwise.
+          schema:
+            type: string
+            enum: [players, teams]
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
       responses:
         '200':
-          description: Ranking list
+          description: One page of the ranking
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LeaderboardEntry'
+                $ref: '#/components/schemas/LeaderboardPage'
+        '400':
+          description: No active season, invalid type, or type=teams in an individual season (not_team_season)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /leaderboard/teams/{team_id}:
+    get:
+      summary: Team in the active team season with each member's contribution (public)
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Team detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  team_id:
+                    type: string
+                  name:
+                    type: string
+                  dissolved:
+                    type: boolean
+                  score:
+                    type: integer
+                  members:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        username:
+                          type: string
+                        score:
+                          type: integer
+                        current_member:
+                          type: boolean
+        '400':
+          description: The active season is not a team season (not_team_season)
+        '404':
+          description: Team not found in this season (team_not_found)
+
+  /config/:
+    get:
+      summary: Public feature flags, team settings and season status
+      responses:
+        '200':
+          description: Flat object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invitations_enabled: {type: boolean}
+                  player_invitations_enabled: {type: boolean}
+                  bot_fortresses_enabled: {type: boolean}
+                  team_max_size: {type: integer}
+                  team_creation_enabled: {type: boolean}
+                  team_joining_enabled: {type: boolean}
+                  team_leaving_enabled: {type: boolean}
+                  team_self_management_enabled: {type: boolean}
+                  season_status: {type: string, enum: [active, frozen, finalized, none]}
+                  season_mode: {type: string, nullable: true, enum: [individual, team, null]}
+                  season_start_date: {type: string, nullable: true}
+                  season_end_date: {type: string, nullable: true}
+
+  /teams/me:
+    get:
+      summary: My team (or null) and what I may do
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Team state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamState'
+    patch:
+      summary: Rename my team (any member if team_self_management_enabled)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  description: 3–32 letters, digits, spaces, '-' or '_'; unique ignoring case and accents.
+      responses:
+        '200':
+          description: New team state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamState'
+        '400':
+          description: invalid_name
+        '403':
+          description: self_management_disabled
+        '409':
+          description: not_in_team | name_taken
+
+  /teams:
+    post:
+      summary: Create a team (I become its first member)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        '201':
+          description: New team state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamState'
+        '400':
+          description: invalid_name
+        '403':
+          description: team_creation_disabled | bots_cannot_join
+        '409':
+          description: already_in_team | name_taken
+
+  /teams/preview:
+    get:
+      summary: Team behind a join code (10 attempts/min per player, shared with join)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamPreview'
+        '404':
+          description: invalid_code (also for dissolved teams)
+        '429':
+          description: Too many attempts
+
+  /teams/join:
+    post:
+      summary: Join a team with its code (allowed during a team season if I have no team)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+      responses:
+        '200':
+          description: New team state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamState'
+        '403':
+          description: team_joining_disabled | bots_cannot_join
+        '404':
+          description: invalid_code
+        '409':
+          description: already_in_team | team_full
+        '429':
+          description: Too many attempts
+
+  /teams/me/leave:
+    post:
+      summary: Leave my team (the last member leaving dissolves it)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: New team state (team is null)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamState'
+        '403':
+          description: team_leaving_disabled
+        '409':
+          description: not_in_team | season_locked (a team season is running)
+
+  /teams/me/regenerate-code:
+    post:
+      summary: New join code for my team (the old one stops working)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: New team state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamState'
+        '403':
+          description: self_management_disabled
+        '409':
+          description: not_in_team
